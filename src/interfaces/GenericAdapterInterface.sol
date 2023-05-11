@@ -5,11 +5,21 @@ import {ContractOffererInterface} from "seaport-types/interfaces/ContractOfferer
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
-
-import {GenericAdapterSidecar} from "./GenericAdapterSidecar.sol";
-
 interface GenericAdapterInterface is ContractOffererInterface {
+    error InvalidCaller(address caller);
+    error InvalidFulfiller(address fulfiller);
+    error UnsupportedExtraDataVersion(uint8 version);
+    error InvalidExtraDataEncoding(uint8 version);
+    // 0xe5a0a42f
+    error ApprovalFailed(address approvalToken);
+    // 0x3204506f
+    error CallFailed();
+    // 0xbc806b96
+    error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
+    error NotImplemented();
+
+    event SeaportCompatibleContractDeployed();
+
     function generateOrder(
         address fulfiller,
         SpentItem[] calldata minimumReceived,

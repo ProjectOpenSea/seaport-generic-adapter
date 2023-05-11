@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Call, GenericAdapterSidecarInterface} from "../src/optimized/GenericAdapterSidecarInterface.sol";
+import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+
+import {Call, GenericAdapterSidecarInterface} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import {GenericAdapterSidecar} from "../src/optimized/GenericAdapterSidecar.sol";
 
@@ -13,11 +15,8 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
-
 contract GenericAdapterSidecarTest is BaseOrderTest {
     struct Context {
-        ConsiderationInterface consideration;
         GenericAdapterSidecarInterface sidecar;
         bool isReference;
     }
@@ -48,10 +47,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testReceive() public {
-        test(this.execReceive, Context({consideration: consideration, sidecar: testSidecar, isReference: false}));
-        test(
-            this.execReceive, Context({consideration: consideration, sidecar: testSidecarReference, isReference: true})
-        );
+        test(this.execReceive, Context({sidecar: testSidecar, isReference: false}));
+        test(this.execReceive, Context({sidecar: testSidecarReference, isReference: true}));
     }
 
     function execReceive(Context memory context) external stateless {
@@ -65,14 +62,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteReturnsNativeBalance() public {
-        test(
-            this.execExecuteReturnsNativeBalance,
-            Context({consideration: consideration, sidecar: testSidecar, isReference: false})
-        );
-        test(
-            this.execExecuteReturnsNativeBalance,
-            Context({consideration: consideration, sidecar: testSidecarReference, isReference: true})
-        );
+        test(this.execExecuteReturnsNativeBalance, Context({sidecar: testSidecar, isReference: false}));
+        test(this.execExecuteReturnsNativeBalance, Context({sidecar: testSidecarReference, isReference: true}));
     }
 
     function execExecuteReturnsNativeBalance(Context memory context) external stateless {
@@ -103,14 +94,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteNotDesignatedCaller() public {
-        test(
-            this.execExecuteNotDesignatedCaller,
-            Context({consideration: consideration, sidecar: testSidecar, isReference: false})
-        );
-        test(
-            this.execExecuteNotDesignatedCaller,
-            Context({consideration: consideration, sidecar: testSidecarReference, isReference: true})
-        );
+        test(this.execExecuteNotDesignatedCaller, Context({sidecar: testSidecar, isReference: false}));
+        test(this.execExecuteNotDesignatedCaller, Context({sidecar: testSidecarReference, isReference: true}));
     }
 
     function execExecuteNotDesignatedCaller(Context memory context) external stateless {
@@ -187,14 +172,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteToggleFailureAllowed() public {
-        test(
-            this.execExecuteToggleFailureAllowed,
-            Context({consideration: consideration, sidecar: testSidecar, isReference: false})
-        );
-        test(
-            this.execExecuteToggleFailureAllowed,
-            Context({consideration: consideration, sidecar: testSidecarReference, isReference: true})
-        );
+        test(this.execExecuteToggleFailureAllowed, Context({sidecar: testSidecar, isReference: false}));
+        test(this.execExecuteToggleFailureAllowed, Context({sidecar: testSidecarReference, isReference: true}));
     }
 
     function execExecuteToggleFailureAllowed(Context memory context) external stateless {

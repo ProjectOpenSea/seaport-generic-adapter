@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {GenericAdapterInterface} from "../src/optimized/GenericAdapterInterface.sol";
+import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {FlashloanOffererInterface} from "../src/optimized/FlashloanOffererInterface.sol";
+import {GenericAdapterInterface} from "../src/interfaces/GenericAdapterInterface.sol";
+
+import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInterface.sol";
 
 import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
 
@@ -15,11 +17,10 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
 contract GenericAdapterTest is BaseOrderTest {
     struct Context {
-        ConsiderationInterface consideration;
         FlashloanOffererInterface flashloanOfferer;
         bool isReference;
     }
@@ -28,38 +29,6 @@ contract GenericAdapterTest is BaseOrderTest {
     FlashloanOffererInterface testFlashloanOffererReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
-    bool rejectReceive;
-
-    /**
-     * @dev Enable accepting ERC721 tokens via safeTransfer.
-     */
-    function onERC721Received(address, address, uint256, bytes calldata) public pure override returns (bytes4) {
-        assembly {
-            mstore(0, 0x150b7a02)
-            return(0x1c, 0x04)
-        }
-    }
-
-    /**
-     * @dev Enable accepting ERC1155 tokens via safeTransfer.
-     */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata)
-        public
-        pure
-        override
-        returns (bytes4)
-    {
-        assembly {
-            mstore(0, 0xf23a6e61)
-            return(0x1c, 0x04)
-        }
-    }
-
-    receive() external payable override {
-        if (rejectReceive) {
-            revert("rejectReceive");
-        }
-    }
 
     function setUp() public override {
         super.setUp();
@@ -86,15 +55,9 @@ contract GenericAdapterTest is BaseOrderTest {
         }
     }
 
-    function testReceive() public {
-        test(
-            this.execReceive,
-            Context({consideration: consideration, flashloanOfferer: testFlashloanOfferer, isReference: false})
-        );
-        test(
-            this.execReceive,
-            Context({consideration: consideration, flashloanOfferer: testFlashloanOffererReference, isReference: true})
-        );
+    function testFlashloanOffererReceive() public {
+        test(this.execReceive, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execReceive, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
     }
 
     function execReceive(Context memory context) external stateless {
@@ -105,5 +68,25 @@ contract GenericAdapterTest is BaseOrderTest {
         testERC1155.mint(address(context.flashloanOfferer), 1, 1);
         testERC721.mint(address(this), 2);
         testERC721.safeTransferFrom(address(this), address(context.flashloanOfferer), 2);
+    }
+
+    function testSupportsInterface() public {
+        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+    }
+
+    function execSupportsInterface(Context memory context) external stateless {
+        assertEq(context.flashloanOfferer.supportsInterface(type(ContractOffererInterface).interfaceId), true);
+    }
+
+    function testGetSeaportMetadata() public {
+        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+    }
+
+    function execGetSeaportMetadata(Context memory context) external stateless {
+        (string memory name, Schema[] memory schemas) = context.flashloanOfferer.getSeaportMetadata();
+        assertEq(name, "FlashloanOfferer");
+        assertEq(schemas.length, 0);
     }
 }
