@@ -45,14 +45,20 @@ contract FlashloanOfferer is ContractOffererInterface {
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
     function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
-        return this.onERC721Received.selector;
+        assembly {
+            mstore(0, 0x150b7a02)
+            return(0x1c, 0x20)
+        }
     }
 
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
-        return this.onERC1155Received.selector;
+        assembly {
+            mstore(0, 0xf23a6e61)
+            return(0x1c, 0x20)
+        }
     }
 
     // TODO: Fix.
