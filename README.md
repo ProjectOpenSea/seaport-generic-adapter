@@ -7,7 +7,7 @@ The Seaport Generic Adapter is a work in progress Seaport app that allows users 
 To install dependencies and compile contracts:
 
 ```bash
-git clone --recurse-submodules https://github.com/ProjectOpenSea/seaport-generic-adapter && cd seaport-generic-adapter
+git clone --recurse-submodules https://github.com/ProjectOpenSea/seaport-generic-adapter && cd seaport-generic-adapter && forge build
 ```
 
 ## Usage
