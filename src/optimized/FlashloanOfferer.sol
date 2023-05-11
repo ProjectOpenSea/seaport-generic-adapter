@@ -61,11 +61,6 @@ contract FlashloanOfferer is ContractOffererInterface {
         }
     }
 
-    // TODO: Fix.
-    function cleanup(address) external payable returns (bytes4) {
-        return this.cleanup.selector;
-    }
-
     /**
      * @dev Generates an order with the specified minimum and maximum spent
      *      items, and optional context (supplied as extraData).

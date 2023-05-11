@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+
 import {GenericAdapterInterface} from "../src/optimized/GenericAdapterInterface.sol";
 
 import {FlashloanOffererInterface} from "../src/optimized/FlashloanOffererInterface.sol";
@@ -15,11 +17,8 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
-
 contract GenericAdapterTest is BaseOrderTest {
     struct Context {
-        ConsiderationInterface consideration;
         FlashloanOffererInterface flashloanOfferer;
         bool isReference;
     }
@@ -55,14 +54,8 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testFlashloanOffererReceive() public {
-        test(
-            this.execReceive,
-            Context({consideration: consideration, flashloanOfferer: testFlashloanOfferer, isReference: false})
-        );
-        test(
-            this.execReceive,
-            Context({consideration: consideration, flashloanOfferer: testFlashloanOffererReference, isReference: true})
-        );
+        test(this.execReceive, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execReceive, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
     }
 
     function execReceive(Context memory context) external stateless {
@@ -73,5 +66,14 @@ contract GenericAdapterTest is BaseOrderTest {
         testERC1155.mint(address(context.flashloanOfferer), 1, 1);
         testERC721.mint(address(this), 2);
         testERC721.safeTransferFrom(address(this), address(context.flashloanOfferer), 2);
+    }
+
+    function testSupportsInterface() public {
+        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+    }
+
+    function execSupportsInterface(Context memory context) external stateless {
+        assertEq(context.flashloanOfferer.supportsInterface(type(ContractOffererInterface).interfaceId), true);
     }
 }

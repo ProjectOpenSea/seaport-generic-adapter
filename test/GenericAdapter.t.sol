@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+
 import {GenericAdapterInterface} from "../src/optimized/GenericAdapterInterface.sol";
 
 import {FlashloanOffererInterface} from "../src/optimized/FlashloanOffererInterface.sol";
@@ -15,11 +17,8 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
-
 contract GenericAdapterTest is BaseOrderTest {
     struct Context {
-        ConsiderationInterface consideration;
         GenericAdapterInterface adapter;
         bool isReference;
     }
@@ -76,10 +75,8 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testReceive() public {
-        test(this.execReceive, Context({consideration: consideration, adapter: testAdapter, isReference: false}));
-        test(
-            this.execReceive, Context({consideration: consideration, adapter: testAdapterReference, isReference: true})
-        );
+        test(this.execReceive, Context({adapter: testAdapter, isReference: false}));
+        test(this.execReceive, Context({adapter: testAdapterReference, isReference: true}));
     }
 
     function execReceive(Context memory context) external stateless {
@@ -90,5 +87,14 @@ contract GenericAdapterTest is BaseOrderTest {
         testERC1155.mint(address(context.adapter), 1, 1);
         testERC721.mint(address(this), 1);
         testERC721.safeTransferFrom(address(this), address(context.adapter), 1);
+    }
+
+    function testSupportsInterface() public {
+        test(this.execSupportsInterface, Context({adapter: testAdapter, isReference: false}));
+        test(this.execSupportsInterface, Context({adapter: testAdapterReference, isReference: true}));
+    }
+
+    function execSupportsInterface(Context memory context) external stateless {
+        assertEq(context.adapter.supportsInterface(type(ContractOffererInterface).interfaceId), true);
     }
 }

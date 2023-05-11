@@ -7,6 +7,12 @@ import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
+// Right now this is just here to allow `this.cleanup.selector` to be used
+// below. Think about inheriting an interface or something.
+interface Cleanup {
+    function cleanup(address recipient) external payable returns (bytes4);
+}
+
 /**
  * @title ReferenceFlashloanOfferer
  * @author 0age
@@ -23,6 +29,8 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     address private immutable _SEAPORT;
 
     mapping(address => uint256) public balanceOf;
+
+    Cleanup cleanupInterface;
 
     error InvalidCaller(address caller);
     error InvalidTotalMaximumSpentItems();
@@ -54,11 +62,6 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
      */
     function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
         return this.onERC1155Received.selector;
-    }
-
-    // TODO: Fix.
-    function cleanup(address) external payable returns (bytes4) {
-        return this.cleanup.selector;
     }
 
     /**
@@ -246,7 +249,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                     recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
 
                 // TODO: Fix `this.cleanup.selector`.
-                if (success == false || bytes4(returnData) != this.cleanup.selector) {
+                if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
                     revert CallFailed();
                 }
             }
