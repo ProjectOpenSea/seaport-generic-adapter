@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {Call, GenericAdapterSidecarInterface} from "../src/optimized/GenericAdapterSidecarInterface.sol";
+import {Call, GenericAdapterSidecarInterface} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import {GenericAdapterSidecar} from "../src/optimized/GenericAdapterSidecar.sol";
 

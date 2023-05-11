@@ -3,9 +3,9 @@ pragma solidity ^0.8.17;
 
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {GenericAdapterInterface} from "../src/optimized/GenericAdapterInterface.sol";
+import {GenericAdapterInterface} from "../src/interfaces/GenericAdapterInterface.sol";
 
-import {FlashloanOffererInterface} from "../src/optimized/FlashloanOffererInterface.sol";
+import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInterface.sol";
 
 import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
 
@@ -16,6 +16,8 @@ import {TestERC721} from "../src/contracts/test/TestERC721.sol";
 import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
+
+import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
 contract GenericAdapterTest is BaseOrderTest {
     struct Context {
@@ -75,5 +77,16 @@ contract GenericAdapterTest is BaseOrderTest {
 
     function execSupportsInterface(Context memory context) external stateless {
         assertEq(context.flashloanOfferer.supportsInterface(type(ContractOffererInterface).interfaceId), true);
+    }
+
+    function testGetSeaportMetadata() public {
+        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
+        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+    }
+
+    function execGetSeaportMetadata(Context memory context) external stateless {
+        (string memory name, Schema[] memory schemas) = context.flashloanOfferer.getSeaportMetadata();
+        assertEq(name, "FlashloanOfferer");
+        assertEq(schemas.length, 0);
     }
 }
