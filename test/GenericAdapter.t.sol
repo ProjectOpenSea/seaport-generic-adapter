@@ -145,9 +145,22 @@ contract GenericAdapterTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidCaller.selector, address(this)));
         context.adapter.cleanup(address(this));
 
-        // TODO: look into why the optimized version reverts tersely and whether
-        // it's expected.
-        // vm.prank(address(context.flashloanOfferer));
-        // context.adapter.cleanup(address(this));
+        // This is a no-op, but should not revert.
+        vm.prank(address(context.flashloanOfferer));
+        context.adapter.cleanup(address(this));
+
+        (bool success,) = address(context.adapter).call{value: 1 ether}("");
+        require(success);
+        assertEq(address(context.adapter).balance, 1 ether);
+
+        address arbitrary = address(0xdeafbeef);
+
+        assertEq(arbitrary.balance, 0 ether);
+
+        vm.prank(address(context.flashloanOfferer));
+        context.adapter.cleanup(arbitrary);
+
+        assertEq(arbitrary.balance, 1 ether);
+        assertEq(address(context.adapter).balance, 0 ether);
     }
 }

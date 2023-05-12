@@ -290,7 +290,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
 
             mstore(0, 0xfbacefce) // cleanup(address) selector
-            return(0x1c, 0x04)
+            return(0x1c, 0x20)
         }
     }
 
