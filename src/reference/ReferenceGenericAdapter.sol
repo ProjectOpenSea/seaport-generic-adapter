@@ -11,6 +11,8 @@ import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
 import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title ReferenceGenericAdapter
  * @author 0age
@@ -82,10 +84,16 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
     ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
-        // Get the length of the context array from calldata (masked).
-        uint256 contextLength = uint256(bytes32(context[24:32]));
+        // The block below expects to be able to check indexes up to 32 of
+        // context. So, if context is empty, revert early with a descriptive
+        // error.
+        if (context.length < 32) {
+            revert InvalidExtraDataEncoding(0);
+        }
 
+        uint256 contextLength;
         uint256 approvalDataSize;
+
         {
             // Check is that caller is Seaport.
             if (msg.sender != _SEAPORT) {
@@ -102,8 +110,11 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
             // Each approval block is 21 bytes long.
             approvalDataSize = approvalCount * 21;
 
+            // Get the length of the context array from calldata.
+            contextLength = uint256(bytes32(context[24:32]));
+
             // Check that the context length is acceptable.
-            if (contextLength < 2 + approvalDataSize) {
+            if (contextLength < (2 + approvalDataSize)) {
                 // If it's not, revert.
                 revert InvalidExtraDataEncoding(uint8(context[0]));
             }

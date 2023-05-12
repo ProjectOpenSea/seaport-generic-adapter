@@ -149,18 +149,83 @@ contract GenericAdapterTest is BaseOrderTest {
         vm.prank(address(context.flashloanOfferer));
         context.adapter.cleanup(address(this));
 
+        // Send the adapter some native tokens.
         (bool success,) = address(context.adapter).call{value: 1 ether}("");
         require(success);
         assertEq(address(context.adapter).balance, 1 ether);
 
+        // Sweep the native tokens to an arbitrary address.
         address arbitrary = address(0xdeafbeef);
-
         assertEq(arbitrary.balance, 0 ether);
-
         vm.prank(address(context.flashloanOfferer));
         context.adapter.cleanup(arbitrary);
 
+        // The native tokens should have been swept.
         assertEq(arbitrary.balance, 1 ether);
         assertEq(address(context.adapter).balance, 0 ether);
+    }
+
+    function testGenerateOrderReverts() public {
+        test(
+            this.execGenerateOrderReverts,
+            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+        );
+        test(
+            this.execGenerateOrderReverts,
+            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+        );
+    }
+
+    function execGenerateOrderReverts(Context memory context) external stateless {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidExtraDataEncoding.selector,
+                0
+            )
+        );
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            ""
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidCaller.selector,
+                address(this)
+            )
+        );
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            bytes(
+                "00OfferItem(uint8 itemType,address token, uint256 identifierOrCriteria, uint256 startAmount, uint256 endAmount"
+            )
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.UnsupportedExtraDataVersion.selector,
+                255
+            )
+        );
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
+        );
+
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(0), bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
+        );
     }
 }

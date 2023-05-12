@@ -86,19 +86,22 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
     ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
-        // Get the length of the context array from calldata (masked).
-        uint256 contextLength;
-        assembly {
-            contextLength := and(calldataload(context.offset), 0xfffffff)
+        // The block below expects to be able to check index 0 of context. So,
+        // if context is empty, revert early with a descriptive error.
+        if (context.length == 0) {
+            revert InvalidExtraDataEncoding(0);
         }
 
+        // Get the length of the context array from calldata (masked).
+        uint256 contextLength;
         uint256 approvalDataSize;
+
         {
             // Declare an error buffer; first check is that caller is Seaport.
-            uint256 errorBuffer = _cast(msg.sender == _SEAPORT);
+            uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
 
             // Next, check for sip-6 version byte.
-            errorBuffer |= errorBuffer ^ (_cast(context[0] == 0x00) << 1);
+            errorBuffer |= errorBuffer ^ (_cast(context[0] != 0x00) << 1);
 
             // Retrieve the target and the number of approvals to perform.
             assembly {
@@ -106,9 +109,13 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                 approvalDataSize := mul(totalApprovals, 21)
             }
 
+            assembly {
+                contextLength := and(calldataload(context.offset), 0xfffffff)
+            }
+
             // Next, check for sufficient context length.
             unchecked {
-                errorBuffer |= errorBuffer ^ (_cast(contextLength < 2 + approvalDataSize) << 2);
+                errorBuffer |= errorBuffer ^ (_cast(contextLength < (2 + approvalDataSize)) << 2);
             }
 
             // Handle decoding errors.
