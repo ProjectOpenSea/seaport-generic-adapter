@@ -11,8 +11,6 @@ import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
 import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title ReferenceGenericAdapter
  * @author 0age
@@ -87,7 +85,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         // The block below expects to be able to check indexes up to 32 of
         // context. So, if context is empty, revert early with a descriptive
         // error.
-        if (context.length < 32) {
+        if (context.length < 35) {
             revert InvalidExtraDataEncoding(0);
         }
 
@@ -106,12 +104,12 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
 
             // Retrieve the number of approvals.
-            uint256 approvalCount = uint256(bytes32(context[34 - 8:34]));
+            uint256 approvalCount = uint256(bytes32(context[32:33])) >> 248;
             // Each approval block is 21 bytes long.
             approvalDataSize = approvalCount * 21;
 
             // Get the length of the context array from calldata.
-            contextLength = uint256(bytes32(context[24:32]));
+            contextLength = uint256(bytes32(context[28:32])) >> 224;
 
             // Check that the context length is acceptable.
             if (contextLength < (2 + approvalDataSize)) {

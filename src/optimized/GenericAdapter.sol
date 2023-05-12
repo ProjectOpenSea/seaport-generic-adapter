@@ -95,6 +95,14 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         // Get the length of the context array from calldata (masked).
         uint256 contextLength;
         uint256 approvalDataSize;
+        uint256 totalApprovals;
+
+        // context is 1 bytes of SIP-6 version, [ empty bytes?], 4 bytes of size,
+        // 1 byte of total approval count, and 21 bytes per approval (1 byte for
+        // type, 20 bytes for token).
+
+        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
+        // 0xvveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeellllllll
 
         {
             // Declare an error buffer; first check is that caller is Seaport.
@@ -105,17 +113,17 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
 
             // Retrieve the target and the number of approvals to perform.
             assembly {
-                let totalApprovals := and(0xff, calldataload(add(context.offset, 2)))
+                totalApprovals := and(0xff, calldataload(add(context.offset, 1)))
                 approvalDataSize := mul(totalApprovals, 21)
             }
 
             assembly {
-                contextLength := and(calldataload(context.offset), 0xfffffff)
+                contextLength := and(0xffffffff, calldataload(context.offset))
             }
 
             // Next, check for sufficient context length.
             unchecked {
-                errorBuffer |= errorBuffer ^ (_cast(contextLength < (2 + approvalDataSize)) << 2);
+                errorBuffer |= errorBuffer ^ (_cast(contextLength < (33 + approvalDataSize)) << 2);
             }
 
             // Handle decoding errors.
@@ -140,6 +148,10 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         {
             // Read the approval target from runtime code and place on stack.
             address approvalTarget = _SEAPORT;
+            uint256 approvalType;
+            address approvalToken;
+            bool success;
+
             assembly {
                 // Get the free memory pointer.
                 let freeMemoryPointer := mload(0x40)
@@ -159,8 +171,9 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     // Attempt to process each approval. This only needs to be
                     // done once per token. The approval type is even for ERC20
                     // or odd for ERC721 / 1155 and is converted to 0 or 1.
-                    let approvalType := and(0x01, calldataload(sub(approvalDataOffset, 32)))
-                    let approvalToken := shr(96, calldataload(approvalDataOffset))
+                    approvalType := and(0x01, calldataload(approvalDataOffset))
+                    // 96 = (32 x 8) - (20 x 8)
+                    approvalToken := shr(96, calldataload(add(approvalDataOffset, 1)))
                     let approvalValue := sub(approvalType, iszero(approvalType))
                     let selector := add(mul(0x095ea7b3, iszero(approvalType)), mul(0xa22cb465, approvalType))
 
@@ -168,9 +181,12 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     mstore(0, selector)
                     mstore(0x40, approvalValue)
 
+                    // Declare a variable indicating whether the call was successful or not.
+                    success := call(gas(), approvalToken, 0, 0x1c, 0x44, 0, 0)
+
                     // Fire off call to token. Revert & bubble up revert data if
                     // present & reasonably-sized or revert with a custom error.
-                    if iszero(call(gas(), approvalToken, 0, 0x1c, 0x44, 0, 0)) {
+                    if iszero(success) {
                         if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
                             returndatacopy(0, 0, returndatasize())
                             revert(0, returndatasize())

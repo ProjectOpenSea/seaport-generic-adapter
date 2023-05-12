@@ -11,6 +11,8 @@ import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
 
 import {ReferenceGenericAdapter} from "../src/reference/ReferenceGenericAdapter.sol";
 
+import {TestERC20Revert} from "../src/contracts/test/TestERC20Revert.sol";
+
 import {TestERC721} from "../src/contracts/test/TestERC721.sol";
 
 import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
@@ -177,55 +179,82 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function execGenerateOrderReverts(Context memory context) external stateless {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                GenericAdapterInterface.InvalidExtraDataEncoding.selector,
-                0
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
+        context.adapter.generateOrder(address(this), new SpentItem[](0), new SpentItem[](0), "");
+
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidCaller.selector, address(this)));
         context.adapter.generateOrder(
-            address(this),
-            new SpentItem[](0),
-            new SpentItem[](0),
-            ""
+            address(this), new SpentItem[](0), new SpentItem[](0), abi.encodePacked(bytes32(0), bytes32(0))
         );
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                GenericAdapterInterface.InvalidCaller.selector,
-                address(this)
-            )
-        );
-        context.adapter.generateOrder(
-            address(this),
-            new SpentItem[](0),
-            new SpentItem[](0),
-            bytes(
-                "00OfferItem(uint8 itemType,address token, uint256 identifierOrCriteria, uint256 startAmount, uint256 endAmount"
-            )
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                GenericAdapterInterface.UnsupportedExtraDataVersion.selector,
-                255
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.UnsupportedExtraDataVersion.selector, 0xff));
         vm.prank(address(consideration));
         context.adapter.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](0),
-            abi.encodePacked(bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
+            abi.encodePacked(bytes32(0xff00000000000000000000000000000000000000000000000000000000000000), bytes32(0))
         );
 
         vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
         vm.prank(address(consideration));
         context.adapter.generateOrder(
+            address(this), new SpentItem[](0), new SpentItem[](0), abi.encodePacked(bytes32(0), bytes32(0))
+        );
+
+        TestERC20Revert testERC20Revert = new TestERC20Revert();
+
+        address erc20Address = address(testERC20Revert);
+        uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
+        uint256 secondWord;
+
+        assembly {
+            secondWord := or(shl(248, 0x01), erc20AddressShifted)
+        }
+
+        // Second word is something like this:
+        // 0x01002a07706473244bc757e10f2a9e86fb532828afe300000000000000000000
+        // The first byte is number of approvals (one), second is approval type
+        // (0 for erc20), next 20 are addy, finalbytes are not used.
+
+        if (context.isReference) {
+            vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
+        } else {
+            vm.expectRevert(abi.encodeWithSignature("AlwaysRevert()"));
+        }
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](0),
-            abi.encodePacked(bytes32(0), bytes32(0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff))
+            abi.encodePacked(
+                // First byte is encoding. Last 4 are context length. 1s are
+                // just disregarded, it seems.
+                bytes32(0x0011111111111111111111111111111111111111111111111111111100000036),
+                // First byte is the number of approvals, second is approval
+                // type, next 20 are addy.
+                bytes32(secondWord)
+            )
         );
+
+        // TODO: Figure out why the optimized version isn't falling back on its
+        // own revert when the token's revert is enormous.
+        // address(testERC20Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
+        // vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
+
+        // vm.prank(address(consideration));
+        // context.adapter.generateOrder(
+        //     address(this),
+        //     new SpentItem[](0),
+        //     new SpentItem[](0),
+        //     abi.encodePacked(
+        //         // First byte is encoding. Last 4 are context length. 1s are
+        //         // just disregarded, it seems.
+        //         bytes32(0x0011111111111111111111111111111111111111111111111111111100000036),
+        //         // First byte is the number of approvals, second is approval
+        //         // type, next 20 are addy.
+        //         bytes32(secondWord)
+        //     )
+        // );
     }
 }
