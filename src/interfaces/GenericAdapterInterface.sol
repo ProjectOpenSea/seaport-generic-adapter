@@ -12,6 +12,8 @@ interface GenericAdapterInterface is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
+    // // 0x2e3f1f34
+    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96

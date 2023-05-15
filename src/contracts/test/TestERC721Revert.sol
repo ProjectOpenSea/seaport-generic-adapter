@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: Unlicense
+pragma solidity ^0.8.0;
 
-import {ERC20} from "@rari-capital/solmate/src/tokens/ERC20.sol";
+import {TestERC721} from "./TestERC721.sol";
 
-contract TestERC20Revert is ERC20("TestRevert", "REVERT", 18) {
+contract TestERC721Revert is TestERC721 {
     error AlwaysRevert();
 
     bool revertSpectacularly;
@@ -12,17 +12,7 @@ contract TestERC20Revert is ERC20("TestRevert", "REVERT", 18) {
         revertSpectacularly = _revertSpectacularly;
     }
 
-    function mint(address to, uint256 amount) external {
-        _mint(to, amount);
-    }
-
-    function transferFrom(
-        address,
-        /* from */
-        address,
-        /* to */
-        uint256 /* amount */
-    ) public view override returns (bool) {
+    function transferFrom(address, address, uint256) public view override {
         if (revertSpectacularly) {
             bytes memory a = new bytes(0x10000);
             for (uint256 i; i < a.length; ++i) {
@@ -34,11 +24,7 @@ contract TestERC20Revert is ERC20("TestRevert", "REVERT", 18) {
         }
     }
 
-    function approve(
-        address,
-        /* spender */
-        uint256 /* amount */
-    ) public view override returns (bool) {
+    function setApprovalForAll(address, bool) public view override {
         if (revertSpectacularly) {
             bytes memory a = new bytes(0x10000);
             for (uint256 i; i < a.length; ++i) {

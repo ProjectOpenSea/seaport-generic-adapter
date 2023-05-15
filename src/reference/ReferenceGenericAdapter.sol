@@ -31,6 +31,8 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
+    // // 0x2e3f1f34
+    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
@@ -215,15 +217,17 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
 
         // Call sidecar, performing generic execution consuming supplied items.
         {
-            uint256 payloadSize = contextLength - (2 + approvalDataSize);
+            uint256 payloadSize = contextLength - (33 + approvalDataSize);
             bytes calldata payload = context[approvalDataEnds:approvalDataEnds + payloadSize];
 
-            // Call the sidecar with the supplied payload.
-            (bool success,) = target.call{value: 0}(abi.encodeWithSignature("execute(Calls[])", payload));
+            if (payloadSize != 0) {
+                // Call the sidecar with the supplied payload.
+                (bool success,) = target.call{value: 0}(abi.encodeWithSignature("execute(Calls[])", payload));
 
-            // Revert if the call failed.
-            if (!success) {
-                revert CallFailed();
+                // Revert if the call failed.
+                if (!success) {
+                    revert CallFailed();
+                }
             }
         }
 

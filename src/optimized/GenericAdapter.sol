@@ -11,6 +11,8 @@ import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
 import {GenericAdapterSidecar} from "./GenericAdapterSidecar.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title GenericAdapter
  * @author 0age
@@ -31,6 +33,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
+    // // 0x2e3f1f34
+    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
@@ -101,9 +105,6 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         // 1 byte of total approval count, and 21 bytes per approval (1 byte for
         // type, 20 bytes for token).
 
-        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeffffffff
-        // 0xvveeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeellllllll
-
         {
             // Declare an error buffer; first check is that caller is Seaport.
             uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
@@ -171,7 +172,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     // Attempt to process each approval. This only needs to be
                     // done once per token. The approval type is even for ERC20
                     // or odd for ERC721 / 1155 and is converted to 0 or 1.
-                    approvalType := and(0x01, calldataload(approvalDataOffset))
+                    approvalType := and(0x01, calldataload(sub(approvalDataOffset, 31)))
                     // 96 = (32 x 8) - (20 x 8)
                     approvalToken := shr(96, calldataload(add(approvalDataOffset, 1)))
                     let approvalValue := sub(approvalType, iszero(approvalType))
@@ -245,29 +246,35 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                 // Get the free memory pointer.
                 let freeMemoryPointer := mload(0x40)
 
-                // Get the size of the payload.
-                let payloadSize := sub(contextLength, add(2, approvalDataSize))
+                // Get the size of the payload. 33 = one word of memory (for
+                // SIP encoding and context length) + 1 byte for number of
+                // approvals. approvalDataSize = number of approvals * 21.
+                // Everything else is the payload.
+                let payloadSize := sub(contextLength, add(33, approvalDataSize))
 
-                // Write the execute(Calls[]) selector. Note this as well as the
-                // single offset can be removed on both ends as an optimization.
-                mstore(freeMemoryPointer, 0xb252b6e5)
+                // TODO: think more about validation and safety.
+                if payloadSize {
+                    // Write the execute(Calls[]) selector. Note this as well as the
+                    // single offset can be removed on both ends as an optimization.
+                    mstore(freeMemoryPointer, 0xb252b6e5)
 
-                // Copy payload into memory after selector.
-                calldatacopy(add(freeMemoryPointer, 0x20), approvalDataEnds, payloadSize)
+                    // Copy payload into memory after selector.
+                    calldatacopy(add(freeMemoryPointer, 0x20), approvalDataEnds, payloadSize)
 
-                // Fire off call to target. Revert and bubble up revert data if
-                // present & reasonably-sized, else revert with a custom error.
-                // Note that checking for sufficient native token balance is an
-                // option here if more specific custom reverts are preferred.
-                if iszero(call(gas(), target, value, add(freeMemoryPointer, 0x1c), add(payloadSize, 0x04), 0, 0)) {
-                    if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
-                        returndatacopy(0, 0, returndatasize())
-                        revert(0, returndatasize())
+                    // Fire off call to target. Revert and bubble up revert data if
+                    // present & reasonably-sized, else revert with a custom error.
+                    // Note that checking for sufficient native token balance is an
+                    // option here if more specific custom reverts are preferred.
+                    if iszero(call(gas(), target, value, add(freeMemoryPointer, 0x1c), add(payloadSize, 0x04), 0, 0)) {
+                        if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                            returndatacopy(0, 0, returndatasize())
+                            revert(0, returndatasize())
+                        }
+
+                        // CallFailed()
+                        mstore(0, 0x3204506f)
+                        revert(0x1c, 0x04)
                     }
-
-                    // CallFailed()
-                    mstore(0, 0x3204506f)
-                    revert(0x1c, 0x04)
                 }
             }
         }

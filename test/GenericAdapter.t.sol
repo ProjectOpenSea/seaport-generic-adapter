@@ -3,6 +3,12 @@ pragma solidity ^0.8.17;
 
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
+import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+
+import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+
+import {SpentItemLib} from "seaport-sol/lib/SpentItemLib.sol";
+
 import {GenericAdapterInterface} from "../src/interfaces/GenericAdapterInterface.sol";
 
 import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInterface.sol";
@@ -11,7 +17,13 @@ import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
 
 import {ReferenceGenericAdapter} from "../src/reference/ReferenceGenericAdapter.sol";
 
+import {TestERC20} from "../src/contracts/test/TestERC20.sol";
+
 import {TestERC20Revert} from "../src/contracts/test/TestERC20Revert.sol";
+
+import {TestERC721} from "../src/contracts/test/TestERC721.sol";
+
+import {TestERC721Revert} from "../src/contracts/test/TestERC721Revert.sol";
 
 import {TestERC721} from "../src/contracts/test/TestERC721.sol";
 
@@ -19,9 +31,10 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
-
 contract GenericAdapterTest is BaseOrderTest {
+    using SpentItemLib for SpentItem;
+    using SpentItemLib for SpentItem[];
+
     struct Context {
         GenericAdapterInterface adapter;
         FlashloanOffererInterface flashloanOfferer;
@@ -167,18 +180,18 @@ contract GenericAdapterTest is BaseOrderTest {
         assertEq(address(context.adapter).balance, 0 ether);
     }
 
-    function testGenerateOrderReverts() public {
+    function testGenerateOrderThresholdReverts() public {
         test(
-            this.execGenerateOrderReverts,
+            this.execGenerateOrderThresholdReverts,
             Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
         );
         test(
-            this.execGenerateOrderReverts,
+            this.execGenerateOrderThresholdReverts,
             Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
         );
     }
 
-    function execGenerateOrderReverts(Context memory context) external stateless {
+    function execGenerateOrderThresholdReverts(Context memory context) external stateless {
         vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
         context.adapter.generateOrder(address(this), new SpentItem[](0), new SpentItem[](0), "");
 
@@ -204,6 +217,7 @@ contract GenericAdapterTest is BaseOrderTest {
 
         TestERC20Revert testERC20Revert = new TestERC20Revert();
 
+        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000036;
         address erc20Address = address(testERC20Revert);
         uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
         uint256 secondWord;
@@ -230,31 +244,200 @@ contract GenericAdapterTest is BaseOrderTest {
             abi.encodePacked(
                 // First byte is encoding. Last 4 are context length. 1s are
                 // just disregarded, it seems.
-                bytes32(0x0011111111111111111111111111111111111111111111111111111100000036),
+                bytes32(firstWord),
                 // First byte is the number of approvals, second is approval
                 // type, next 20 are addy.
                 bytes32(secondWord)
             )
         );
 
-        // TODO: Figure out why the optimized version isn't falling back on its
-        // own revert when the token's revert is enormous.
-        // address(testERC20Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
-        // vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
+        (bool avoidWarning, bytes memory data) =
+            address(testERC20Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
+        if (!avoidWarning || data.length != 0) {
+            revert("Just trying to make the compiler happy");
+        }
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
 
-        // vm.prank(address(consideration));
-        // context.adapter.generateOrder(
-        //     address(this),
-        //     new SpentItem[](0),
-        //     new SpentItem[](0),
-        //     abi.encodePacked(
-        //         // First byte is encoding. Last 4 are context length. 1s are
-        //         // just disregarded, it seems.
-        //         bytes32(0x0011111111111111111111111111111111111111111111111111111100000036),
-        //         // First byte is the number of approvals, second is approval
-        //         // type, next 20 are addy.
-        //         bytes32(secondWord)
-        //     )
-        // );
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
+        );
+
+        TestERC721Revert testERC721Revert = new TestERC721Revert();
+
+        address erc721Address = address(testERC721Revert);
+        secondWord = uint256(uint160(erc721Address)) << 80;
+
+        assembly {
+            // Set the number of approvals.
+            secondWord := or(shl(248, 0x01), secondWord)
+            // Set the approval type.
+            secondWord := or(shl(240, 0x01), secondWord)
+        }
+
+        if (context.isReference) {
+            vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc721Address));
+        } else {
+            vm.expectRevert(abi.encodeWithSignature("AlwaysRevert()"));
+        }
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
+        );
+
+        (avoidWarning, data) =
+            address(testERC721Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
+
+        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc721Address));
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
+        );
+    }
+
+    function testApprovals() public {
+        test(
+            this.execApprovals,
+            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+        );
+        test(
+            this.execApprovals,
+            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+        );
+    }
+
+    function execApprovals(Context memory context) external stateless {
+        TestERC20 testERC20 = new TestERC20();
+        TestERC721 testERC721 = new TestERC721();
+
+        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000036;
+        address erc20Address = address(testERC20);
+        uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
+        uint256 secondWord;
+
+        assembly {
+            secondWord := or(shl(248, 0x01), erc20AddressShifted)
+        }
+
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
+        );
+
+        assertEq(testERC20.allowance(address(context.adapter), address(consideration)), type(uint256).max);
+
+        address erc721Address = address(testERC721);
+        secondWord = uint256(uint160(erc721Address)) << 80;
+
+        assembly {
+            secondWord := or(shl(248, 0x01), secondWord)
+            secondWord := or(shl(240, 0x01), secondWord)
+        }
+
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
+        );
+
+        assertTrue(testERC721.isApprovedForAll(address(context.adapter), address(consideration)));
+    }
+
+    function testTransfersToSideCar() public {
+        test(
+            this.execTransfersToSideCar,
+            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+        );
+        test(
+            this.execTransfersToSideCar,
+            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+        );
+    }
+
+    function execTransfersToSideCar(Context memory context) external stateless {
+        // TODO: add native.
+        TestERC20 testERC20 = new TestERC20();
+        TestERC721 testERC721 = new TestERC721();
+        TestERC1155 testERC1155 = new TestERC1155();
+
+        SpentItem[] memory spentItems = new SpentItem[](3);
+
+        SpentItem memory spentItemERC20 = SpentItem(ItemType.ERC20, address(testERC20), 0, 1);
+        SpentItem memory spentItemERC721 = SpentItem(ItemType.ERC721, address(testERC721), 1, 1);
+        SpentItem memory spentItemERC1155 = SpentItem(ItemType.ERC1155, address(testERC1155), 2, 1);
+
+        spentItems[0] = spentItemERC20;
+        spentItems[1] = spentItemERC721;
+        spentItems[2] = spentItemERC1155;
+
+        // TODO: Update the size once the approvals and Calls are added.
+        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000060;
+        uint256 secondWord;
+        uint256 thirdWord;
+
+        // Add the ERC20 address to the second word.
+        address erc20Address = address(testERC20);
+        uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
+
+        address erc721Address = address(testERC721);
+        address erc1155Address = address(testERC1155);
+
+        assembly {
+            // Insert the number of approvals into the second word. Becomes:
+            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
+            secondWord := or(shl(248, 0x03), erc20AddressShifted)
+            // Insert the approval type for the second item into the second word
+            // Becomes:
+            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
+            secondWord := or(shl(72, 0x01), secondWord)
+            // Insert the first 9 bytes of the ERC721 address into the second
+            // word.  Becomes:
+            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
+            secondWord := or(shr(88, erc721Address), secondWord)
+
+            // Insert the remaining 11 bytes of the ERC721 address into the third
+            // word. Becomes:
+            // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
+            thirdWord := shl(168, erc721Address)
+            // Insert the approval type for the third item into the third word.
+            // Becomes:
+            // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
+            thirdWord := or(shl(160, 0x01), thirdWord)
+            // Insert the ERC1155 address into the third word. Becomes:
+            // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
+            thirdWord := or(erc1155Address, thirdWord)
+        }
+
+        emit log_named_bytes32("firstWord ", bytes32(firstWord));
+        emit log_named_bytes32("secondWord", bytes32(secondWord));
+        emit log_named_bytes32("thirdWord ", bytes32(thirdWord));
+
+        if (context.isReference) {
+            emit log_named_address("reference", address(context.adapter));
+        } else {
+            emit log_named_address("optimized", address(context.adapter));
+        }
+
+        // TODO: set approvals.
+        // TODO: add calls.
+
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(
+            address(this), new SpentItem[](0), spentItems, abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord))
+        );
     }
 }
