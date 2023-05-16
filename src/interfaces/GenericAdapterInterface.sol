@@ -20,7 +20,7 @@ interface GenericAdapterInterface is ContractOffererInterface {
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed();
+    event SeaportCompatibleContractDeployed(address);
 
     function generateOrder(
         address fulfiller,

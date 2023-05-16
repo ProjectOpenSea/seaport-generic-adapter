@@ -11,8 +11,6 @@ import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
 import {GenericAdapterSidecar} from "./GenericAdapterSidecar.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title GenericAdapter
  * @author 0age
@@ -41,14 +39,14 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed();
+    event SeaportCompatibleContractDeployed(address);
 
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
         _SIDECAR = address(new GenericAdapterSidecar());
         _FLASHLOAN_OFFERER = flashloanOfferer;
 
-        emit SeaportCompatibleContractDeployed();
+        emit SeaportCompatibleContractDeployed(_SIDECAR);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -254,7 +252,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
 
                 // TODO: think more about validation and safety.
                 if payloadSize {
-                    // Write the execute(Calls[]) selector. Note this as well as the
+                    // Write the execute(Call[]) selector. Note this as well as the
                     // single offset can be removed on both ends as an optimization.
                     mstore(freeMemoryPointer, 0xb252b6e5)
 

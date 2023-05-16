@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import {Vm} from "forge-std/Vm.sol";
+
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
@@ -16,6 +18,8 @@ import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInter
 import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
 
 import {ReferenceGenericAdapter} from "../src/reference/ReferenceGenericAdapter.sol";
+
+import {Call, GenericAdapterSidecarInterface} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import {TestERC20} from "../src/contracts/test/TestERC20.sol";
 
@@ -38,6 +42,7 @@ contract GenericAdapterTest is BaseOrderTest {
     struct Context {
         GenericAdapterInterface adapter;
         FlashloanOffererInterface flashloanOfferer;
+        GenericAdapterSidecarInterface sidecar;
         bool isReference;
     }
 
@@ -45,9 +50,14 @@ contract GenericAdapterTest is BaseOrderTest {
     GenericAdapterInterface testAdapterReference;
     FlashloanOffererInterface testFlashloanOfferer;
     FlashloanOffererInterface testFlashloanOffererReference;
+    GenericAdapterSidecarInterface testSidecar;
+    GenericAdapterSidecarInterface testSidecarReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
     bool rejectReceive;
+    bool erc20CallExecuted;
+    bool erc721CallExecuted;
+    bool erc1155CallExecuted;
 
     receive() external payable override {
         if (rejectReceive) {
@@ -68,6 +78,8 @@ contract GenericAdapterTest is BaseOrderTest {
             )
         );
 
+        vm.recordLogs();
+
         testAdapter = GenericAdapterInterface(
             deployCode(
                 "out/GenericAdapter.sol/GenericAdapter.json",
@@ -80,6 +92,12 @@ contract GenericAdapterTest is BaseOrderTest {
                 abi.encode(address(consideration), address(testFlashloanOffererReference))
             )
         );
+
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+
+        testSidecar = GenericAdapterSidecarInterface(abi.decode(entries[0].data, (address)));
+        testSidecarReference = GenericAdapterSidecarInterface(abi.decode(entries[1].data, (address)));
+
         testERC721 = new TestERC721();
         testERC1155 = new TestERC1155();
     }
@@ -95,11 +113,21 @@ contract GenericAdapterTest is BaseOrderTest {
     function testReceive() public {
         test(
             this.execReceive,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execReceive,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
@@ -116,11 +144,21 @@ contract GenericAdapterTest is BaseOrderTest {
     function testSupportsInterface() public {
         test(
             this.execSupportsInterface,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execSupportsInterface,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
@@ -131,11 +169,21 @@ contract GenericAdapterTest is BaseOrderTest {
     function testGetSeaportMetadata() public {
         test(
             this.execGetSeaportMetadata,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execGetSeaportMetadata,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
@@ -148,11 +196,21 @@ contract GenericAdapterTest is BaseOrderTest {
     function testCleanup() public {
         test(
             this.execCleanup,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execCleanup,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
@@ -183,11 +241,21 @@ contract GenericAdapterTest is BaseOrderTest {
     function testGenerateOrderThresholdReverts() public {
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
@@ -307,17 +375,26 @@ contract GenericAdapterTest is BaseOrderTest {
     function testApprovals() public {
         test(
             this.execApprovals,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execApprovals,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
     function execApprovals(Context memory context) external stateless {
         TestERC20 testERC20 = new TestERC20();
-        TestERC721 testERC721 = new TestERC721();
 
         uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000036;
         address erc20Address = address(testERC20);
@@ -360,32 +437,42 @@ contract GenericAdapterTest is BaseOrderTest {
     function testTransfersToSideCar() public {
         test(
             this.execTransfersToSideCar,
-            Context({adapter: testAdapter, flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
         );
         test(
             this.execTransfersToSideCar,
-            Context({adapter: testAdapterReference, flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
         );
     }
 
     function execTransfersToSideCar(Context memory context) external stateless {
         // TODO: add native.
         TestERC20 testERC20 = new TestERC20();
-        TestERC721 testERC721 = new TestERC721();
-        TestERC1155 testERC1155 = new TestERC1155();
 
         SpentItem[] memory spentItems = new SpentItem[](3);
 
-        SpentItem memory spentItemERC20 = SpentItem(ItemType.ERC20, address(testERC20), 0, 1);
-        SpentItem memory spentItemERC721 = SpentItem(ItemType.ERC721, address(testERC721), 1, 1);
-        SpentItem memory spentItemERC1155 = SpentItem(ItemType.ERC1155, address(testERC1155), 2, 1);
+        {
+            SpentItem memory spentItemERC20 = SpentItem(ItemType.ERC20, address(testERC20), 0, 1);
+            SpentItem memory spentItemERC721 = SpentItem(ItemType.ERC721, address(testERC721), 1, 1);
+            SpentItem memory spentItemERC1155 = SpentItem(ItemType.ERC1155, address(testERC1155), 1, 1);
 
-        spentItems[0] = spentItemERC20;
-        spentItems[1] = spentItemERC721;
-        spentItems[2] = spentItemERC1155;
+            spentItems[0] = spentItemERC20;
+            spentItems[1] = spentItemERC721;
+            spentItems[2] = spentItemERC1155;
+        }
 
-        // TODO: Update the size once the approvals and Calls are added.
-        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000060;
+        // TODO: Update the size once Calls are added.
+        uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000003B6; // ...060 before
         uint256 secondWord;
         uint256 thirdWord;
 
@@ -397,47 +484,111 @@ contract GenericAdapterTest is BaseOrderTest {
         address erc1155Address = address(testERC1155);
 
         assembly {
-            // Insert the number of approvals into the second word. Becomes:
+            // Insert the number of approvals into the second word. Becomes
+            // something like:
             // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
             secondWord := or(shl(248, 0x03), erc20AddressShifted)
             // Insert the approval type for the second item into the second word
-            // Becomes:
+            // Becomes something like:
             // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
             secondWord := or(shl(72, 0x01), secondWord)
             // Insert the first 9 bytes of the ERC721 address into the second
-            // word.  Becomes:
+            // word.  Becomes something like:
             // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
             secondWord := or(shr(88, erc721Address), secondWord)
 
             // Insert the remaining 11 bytes of the ERC721 address into the third
-            // word. Becomes:
+            // word. Becomes something like:
             // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
             thirdWord := shl(168, erc721Address)
             // Insert the approval type for the third item into the third word.
-            // Becomes:
+            // Becomes something like:
             // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
             thirdWord := or(shl(160, 0x01), thirdWord)
-            // Insert the ERC1155 address into the third word. Becomes:
+            // Insert the ERC1155 address into the third word. Becomes something
+            // like:
             // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
             thirdWord := or(erc1155Address, thirdWord)
         }
 
-        emit log_named_bytes32("firstWord ", bytes32(firstWord));
-        emit log_named_bytes32("secondWord", bytes32(secondWord));
-        emit log_named_bytes32("thirdWord ", bytes32(thirdWord));
+        testERC20.approve(address(context.adapter), type(uint256).max);
+        testERC20.mint(address(this), 1);
+        testERC721.setApprovalForAll(address(context.adapter), true);
+        testERC721.mint(address(this), 1);
+        testERC1155.setApprovalForAll(address(context.adapter), true);
+        testERC1155.mint(address(this), 1, 1);
 
-        if (context.isReference) {
-            emit log_named_address("reference", address(context.adapter));
-        } else {
-            emit log_named_address("optimized", address(context.adapter));
+        Call[] memory calls = new Call[](3);
+
+        {
+            Call memory callERC20 = Call(
+                address(this), // TODO: put in some marketplace addy here.
+                true, // TODO: figure out how to get some actually working.
+                0, // TODO: Native and flashloan offerer stuff.
+                abi.encodeWithSelector(this.toggleERC20Call.selector, true)
+            );
+
+            Call memory callERC721 = Call(
+                address(this), // TODO: put in some marketplace addy here.
+                true, // TODO: figure out how to get some actually working.
+                0, // TODO: Native and flashloan offerer stuff.
+                abi.encodeWithSelector(this.toggleERC721Call.selector, true)
+            );
+
+            Call memory callERC1155 = Call(
+                address(this), // TODO: put in some marketplace addy here.
+                true, // TODO: figure out how to get some actually working.
+                0, // TODO: Native and flashloan offerer stuff.
+                abi.encodeWithSelector(this.toggleERC1155Call.selector, true)
+            );
+
+            calls[0] = callERC20;
+            calls[1] = callERC721;
+            calls[2] = callERC1155;
         }
 
-        // TODO: set approvals.
-        // TODO: add calls.
+        bytes memory contextArg;
+
+        {
+            bytes memory contextArgApprovalPortion =
+                abi.encode(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+
+            bytes memory contextArgCalldataPortion = abi.encode(calls);
+
+            contextArg = abi.encodePacked(contextArgApprovalPortion, contextArgCalldataPortion);
+        }
+
+        assertEq(testERC20.balanceOf(address(context.sidecar)), 0, "sidecar should have no ERC20");
+        assertEq(testERC721.ownerOf(1), address(this), "this should own ERC721");
+        assertEq(testERC1155.balanceOf(address(this), 1), 1, "this should own ERC1155");
+
+        assertFalse(erc20CallExecuted, "erc20CallExecuted should be false");
+        assertFalse(erc721CallExecuted, "erc721CallExecuted should be false");
+        assertFalse(erc1155CallExecuted, "erc1155CallExecuted should be false");
 
         vm.prank(address(consideration));
-        context.adapter.generateOrder(
-            address(this), new SpentItem[](0), spentItems, abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord))
-        );
+        context.adapter.generateOrder(address(this), new SpentItem[](0), spentItems, contextArg);
+
+        assertEq(testERC20.balanceOf(address(context.sidecar)), 1, "sidecar should have ERC20");
+        assertEq(testERC721.ownerOf(1), address(context.sidecar), "sidecar should own ERC721");
+        assertEq(testERC1155.balanceOf(address(context.sidecar), 1), 1, "sidecar should own ERC1155");
+
+        assertTrue(erc20CallExecuted, "erc20CallExecuted should be true");
+        assertTrue(erc721CallExecuted, "erc721CallExecuted should be true");
+        assertTrue(erc1155CallExecuted, "erc1155CallExecuted should be true");
+    }
+
+    function toggleERC20Call(bool called) external {
+        erc20CallExecuted = called;
+    }
+
+    function toggleERC721Call(bool called) external {
+        erc721CallExecuted = called;
+    }
+
+    function toggleERC1155Call(bool called) external {
+        erc1155CallExecuted = called;
     }
 }
+
+// TODO: Stub out some marketplace contracts and start making calls to them.

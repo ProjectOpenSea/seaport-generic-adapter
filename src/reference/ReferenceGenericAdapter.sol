@@ -9,7 +9,8 @@ import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationSt
 
 import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
-import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
+import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
+
 
 /**
  * @title ReferenceGenericAdapter
@@ -22,8 +23,10 @@ import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.s
  */
 contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     address private immutable _SEAPORT;
-    address private immutable _SIDECAR;
+    address private immutable _SIDECAR_ADDRESS;
     address private immutable _FLASHLOAN_OFFERER;
+
+    ReferenceGenericAdapterSidecar private immutable _SIDECAR_INSTANCE;
 
     error InvalidCaller(address caller);
     error InvalidFulfiller(address fulfiller);
@@ -39,10 +42,15 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
     error NotImplemented();
 
+    event SeaportCompatibleContractDeployed(address);
+
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
-        _SIDECAR = address(new ReferenceGenericAdapterSidecar());
+        _SIDECAR_INSTANCE = new ReferenceGenericAdapterSidecar();
+        _SIDECAR_ADDRESS = address(_SIDECAR_INSTANCE);
         _FLASHLOAN_OFFERER = flashloanOfferer;
+
+        emit SeaportCompatibleContractDeployed(_SIDECAR_ADDRESS);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -179,7 +187,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         }
 
         // Read the sidecar address from runtime code and place on the stack.
-        address target = _SIDECAR;
+        address target = _SIDECAR_ADDRESS;
 
         // Track cumulative native tokens to be spent.
         uint256 value;
@@ -218,11 +226,27 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         // Call sidecar, performing generic execution consuming supplied items.
         {
             uint256 payloadSize = contextLength - (33 + approvalDataSize);
-            bytes calldata payload = context[approvalDataEnds:approvalDataEnds + payloadSize];
-
             if (payloadSize != 0) {
+                // Construct the payload in such a way that it can be passed in
+                // as calldata to the sidecar.
+
+                // Start by sticking the selector in the first 4 bytes.
+                bytes memory prebuiltPayload = abi.encode(bytes32(uint256(0xb252b6e5) << 224));
+
+                // Iterate over the payload portion of the context arg.
+                for (uint256 i = approvalDataEnds; i < context.length; i++) {
+                    // Fill in the empty space in the prebuilt payload and then
+                    // tack each byte onto the end.
+                    uint256 targetIndex = 4 + (i - approvalDataEnds);
+                    if (targetIndex < prebuiltPayload.length) {
+                        prebuiltPayload[targetIndex] = context[i];
+                    } else {
+                        prebuiltPayload = abi.encodePacked(prebuiltPayload, context[i]);
+                    }
+                }
+
                 // Call the sidecar with the supplied payload.
-                (bool success,) = target.call{value: 0}(abi.encodeWithSignature("execute(Calls[])", payload));
+                (bool success,) = target.call{value: 0}(prebuiltPayload);
 
                 // Revert if the call failed.
                 if (!success) {
