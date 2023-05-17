@@ -625,12 +625,10 @@ contract GenericAdapterTest is BaseOrderTest {
 
         {
             SpentItem memory spentItemNativeOne = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
-            SpentItem memory spentItemNativeTwo = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
-            SpentItem memory spentItemNativeThree = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
 
             spentItems[0] = spentItemNativeOne;
-            spentItems[1] = spentItemNativeTwo;
-            spentItems[2] = spentItemNativeThree;
+            spentItems[1] = spentItemNativeOne;
+            spentItems[2] = spentItemNativeOne;
         }
 
         // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.

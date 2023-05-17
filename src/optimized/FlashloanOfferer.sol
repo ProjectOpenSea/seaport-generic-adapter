@@ -7,6 +7,8 @@ import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title FlashloanOfferer
  * @author 0age
@@ -32,6 +34,11 @@ contract FlashloanOfferer is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     error CallFailed(); // 0x3204506f
     error NotImplemented();
+
+    error MinGreaterThanMax(); // 0xc9b4d6ba
+    error SharedItemTypes(); // 0xc25bddad
+    error UnacceptableTokenPairing(); // 0xdd55e6a8
+    error MismatchedAddresses(); // 0x67306d70
 
     constructor(address seaport) {
         _SEAPORT = seaport;
@@ -80,6 +87,9 @@ contract FlashloanOfferer is ContractOffererInterface {
      *                        provided with amount not less than the sum of all
      *                        flashloaned amounts.
      * @param context         Additional context of the order when flashloaning:
+     *                          - SIP encoding version (1 byte)
+     *                          - 27 empty bytes
+     *                          - context length (4 bytes)
      *                          - cleanupRecipient: arg for cleanup (20 bytes)
      *                          - totalRecipients: flashloans to send (1 byte)
      *                              - amount (11 bytes * totalRecipients)
@@ -119,60 +129,125 @@ contract FlashloanOfferer is ContractOffererInterface {
 
             assembly {
                 // Revert if minimumReceived item amount is greater than
-                // maximumSpent, or if any of the following are not true:
-                //  - one of the item types is 1 and the other is 0
-                //  - one of the tokens is address(this) and the other is null
+                // maximumSpent, or if any of the following is not true:
+                //  - one of the item types is 1 and the other is 0 (so, both item items same, revert)
+                //  - one of the tokens is address(this) and the other is null (so, both same, revert or neither is this, revert) IS THIS REDUNDANT?
                 //  - item type 1 has address(this) token and 0 is null token
-                if or(
+
+                // TODO: look at how expensive it would be to swap these in for readbility.
+                // let minimumReceivedItemType := and(calldataload(minimumReceivedItem), 0xff)
+                // let maximumSpentItemType := and(calldataload(maximumSpentItem), 0xff)
+                // let minimumReceivedToken := calldataload(add(minimumReceivedItem, 0x20))
+                // let maximumSpentToken := calldataload(add(maximumSpentItem, 0x20))
+                // let minimumReceivedAmount := calldataload(add(minimumReceivedItem, 0x60))
+
+                // Ensure that minimumReceived item amount is less than or equal
+                // to maximumSpent.
+                let testErrorBuffer := gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount)
+
+                // Ensure that the items don't share a type.
+                testErrorBuffer :=
                     or(
-                        gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount),
-                        or(
+                        testErrorBuffer,
+                        shl(
+                            1,
+                            // returns 1 if both native or both ERC20. 0 otherwise.
                             iszero(
+                                // returns 1 if one of each. 0 otherwise.
                                 eq(
+                                    // returns 0 if both native. 1 if one of
+                                    // each. 2 if both ERC20.
                                     add(
                                         and(calldataload(minimumReceivedItem), 0xff),
                                         and(calldataload(maximumSpentItem), 0xff)
                                     ),
                                     0x01
                                 )
-                            ),
+                            )
+                        )
+                    )
+
+                // Ensure that at one of the tokens is and ERC20 with
+                // address(this).
+                testErrorBuffer :=
+                    or(
+                        testErrorBuffer,
+                        shl(
+                            2,
+                            // 1 if the ERC20 address is not this contract.
                             iszero(
+                                // 1 if the ERC20 address is this contract.
                                 eq(
+                                    // Since it has to be a zero and a 1 for item types, this just
+                                    // returns the non-null address token.
                                     add(
-                                        mul(
-                                            calldataload(minimumReceivedItem),
-                                            calldataload(add(minimumReceivedItem, 0x20))
-                                        ),
+                                        // Token value if ERC20, 0 otherwise.
+                                        mul(calldataload(minimumReceivedItem), calldataload(add(minimumReceivedItem, 0x20))),
+                                        // Token value if ERC20, 0 otherwise.
                                         mul(calldataload(maximumSpentItem), calldataload(add(maximumSpentItem, 0x20)))
                                     ),
                                     address()
                                 )
                             )
                         )
-                    ),
-                    iszero(
-                        and(
+                    )
+
+                // Ensure that exactly one of the items uses address(this).
+                testErrorBuffer :=
+                    or(
+                        testErrorBuffer,
+                        shl(
+                            3,
                             iszero(
-                                mul(
-                                    calldataload(add(minimumReceivedItem, 0x20)),
-                                    calldataload(add(maximumSpentItem, 0x20))
-                                )
-                            ),
-                            iszero(
-                                xor(
-                                    add(
-                                        calldataload(add(minimumReceivedItem, 0x20)),
-                                        calldataload(add(maximumSpentItem, 0x20))
+                                // 1 if one is native and the other is this address.
+                                and(
+                                    // 1 if either is native.
+                                    iszero(
+                                        // 0 if either is native.
+                                        mul(
+                                            calldataload(add(minimumReceivedItem, 0x20)),
+                                            calldataload(add(maximumSpentItem, 0x20))
+                                        )
                                     ),
-                                    address()
+                                    // 1 if the lone non-null address is this contract.
+                                    iszero(
+                                        // Returns either this address or 0.
+                                        // Is only zero if the address from the `add` is
+                                        // this address.
+                                        xor(
+                                            // Just returns the non-null address token.
+                                            add(
+                                                calldataload(add(minimumReceivedItem, 0x20)),
+                                                calldataload(add(maximumSpentItem, 0x20))
+                                            ),
+                                            address()
+                                        )
+                                    )
                                 )
                             )
                         )
                     )
-                ) {
-                    // revert InvalidItems()
-                    mstore(0, 0x913c728a)
-                    revert(0x1c, 0x04)
+
+                if testErrorBuffer {
+                    if shl(255, testErrorBuffer) {
+                        mstore(0, 0xc9b4d6ba)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(254, testErrorBuffer) {
+                        mstore(0, 0xc25bddad)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(253, testErrorBuffer) {
+                        mstore(0, 0xdd55e6a8)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(252, testErrorBuffer) {
+                        mstore(0, 0x67306d70)
+                        revert(0x1c, 0x04)
+                    }
                 }
             }
 
@@ -319,26 +394,55 @@ contract FlashloanOfferer is ContractOffererInterface {
             contextLength := and(calldataload(context.offset), 0xfffffff)
         }
 
+        // console.log('contextLength', contextLength);
+        // console.log('context.length', context.length);
+
+        if (contextLength == 0 || context.length == 0) {
+            revert InvalidExtraDataEncoding(uint8(context[0]));
+        }
+
+        // The expected structure of the context is:
+        // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        //
+        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
+        // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
+
         uint256 flashloanDataSize;
         {
             // Declare an error buffer; first check is that caller is Seaport.
-            uint256 errorBuffer = _cast(msg.sender == _SEAPORT);
+            // If the caller is not Seaport, revert with an InvalidCaller error.
+            uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
+            // console.log('OPTIMIZED ==========================================');
+            // console.log('errorBuffer', errorBuffer);
 
-            // Next, check for sip-6 version byte.
-            errorBuffer |= errorBuffer ^ (_cast(context[0] == 0x00) << 1);
+            // Next, check for sip-6 version byte. If the version byte is not
+            // 0, revert with an UnsupportedExtraDataVersion error.
+            errorBuffer |= errorBuffer ^ (_cast(context[0] != 0x00) << 1);
+
+            // console.log('errorBuffer', errorBuffer);
+
+            uint256 totalFlashloans;
 
             // Retrieve the number of flashloans.
             assembly {
-                let totalFlashloans := and(0xff, calldataload(add(context.offset, 20)))
+                totalFlashloans := and(0xff, calldataload(add(context.offset, 21)))
 
                 // Include one word of flashloan data for each flashloan.
                 flashloanDataSize := shl(0x05, totalFlashloans)
             }
 
-            // Next, check for sufficient context length.
+            // console.log('contextLength', contextLength);
+            // console.log('TOTAL FLASHLOANS', totalFlashloans);
+            // console.log('flashloanDataSize', flashloanDataSize);
+
+            // Next, check for sufficient context length. If the context length
+            // is less than 22 + flashloanDataSize, revert with an
+            // InvalidExtraDataEncoding error.
             unchecked {
                 errorBuffer |= errorBuffer ^ (_cast(contextLength < 22 + flashloanDataSize) << 2);
             }
+            // console.log('errorBuffer', errorBuffer);
 
             // Handle decoding errors.
             if (errorBuffer != 0) {
@@ -399,10 +503,10 @@ contract FlashloanOfferer is ContractOffererInterface {
             }
 
             // Declare an error buffer; first check is that caller is Seaport.
-            uint256 errorBuffer = _cast(msg.sender == _SEAPORT);
+            uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
 
             // Next, check that context is empty.
-            errorBuffer |= errorBuffer ^ (_cast(contextLength == 0) << 1);
+            errorBuffer |= errorBuffer ^ (_cast(contextLength != 0 || context.length != 0) << 1);
 
             // Handle decoding errors.
             if (errorBuffer != 0) {

@@ -25,9 +25,13 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     address private immutable _SIDECAR;
     address private immutable _FLASHLOAN_OFFERER;
 
+    // 0xcbd9d2e
     error InvalidCaller(address caller);
+    // 0xdb4176c7
     error InvalidFulfiller(address fulfiller);
+    // 0x2139cc2c
     error UnsupportedExtraDataVersion(uint8 version);
+    // 0xdefb1057
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
@@ -37,6 +41,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
+    // 0xd6234725
     error NotImplemented();
 
     event SeaportCompatibleContractDeployed(address);

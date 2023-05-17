@@ -7,6 +7,8 @@ import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
+import "forge-std/console.sol";
+
 // Right now this is just here to allow `this.cleanup.selector` to be used
 // below. Think about inheriting an interface or something.
 interface Cleanup {
@@ -41,6 +43,11 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     error CallFailed(); // 0x3204506f
     error NotImplemented();
+
+    error MinGreaterThanMax(); // 0xc9b4d6ba
+    error SharedItemTypes(); // 0xc25bddad
+    error UnacceptableTokenPairing(); // 0xdd55e6a8
+    error MismatchedAddresses(); // 0x67306d70
 
     constructor(address seaport) {
         _SEAPORT = seaport;
@@ -120,32 +127,42 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // One minimumReceived item indicates a deposit or withdrawal.
             SpentItem calldata minimumReceivedItem = minimumReceived[0];
 
-            bool unacceptableItemTypePair = (
-                minimumReceivedItem.itemType == ItemType.ERC20 && maximumSpentItem.itemType == ItemType.NATIVE
-            ) || (minimumReceivedItem.itemType == ItemType.NATIVE && maximumSpentItem.itemType == ItemType.ERC20);
-
-            bool unacceptableAddressPair = (
-                minimumReceivedItem.token == address(this) && maximumSpentItem.token == address(0)
-            ) || (minimumReceivedItem.token == address(0) && maximumSpentItem.token == address(this));
-
-            bool minimumReceivedItemTypeAddressMismatch = (
-                minimumReceivedItem.itemType == ItemType.ERC20 && minimumReceivedItem.token == address(this)
-            ) || (minimumReceivedItem.itemType == ItemType.NATIVE && minimumReceivedItem.token == address(0));
-
-            bool maximumSpentItemTypeAddressMismatch = (
-                maximumSpentItem.itemType == ItemType.ERC20 && maximumSpentItem.token == address(this)
-            ) || (maximumSpentItem.itemType == ItemType.NATIVE && maximumSpentItem.token == address(0));
-
             // Revert if minimumReceived item amount is greater than
             // maximumSpent, or if any of the following are not true:
             //  - one of the item types is 1 and the other is 0
             //  - one of the tokens is address(this) and the other is null
             //  - item type 1 has address(this) token and 0 is null token
+
+            if (minimumReceivedItem.amount > maximumSpentAmount) {
+                revert MinGreaterThanMax();
+            }
+
+            if (minimumReceivedItem.itemType == maximumSpentItem.itemType) {
+                revert SharedItemTypes();
+            }
+
+            // These are silly, just an experiment in more closely modeling
+            // the behavior of the optimized contracts.
+
+            address typeNeutralizedAddressMin =
+                minimumReceivedItem.itemType == ItemType.ERC20 ? minimumReceivedItem.token : address(0);
+            address typeNeutralizedAddressMax =
+                maximumSpentItem.itemType == ItemType.ERC20 ? maximumSpentItem.token : address(0);
+            address xorAddress = address(uint160(typeNeutralizedAddressMin) ^ uint160(typeNeutralizedAddressMax));
+
+            if (xorAddress != address(this)) {
+                revert UnacceptableTokenPairing();
+            }
+
+            bool isOneButNotBoth = (
+                minimumReceivedItem.token == address(this) || maximumSpentItem.token == address(this)
+            ) && !(minimumReceivedItem.token == address(this) && maximumSpentItem.token == address(this));
+
             if (
-                minimumReceivedItem.amount > maximumSpentAmount || unacceptableItemTypePair || unacceptableAddressPair
-                    || minimumReceivedItemTypeAddressMismatch || maximumSpentItemTypeAddressMismatch
+                !(isOneButNotBoth)
+                    || !(minimumReceivedItem.itemType == ItemType.NATIVE || maximumSpentItem.itemType == ItemType.NATIVE)
             ) {
-                revert InvalidItems();
+                revert MismatchedAddresses();
             }
 
             // Process the deposit or withdrawal.
@@ -212,15 +229,15 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             );
             // TODO: Come back and figure this out.  I thought I had it but now
             // I'm confused as hell.
-            uint256 flashloanDataLengthRaw = uint256(bytes32(context[36:40]));
-            uint256 flashloanDataLength = 5 * (2 ^ flashloanDataLengthRaw);
+            uint256 flashloanDataSizeRaw = uint256(bytes32(context[36:40]));
+            uint256 flashloanDataSize = 5 * (2 ^ flashloanDataSizeRaw);
             uint256 flashloanDataInitialOffset = 21;
             uint256 startingIndex;
             uint256 endingIndex;
             bool shouldCall;
 
             // Iterate over each flashloan, one word of memory at a time.
-            for (uint256 i = 0; i < flashloanDataLength;) {
+            for (uint256 i = 0; i < flashloanDataSize;) {
                 // Increment i by 32 bytes (1 word) to get the next word.
                 i += 32;
 
@@ -305,14 +322,25 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
 
     function _processFlashloan(bytes calldata context) internal returns (uint256 totalSpent) {
         // Get the length of the context array from calldata.
-        uint256 contextLength = uint256(bytes32(context[24:32]));
+        uint256 contextLength = uint256(bytes32(context[24:32])) >> 248;
 
-        uint256 flashloanDataLength;
+        // console.log('contextLength', contextLength);
+        // console.log('context.length', context.length);
+
+        if (contextLength == 0 || context.length == 0) {
+            revert InvalidExtraDataEncoding(uint8(context[0]));
+        }
+
+        uint256 flashloanDataSize;
         {
             // Check is that caller is Seaport.
             if (msg.sender != _SEAPORT) {
                 revert InvalidCaller(msg.sender);
             }
+
+            // console.log('REFERENCE ------------------------------------------');
+            // console.log('context');
+            // console.logBytes(context);
 
             // Check for sip-6 version byte.
             if (context[0] != 0x00) {
@@ -320,12 +348,14 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             }
 
             // Retrieve the number of flashloans.
-            uint256 flashloanLength = uint256(bytes32(context[36:40]));
+            uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
+
+            // console.log('totalFlashloans', totalFlashloans);
 
             // Include one word of flashloan data for each flashloan.
-            flashloanDataLength = 5 * (2 ^ flashloanLength);
+            flashloanDataSize = 5 * (2 ^ totalFlashloans);
 
-            if (contextLength < 22 + flashloanDataLength) {
+            if (contextLength < 22 + flashloanDataSize) {
                 revert InvalidExtraDataEncoding(uint8(context[0]));
             }
         }
@@ -338,7 +368,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         uint256 totalValue;
 
         // Iterate over each flashloan, one word of memory at a time.
-        for (uint256 i = 0; i < flashloanDataLength;) {
+        for (uint256 i = 0; i < flashloanDataSize;) {
             // Increment i by 32 bytes (1 word) to get the next word.
             i += 32;
 
@@ -386,7 +416,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         }
 
         // Next, check that context is empty.
-        if (contextLength != 0) {
+        if (contextLength != 0 || context.length != 0) {
             revert InvalidExtraDataEncoding(0);
         }
 
