@@ -143,12 +143,12 @@ contract FlashloanOfferer is ContractOffererInterface {
 
                 // Ensure that minimumReceived item amount is less than or equal
                 // to maximumSpent.
-                let testErrorBuffer := gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount)
+                let errorBuffer := gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount)
 
                 // Ensure that the items don't share a type.
-                testErrorBuffer :=
+                errorBuffer :=
                     or(
-                        testErrorBuffer,
+                        errorBuffer,
                         shl(
                             1,
                             // returns 1 if both native or both ERC20. 0 otherwise.
@@ -169,9 +169,9 @@ contract FlashloanOfferer is ContractOffererInterface {
 
                 // Ensure that at one of the tokens is and ERC20 with
                 // address(this).
-                testErrorBuffer :=
+                errorBuffer :=
                     or(
-                        testErrorBuffer,
+                        errorBuffer,
                         shl(
                             2,
                             // 1 if the ERC20 address is not this contract.
@@ -193,9 +193,9 @@ contract FlashloanOfferer is ContractOffererInterface {
                     )
 
                 // Ensure that exactly one of the items uses address(this).
-                testErrorBuffer :=
+                errorBuffer :=
                     or(
-                        testErrorBuffer,
+                        errorBuffer,
                         shl(
                             3,
                             iszero(
@@ -228,23 +228,23 @@ contract FlashloanOfferer is ContractOffererInterface {
                         )
                     )
 
-                if testErrorBuffer {
-                    if shl(255, testErrorBuffer) {
+                if errorBuffer {
+                    if shl(255, errorBuffer) {
                         mstore(0, 0xc9b4d6ba)
                         revert(0x1c, 0x04)
                     }
 
-                    if shl(254, testErrorBuffer) {
+                    if shl(254, errorBuffer) {
                         mstore(0, 0xc25bddad)
                         revert(0x1c, 0x04)
                     }
 
-                    if shl(253, testErrorBuffer) {
+                    if shl(253, errorBuffer) {
                         mstore(0, 0xdd55e6a8)
                         revert(0x1c, 0x04)
                     }
 
-                    if shl(252, testErrorBuffer) {
+                    if shl(252, errorBuffer) {
                         mstore(0, 0x67306d70)
                         revert(0x1c, 0x04)
                     }

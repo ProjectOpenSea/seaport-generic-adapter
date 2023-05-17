@@ -173,14 +173,18 @@ contract FlashloanOffererTest is BaseOrderTest {
         minimumReceived[0] = spentItemMinReceived;
         maximumSpent[0] = spentItemMaxSpent;
 
-        // Make one that sneaks through to confirm that the test is valid.
-        // InvalidExtraDataEncoding is downstream of the threshold checks at
-        // issue here.
+        // Make one that sneaks through to confirm that the tests are valid.
+        vm.prank(address(consideration));
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+
+        // Test the InvalidCaller that lies on the process deposit or withdrawal path.
+        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidCaller.selector, address(this)));
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+
+        // Test the InvalidExtraDataEncoding that lies on the process deposit or withdrawal path.
         vm.prank(address(consideration));
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
-        );
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0)));
 
         // Mess up the amount.
         spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 3 ether);
@@ -189,7 +193,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MinGreaterThanMax.selector));
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this), minimumReceived, maximumSpent, bytes("")
         );
 
         // Put back the amount but mess up the type.
@@ -199,7 +203,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.SharedItemTypes.selector));
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this), minimumReceived, maximumSpent, bytes("")
         );
 
         // Put back the type but mess up the token.
@@ -209,7 +213,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this), minimumReceived, maximumSpent, bytes("")
         );
 
         // Mess up the token a different way.
@@ -219,7 +223,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this), minimumReceived, maximumSpent, bytes("")
         );
 
         // Put the token back but jumble up types and addresses.
@@ -231,7 +235,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MismatchedAddresses.selector));
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this), minimumReceived, maximumSpent, bytes("")
         );
     }
 }
