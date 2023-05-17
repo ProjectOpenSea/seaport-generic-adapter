@@ -11,6 +11,7 @@ import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
 import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
 
+import {ReferenceFlashloanOfferer} from "./ReferenceFlashloanOfferer.sol";
 
 /**
  * @title ReferenceGenericAdapter
@@ -24,9 +25,10 @@ import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSid
 contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     address private immutable _SEAPORT;
     address private immutable _SIDECAR_ADDRESS;
-    address private immutable _FLASHLOAN_OFFERER;
+    address private immutable _FLASHLOAN_OFFERER_ADDRESS;
 
     ReferenceGenericAdapterSidecar private immutable _SIDECAR_INSTANCE;
+    ReferenceFlashloanOfferer private immutable _FLASHLOAN_OFFERER_INSTANCE;
 
     error InvalidCaller(address caller);
     error InvalidFulfiller(address fulfiller);
@@ -48,7 +50,9 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         _SEAPORT = seaport;
         _SIDECAR_INSTANCE = new ReferenceGenericAdapterSidecar();
         _SIDECAR_ADDRESS = address(_SIDECAR_INSTANCE);
-        _FLASHLOAN_OFFERER = flashloanOfferer;
+
+        _FLASHLOAN_OFFERER_ADDRESS = flashloanOfferer;
+        _FLASHLOAN_OFFERER_INSTANCE = ReferenceFlashloanOfferer(payable(flashloanOfferer));
 
         emit SeaportCompatibleContractDeployed(_SIDECAR_ADDRESS);
     }
@@ -245,8 +249,34 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                     }
                 }
 
+                // TODO: come back and wire this up after testing flashloan offerer directly.
+                // if (value > address(this).balance) {
+                //     // If the value of the planned call is greater than the
+                //     // available balance, pull the difference from the
+                //     // flashloan offerer.
+
+                //     SpentItem[] memory maximumSpentArg = new SpentItem[](1);
+                //     maximumSpentArg[0] = SpentItem({
+                //         itemType: ItemType.NATIVE,
+                //         token: address(0),
+                //         identifier: 0,
+                //         amount: value - address(this).balance
+                //     });
+
+                //     // Create the context arg here.
+                //     // INGREDIENT ONE:
+                //     // The first byte is the SIP encoding (0)
+
+                //     _FLASHLOAN_OFFERER_INSTANCE.generateOrder(
+                //         address(this),      // fulfiller
+                //         new SpentItem[](0), // minimumReceived, 0 length means "give me a flashloan".
+                //         maximumSpentArg,    // maximumSpent
+                //         bytes("")           // context
+                //     );
+                // }
+
                 // Call the sidecar with the supplied payload.
-                (bool success,) = target.call{value: 0}(prebuiltPayload);
+                (bool success,) = target.call{value: value}(prebuiltPayload);
 
                 // Revert if the call failed.
                 if (!success) {
@@ -275,7 +305,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
      */
     function cleanup(address recipient) external payable returns (bytes4) {
         // Ensure that only designated flashloan offerer can call this function.
-        if (msg.sender != _FLASHLOAN_OFFERER) {
+        if (msg.sender != _FLASHLOAN_OFFERER_ADDRESS) {
             revert InvalidCaller(msg.sender);
         }
 

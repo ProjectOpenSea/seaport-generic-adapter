@@ -247,6 +247,7 @@ contract FlashloanOfferer is ContractOffererInterface {
 
                     if or(
                         iszero(success),
+                        // cleanup(address) selector
                         xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
                     ) {
                         if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff)) {

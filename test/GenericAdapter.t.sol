@@ -35,6 +35,8 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
+import "forge-std/console.sol";
+
 contract GenericAdapterTest is BaseOrderTest {
     using SpentItemLib for SpentItem;
     using SpentItemLib for SpentItem[];
@@ -58,6 +60,7 @@ contract GenericAdapterTest is BaseOrderTest {
     bool erc20CallExecuted;
     bool erc721CallExecuted;
     bool erc1155CallExecuted;
+    uint256 nativeAction;
 
     receive() external payable override {
         if (rejectReceive) {
@@ -434,9 +437,9 @@ contract GenericAdapterTest is BaseOrderTest {
         assertTrue(testERC721.isApprovedForAll(address(context.adapter), address(consideration)));
     }
 
-    function testTransfersToSideCar() public {
+    function testTransfersToSidecarAndExecute() public {
         test(
-            this.execTransfersToSideCar,
+            this.execTransfersToSidecarAndExecute,
             Context({
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
@@ -445,7 +448,7 @@ contract GenericAdapterTest is BaseOrderTest {
             })
         );
         test(
-            this.execTransfersToSideCar,
+            this.execTransfersToSidecarAndExecute,
             Context({
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
@@ -455,7 +458,7 @@ contract GenericAdapterTest is BaseOrderTest {
         );
     }
 
-    function execTransfersToSideCar(Context memory context) external stateless {
+    function execTransfersToSidecarAndExecute(Context memory context) external stateless {
         // TODO: add native.
         TestERC20 testERC20 = new TestERC20();
 
@@ -471,7 +474,6 @@ contract GenericAdapterTest is BaseOrderTest {
             spentItems[2] = spentItemERC1155;
         }
 
-        // TODO: Update the size once Calls are added.
         uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000003B6; // ...060 before
         uint256 secondWord;
         uint256 thirdWord;
@@ -518,26 +520,29 @@ contract GenericAdapterTest is BaseOrderTest {
         testERC1155.setApprovalForAll(address(context.adapter), true);
         testERC1155.mint(address(this), 1, 1);
 
+        // TODO: Test that a mix of failing and succeeding calls works as
+        // expected given a mix of `allowFailure` bools.
+
         Call[] memory calls = new Call[](3);
 
         {
             Call memory callERC20 = Call(
                 address(this), // TODO: put in some marketplace addy here.
-                true, // TODO: figure out how to get some actually working.
+                false,
                 0, // TODO: Native and flashloan offerer stuff.
                 abi.encodeWithSelector(this.toggleERC20Call.selector, true)
             );
 
             Call memory callERC721 = Call(
                 address(this), // TODO: put in some marketplace addy here.
-                true, // TODO: figure out how to get some actually working.
+                false,
                 0, // TODO: Native and flashloan offerer stuff.
                 abi.encodeWithSelector(this.toggleERC721Call.selector, true)
             );
 
             Call memory callERC1155 = Call(
                 address(this), // TODO: put in some marketplace addy here.
-                true, // TODO: figure out how to get some actually working.
+                false,
                 0, // TODO: Native and flashloan offerer stuff.
                 abi.encodeWithSelector(this.toggleERC1155Call.selector, true)
             );
@@ -576,6 +581,10 @@ contract GenericAdapterTest is BaseOrderTest {
         assertTrue(erc20CallExecuted, "erc20CallExecuted should be true");
         assertTrue(erc721CallExecuted, "erc721CallExecuted should be true");
         assertTrue(erc1155CallExecuted, "erc1155CallExecuted should be true");
+
+        // TODO: test that the sidecar can actually transfer the items.
+        // TODO: test that the sidecar doesn't need another approval after the
+        //       approval is done the first time.
     }
 
     function toggleERC20Call(bool called) external {
@@ -588,6 +597,77 @@ contract GenericAdapterTest is BaseOrderTest {
 
     function toggleERC1155Call(bool called) external {
         erc1155CallExecuted = called;
+    }
+
+    function testNativeCallAndExecute() public {
+        test(
+            this.execNativeCallAndExecute,
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
+        );
+        test(
+            this.execNativeCallAndExecute,
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execNativeCallAndExecute(Context memory context) external stateless {
+        SpentItem[] memory spentItems = new SpentItem[](3);
+
+        {
+            SpentItem memory spentItemNativeOne = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+            SpentItem memory spentItemNativeTwo = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+            SpentItem memory spentItemNativeThree = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+
+            spentItems[0] = spentItemNativeOne;
+            spentItems[1] = spentItemNativeTwo;
+            spentItems[2] = spentItemNativeThree;
+        }
+
+        // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
+        uint256 firstWord = 0x0022222222222222222222222222222222222222222222222222222200000340;
+
+        Call[] memory calls = new Call[](3);
+
+        {
+            Call memory callNative = Call(
+                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+            );
+
+            calls[0] = callNative;
+            calls[1] = callNative;
+            calls[2] = callNative;
+        }
+
+        bytes memory contextArgCalldataPortion = abi.encode(calls);
+
+        bytes memory contextArg;
+
+        contextArg = abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
+
+        assertEq(nativeAction, 0, "nativeAction should be 0");
+
+        vm.deal(address(context.adapter), 3 ether);
+
+        vm.prank(address(consideration));
+        context.adapter.generateOrder(address(this), new SpentItem[](0), spentItems, contextArg);
+
+        assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
+    }
+
+    function incrementNativeAction(uint256 amount) external payable {
+        assertGt(msg.value, amount - 0.001 ether, "msg.value should be roughly equal to amount");
+        assertLt(msg.value, amount + 0.001 ether, "msg.value should be roughly equal to amount");
+        nativeAction += msg.value;
     }
 }
 
