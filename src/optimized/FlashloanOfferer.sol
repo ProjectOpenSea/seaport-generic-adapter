@@ -89,12 +89,13 @@ contract FlashloanOfferer is ContractOffererInterface {
      * @param context         Additional context of the order when flashloaning:
      *                          - SIP encoding version (1 byte)
      *                          - 27 empty bytes
-     *                          - context length (4 bytes)
-     *                          - cleanupRecipient: arg for cleanup (20 bytes)
-     *                          - totalRecipients: flashloans to send (1 byte)
-     *                              - amount (11 bytes * totalRecipients)
-     *                              - shouldCallback (1 byte * totalRecipients)
-     *                              - recipient (20 bytes * totalRecipients)
+     *                           - context length (4 bytes)
+     *                           - cleanupRecipient: arg for cleanup (20 bytes)
+     *                           - flashloans to send (1 byte)
+     *                           - flashloan data:
+     *                               - amount (11 bytes * totalRecipients)
+     *                               - shouldCallback (1 byte * totalRecipients)
+     *                               - recipient (20 bytes * totalRecipients)
      *
      * @return offer         A tuple containing the offer items.
      * @return consideration An array containing a single consideration item,
@@ -394,9 +395,6 @@ contract FlashloanOfferer is ContractOffererInterface {
             contextLength := and(calldataload(context.offset), 0xfffffff)
         }
 
-        // console.log('contextLength', contextLength);
-        // console.log('context.length', context.length);
-
         if (contextLength == 0 || context.length == 0) {
             revert InvalidExtraDataEncoding(uint8(context[0]));
         }
@@ -413,14 +411,10 @@ contract FlashloanOfferer is ContractOffererInterface {
             // Declare an error buffer; first check is that caller is Seaport.
             // If the caller is not Seaport, revert with an InvalidCaller error.
             uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
-            // console.log('OPTIMIZED ==========================================');
-            // console.log('errorBuffer', errorBuffer);
 
             // Next, check for sip-6 version byte. If the version byte is not
             // 0, revert with an UnsupportedExtraDataVersion error.
             errorBuffer |= errorBuffer ^ (_cast(context[0] != 0x00) << 1);
-
-            // console.log('errorBuffer', errorBuffer);
 
             uint256 totalFlashloans;
 
@@ -432,17 +426,12 @@ contract FlashloanOfferer is ContractOffererInterface {
                 flashloanDataSize := shl(0x05, totalFlashloans)
             }
 
-            // console.log('contextLength', contextLength);
-            // console.log('TOTAL FLASHLOANS', totalFlashloans);
-            // console.log('flashloanDataSize', flashloanDataSize);
-
             // Next, check for sufficient context length. If the context length
             // is less than 22 + flashloanDataSize, revert with an
             // InvalidExtraDataEncoding error.
             unchecked {
                 errorBuffer |= errorBuffer ^ (_cast(contextLength < 22 + flashloanDataSize) << 2);
             }
-            // console.log('errorBuffer', errorBuffer);
 
             // Handle decoding errors.
             if (errorBuffer != 0) {
@@ -461,13 +450,20 @@ contract FlashloanOfferer is ContractOffererInterface {
         uint256 totalValue;
 
         assembly {
-            let flashloanDataStarts := add(context.offset, 21)
+            // 53 = 32 bytes for the first word (SIP encoding and length), plus
+            // 20 bytes for the cleanup recipient, plus one for the total
+            // flashloans.
+            let flashloanDataStarts := add(context.offset, 53)
             let flashloanDataEnds := add(flashloanDataStarts, flashloanDataSize)
             // Iterate over each flashloan.
             for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
                 flashloanDataOffset := add(flashloanDataOffset, 0x20)
             } {
+                // Load the entire flashloan data word. Shift right 21 bytes to
+                // get the value, and mask the recipient address.
                 let value := shr(168, calldataload(flashloanDataOffset))
+                // Load the entire flashloan data word. Mask it to get the
+                // recipient address.
                 let recipient := and(0xffffffffffffffffffffffffffffffffffffffff, calldataload(flashloanDataOffset))
 
                 totalValue := add(totalValue, value)
@@ -558,5 +554,9 @@ contract FlashloanOfferer is ContractOffererInterface {
             calldatacopy(receivedItem, spentItem, 0x80)
             mstore(add(receivedItem, 0x80), address())
         }
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balanceOf[account];
     }
 }

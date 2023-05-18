@@ -15,6 +15,8 @@ import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationSt
 
 import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
+import "forge-std/console.sol";
+
 contract FlashloanOffererTest is BaseOrderTest {
     struct Context {
         FlashloanOffererInterface flashloanOfferer;
@@ -25,6 +27,8 @@ contract FlashloanOffererTest is BaseOrderTest {
     FlashloanOffererInterface testFlashloanOffererReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
+
+    uint256 public flashloanValueReceived;
 
     function setUp() public override {
         super.setUp();
@@ -184,7 +188,9 @@ contract FlashloanOffererTest is BaseOrderTest {
         // Test the InvalidExtraDataEncoding that lies on the process deposit or withdrawal path.
         vm.prank(address(consideration));
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0)));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+        );
 
         // Mess up the amount.
         spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 3 ether);
@@ -192,9 +198,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MinGreaterThanMax.selector));
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, bytes("")
-        );
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
 
         // Put back the amount but mess up the type.
         spentItemMinReceived = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
@@ -202,9 +206,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.SharedItemTypes.selector));
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, bytes("")
-        );
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
 
         // Put back the type but mess up the token.
         spentItemMinReceived = SpentItem(ItemType.ERC20, address(token1), 0, 1 ether);
@@ -212,9 +214,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, bytes("")
-        );
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
 
         // Mess up the token a different way.
         spentItemMinReceived = SpentItem(ItemType.ERC20, address(0), 0, 1 ether);
@@ -222,9 +222,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, bytes("")
-        );
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
 
         // Put the token back but jumble up types and addresses.
         spentItemMinReceived = SpentItem(ItemType.NATIVE, address(context.flashloanOfferer), 0, 1 ether);
@@ -234,8 +232,131 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MismatchedAddresses.selector));
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, bytes("")
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+    }
+
+    function testDepositAndWithdrawFunctionality() public {
+        test(
+            this.execDepositAndWithdrawFunctionality,
+            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
         );
+        test(
+            this.execDepositAndWithdrawFunctionality,
+            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+        );
+    }
+
+    function execDepositAndWithdrawFunctionality(Context memory context) external stateless {
+        // maximumSpent length must always be one.
+        // One minimumReceived item indicates a deposit or withdrawal.
+        // If the item has this contract as its token, process as a deposit.
+
+        SpentItem[] memory minimumReceived = new SpentItem[](1);
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+
+        SpentItem memory spentItemMinReceived;
+        SpentItem memory spentItemMaxSpent;
+
+        // This says, "I'm depositing 1 ether"
+        spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether);
+        // This needs to be higher than or equal to the deposit.
+        spentItemMaxSpent = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+
+        minimumReceived[0] = spentItemMinReceived;
+        maximumSpent[0] = spentItemMaxSpent;
+
+        vm.prank(address(consideration));
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+
+        assertEq(context.flashloanOfferer.getBalance(address(this)), 1 ether);
+
+        // This says, "I'm withdrawing 1 ether"
+        spentItemMinReceived = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+        // This needs to be higher than or equal to the deposit.
+        spentItemMaxSpent = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether);
+
+        minimumReceived[0] = spentItemMinReceived;
+        maximumSpent[0] = spentItemMaxSpent;
+
+        vm.prank(address(consideration));
+        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+
+        assertEq(context.flashloanOfferer.getBalance(address(this)), 0 ether);
+    }
+
+    function testProvideFlashloanFunctionality() public {
+        test(
+            this.execProvideFlashloanFunctionality,
+            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
+        );
+        test(
+            this.execProvideFlashloanFunctionality,
+            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+        );
+    }
+
+    function execProvideFlashloanFunctionality(Context memory context) external stateless {
+        // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        //
+        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
+        // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
+
+        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte], [recipient, 20 bytes]
+
+        uint256 flashloanValueRequested = 0x3333333333333333333333;
+
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+        SpentItem memory spentItemMaxSpent = SpentItem(ItemType.NATIVE, address(0), 0, flashloanValueRequested);
+        maximumSpent[0] = spentItemMaxSpent;
+
+        uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000000ff;
+        uint256 secondWord = uint256(uint160(address(this))) << 96;
+        uint256 thirdWord;
+
+        assembly {
+            // Add a 0x01 byte to the second word to indicate one flashloan.
+            secondWord := or(shl(88, 0x01), secondWord)
+            // Add the amount for the flashloan to the second word.
+            secondWord := or(flashloanValueRequested, secondWord)
+            // Add the shouldCallback flag to the start of the third word.
+            thirdWord := shl(248, 0x01)
+            // Add the recipient to the third word.
+            thirdWord := or(thirdWord, shl(88, address()))
+        }
+
+        // For now, just assume that the flashloan offerer is sufficiently
+        // funded.
+        vm.deal(address(context.flashloanOfferer), 0x4444444444444444444444444);
+
+        uint256 receipientBalanceBefore = address(this).balance;
+        uint256 senderBalanceBefore = address(context.flashloanOfferer).balance;
+
+        // This is supposed to kinda simulate the two-step process of calling
+        // Seaport.
+        vm.prank(address(consideration));
+        context.flashloanOfferer.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            maximumSpent,
+            abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord))
+        );
+
+        uint256 receipientBalanceAfter = address(this).balance;
+        uint256 senderBalanceAfter = address(context.flashloanOfferer).balance;
+
+        assertEq(
+            receipientBalanceAfter, receipientBalanceBefore + flashloanValueRequested, "recipient balance incorrect"
+        );
+
+        assertEq(senderBalanceAfter, senderBalanceBefore - flashloanValueRequested, "sender balance incorrect");
+
+        assertEq(flashloanValueRequested, flashloanValueReceived);
+
+        // TODO: test ratifyOrder
+    }
+
+    receive() external payable override {
+        flashloanValueReceived += msg.value;
     }
 }

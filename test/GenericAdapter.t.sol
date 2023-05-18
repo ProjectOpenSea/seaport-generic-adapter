@@ -654,6 +654,10 @@ contract GenericAdapterTest is BaseOrderTest {
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
+        // TODO: get this working without the cheat. Fund the flashloan offerer
+        //       with 3 ether and then have it send it back to the adapter to
+        //       fund the sidecar. It will require wiring up the generic
+        //       adapter's generateOrder function to the flashloan offerer's.
         vm.deal(address(context.adapter), 3 ether);
 
         vm.prank(address(consideration));

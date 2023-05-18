@@ -9,7 +9,7 @@ import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationSt
 
 import "forge-std/console.sol";
 
-// Right now this is just here to allow `this.cleanup.selector` to be used
+// Right now this is just here to allow `cleanup.selector` to be used
 // below. Think about inheriting an interface or something.
 interface Cleanup {
     function cleanup(address recipient) external payable returns (bytes4);
@@ -261,11 +261,10 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 address recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
                 // TODO: Figure out where I should be using `shouldCall`.
-                // Call the recipient's cleanup function.
+                // Call the generic adapter's cleanup function.
                 (bool success, bytes memory returnData) =
                     recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
 
-                // TODO: Fix `this.cleanup.selector`.
                 if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
                     revert CallFailed();
                 }
@@ -322,10 +321,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
 
     function _processFlashloan(bytes calldata context) internal returns (uint256 totalSpent) {
         // Get the length of the context array from calldata.
-        uint256 contextLength = uint256(bytes32(context[24:32])) >> 248;
-
-        // console.log('contextLength', contextLength);
-        // console.log('context.length', context.length);
+        uint256 contextLength = uint256(bytes32(context[31:32])) >> 248;
 
         if (contextLength == 0 || context.length == 0) {
             revert InvalidExtraDataEncoding(uint8(context[0]));
@@ -338,10 +334,6 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 revert InvalidCaller(msg.sender);
             }
 
-            // console.log('REFERENCE ------------------------------------------');
-            // console.log('context');
-            // console.logBytes(context);
-
             // Check for sip-6 version byte.
             if (context[0] != 0x00) {
                 revert UnsupportedExtraDataVersion(uint8(context[0]));
@@ -350,10 +342,8 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // Retrieve the number of flashloans.
             uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
 
-            // console.log('totalFlashloans', totalFlashloans);
-
             // Include one word of flashloan data for each flashloan.
-            flashloanDataSize = 5 * (2 ^ totalFlashloans);
+            flashloanDataSize = 32 * totalFlashloans;
 
             if (contextLength < 22 + flashloanDataSize) {
                 revert InvalidExtraDataEncoding(uint8(context[0]));
@@ -373,18 +363,19 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             i += 32;
 
             // TODO: Switch all ranges in comments to use indexes.
-            // The first 21 bytes of the context are the cleanup recipient
-            // address, which is where the `flashloanDataInitialOffset`
-            // comes from.
-            // So, the first flashloan starts at byte 22 and goes to byte
-            // 53.  The next is 54-85, etc. `startingIndex` and
-            // `endingIndex` define the range of bytes for each flashloan.
-            startingIndex = flashloanDataInitialOffset + i - 32;
-            endingIndex = flashloanDataInitialOffset + i;
+            // The first 32 bytes of the context are the SIP encoding and the
+            // context length with some ignored bytes in between. The next 21
+            // bytes of the context are the cleanup recipient address, the sum
+            // of the two gives the start i value.
+            // So, the first flashloan starts at byte 53 and goes to byte
+            // 85. `startingIndex` and `endingIndex` define the range of bytes
+            // for each flashloan.
+            startingIndex = flashloanDataInitialOffset + i;
+            endingIndex = flashloanDataInitialOffset + i + 32;
 
             // Bytes at indexes 0-10 are the value, at index 11 is the flag, and
             // at indexes 12-31 are the recipient address.
-            value = uint256(bytes32(context[startingIndex:11]));
+            value = uint256(bytes32(context[startingIndex:startingIndex + 11])) >> 168;
             recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
             // Track the total value of all flashloans for a subsequent check in
@@ -420,19 +411,18 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             revert InvalidExtraDataEncoding(0);
         }
 
-        // If the item has this contract as its token, process as a deposit...
+        // If the item has this contract as its token, process as a deposit.
         if (spentItem.token == address(this)) {
             balanceOf[fulfiller] += spentItem.amount;
         } else {
-            // ...otherwise it is a withdrawal.
+            // Otherwise it is a withdrawal.
             balanceOf[fulfiller] -= spentItem.amount;
         }
     }
 
     /**
      * @dev Copies a spent item from calldata and converts into a received item,
-     *      applying address(this) as the recipient. Note that this currently
-     *      clobbers the word directly after the spent item in memory.
+     *      applying address(this) as the recipient.
      *
      * @param spentItem The spent item.
      *
@@ -450,5 +440,9 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             amount: spentItem.amount,
             recipient: payable(address(this))
         });
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balanceOf[account];
     }
 }
