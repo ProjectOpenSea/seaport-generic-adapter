@@ -1,13 +1,13 @@
-# Seaport Generic Adapter
+# ETH <> WETH Contract Offerer
 
-The Seaport Generic Adapter is a work in progress Seaport app that allows users to fulfill listings from other marketplaces through a Seaport interaction.  It relies on [the contract order pattern](https://github.com/ProjectOpenSea/seaport/blob/main/docs/SeaportDocumentation.md#contract-orders) that was added as part of Seaport v1.2.
+The ETH <> WETH Contract Offerer is a work in progress Seaport app that offers ETH in exchange for an equal amount of WETH, or vice versa. It relies on [the contract order pattern](https://github.com/ProjectOpenSea/seaport/blob/main/docs/SeaportDocumentation.md#contract-orders) that was added as part of Seaport v1.2.
 
 ## Install
 
 To install dependencies and compile contracts:
 
 ```bash
-git clone --recurse-submodules https://github.com/ProjectOpenSea/seaport-generic-adapter && cd seaport-generic-adapter && forge build
+git clone --recurse-submodules https://github.com/ProjectOpenSea/weth-converter && cd weth-converter && forge build
 ```
 
 ## Usage
