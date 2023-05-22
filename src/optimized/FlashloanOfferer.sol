@@ -296,44 +296,46 @@ contract FlashloanOfferer is ContractOffererInterface {
         assembly {
             // If context is present, look for flashloans with callback flags.
             if and(calldataload(context.offset), 0xfffffff) {
-                let cleanupRecipient := calldataload(add(context.offset, 1))
-                let flashloanDataStarts := add(context.offset, 21)
+                let cleanupRecipient := shr(96, calldataload(add(32, context.offset)))
+                let flashloanDataStarts := add(context.offset, 53)
                 let flashloanDataEnds :=
-                    add(flashloanDataStarts, shl(0x05, and(0xff, calldataload(add(context.offset, 20)))))
+                    add(flashloanDataStarts, shl(0x05, and(0xff, calldataload(add(context.offset, 52)))))
 
                 mstore(0, 0xfbacefce) // cleanup(address) selector
                 mstore(0x20, cleanupRecipient)
 
                 // Iterate over each flashloan.
                 for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
-                    flashloanDataOffset := add(flashloanDataOffset, 0x20)
+                    flashloanDataOffset := add(flashloanDataOffset, 32)
                 } {
-                    // Note: confirm that this is the correct usage of byte opcode
                     let flashloanData := calldataload(flashloanDataOffset)
-                    // let shouldCall := byte(12, flashloanData)
-                    let recipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
+                    let shouldCall := byte(12, flashloanData)
+                    let flashloanRecipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
                     let value := shr(168, flashloanData)
 
-                    // Fire off call to recipient. Revert & bubble up revert
+                    // Fire off call to flashloanRecipient. Revert & bubble up revert
                     // data if present & reasonably-sized, else revert with a
                     // custom error. Note that checking for sufficient native
                     // token balance is an option here if more specific custom
                     // reverts are preferred.
-                    let success := call(gas(), recipient, value, 0x1c, 0x24, 0, 4)
+                    if shouldCall {
+                        let success := call(gas(), flashloanRecipient, value, 0x1c, 0x24, 0, 4)
 
-                    if or(
-                        iszero(success),
-                        // cleanup(address) selector
-                        xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
-                    ) {
-                        if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff)) {
-                            returndatacopy(0, 0, returndatasize())
-                            revert(0, returndatasize())
+                        if or(
+                            or(iszero(success), iszero(shouldCall)),
+                            // magic cleanup(address) selector
+                            xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
+                        ) {
+                            if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff))
+                            {
+                                returndatacopy(0, 0, returndatasize())
+                                revert(0, returndatasize())
+                            }
+
+                            // CallFailed()
+                            mstore(0, 0x3204506f)
+                            revert(0x1c, 0x04)
                         }
-
-                        // CallFailed()
-                        mstore(0, 0x3204506f)
-                        revert(0x1c, 0x04)
                     }
                 }
             }

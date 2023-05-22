@@ -227,6 +227,10 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
         }
 
+        if (value > 0) {
+            // Get native tokens from the flashloan offerer.
+        }
+
         // Call sidecar, performing generic execution consuming supplied items.
         {
             uint256 payloadSize = contextLength - (33 + approvalDataSize);

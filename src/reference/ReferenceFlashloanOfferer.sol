@@ -216,21 +216,19 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         if (context.length > 0) {
             // ...look for flashloans with callback flags.
 
-            // The First byte of the context is the schema ID.
-            // Bytes at indexes 1-21 of the context are the cleanup recipient
-            //address.
-            // Bytes n-n of the context are the flashloan data length.
-            // 36-40?  44-52?  24-32?
-
             // Extract the cleanup recipient address from the context.
             address cleanupRecipient = address(
                 // My God the assembly might be clearer than this.
-                uint160(bytes20(context[1:21]))
+                uint160(bytes20(context[32:52]))
             );
-            // TODO: Come back and figure this out.  I thought I had it but now
-            // I'm confused as hell.
-            uint256 flashloanDataSizeRaw = uint256(bytes32(context[36:40]));
-            uint256 flashloanDataSize = 5 * (2 ^ flashloanDataSizeRaw);
+
+
+            // Retrieve the number of flashloans.
+            uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
+
+            // Include one word of flashloan data for each flashloan.
+            uint256 flashloanDataSize = 32 * totalFlashloans;
+
             uint256 flashloanDataInitialOffset = 21;
             uint256 startingIndex;
             uint256 endingIndex;
@@ -241,32 +239,23 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 // Increment i by 32 bytes (1 word) to get the next word.
                 i += 32;
 
-                // TODO: Switch all ranges in comments to use indexes.
-                // The first 21 bytes of the context are the cleanup recipient
-                // address, which is where the `flashloanDataInitialOffset`
-                // comes from.
-                // So, the first flashloan starts at byte 22 and goes to byte
-                // 53.  The next is 54-85, etc. `startingIndex` and
-                // `endingIndex` define the range of bytes for each flashloan.
-                startingIndex = flashloanDataInitialOffset + i - 32;
-                endingIndex = flashloanDataInitialOffset + i;
-
-                // Each flashloan is 32 bytes long.
-                // Bytes at indexes 0-10 are the value, at index 11 is the
-                // callback flag, and indexes 12-31 are the recipient address.
+                startingIndex = flashloanDataInitialOffset + i;
+                endingIndex = flashloanDataInitialOffset + i + 32;
 
                 // Extract the shouldCall flag from the flashloan data.
                 shouldCall = context[startingIndex + 11] == 0x01;
+
                 // Extract the recipient address from the flashloan data.
                 address recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
-                // TODO: Figure out where I should be using `shouldCall`.
-                // Call the generic adapter's cleanup function.
-                (bool success, bytes memory returnData) =
-                    recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
+                if (shouldCall == true) {
+                    // Call the generic adapter's cleanup function.
+                    (bool success, bytes memory returnData) =
+                        recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
 
-                if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
-                    revert CallFailed();
+                    if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
+                        revert CallFailed();
+                    }
                 }
             }
 
