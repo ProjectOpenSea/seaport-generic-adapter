@@ -1,354 +1,421 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {FulfillAvailableHelper, MatchFulfillmentHelper} from "seaport-sol/SeaportSol.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+
+import { LibString } from "solady/src/utils/LibString.sol";
 
 import {
-    AdditionalRecipient,
+    FulfillAvailableHelper
+} from "seaport-sol/fulfillments/available/FulfillAvailableHelper.sol";
+
+import {
+    MatchFulfillmentHelper
+} from "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
+
+import {
+    AdvancedOrderLib,
+    ConsiderationItemLib,
+    FulfillmentComponentLib,
+    FulfillmentLib,
+    OfferItemLib,
+    OrderComponentsLib,
+    OrderLib,
+    OrderParametersLib,
+    SeaportArrays
+} from "seaport-sol/SeaportSol.sol";
+
+import {
+    AdvancedOrder,
+    ConsiderationItem,
     Fulfillment,
     FulfillmentComponent,
+    OfferItem,
     Order,
     OrderComponents,
     OrderParameters
 } from "seaport-sol/SeaportStructs.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ItemType, OrderType } from "seaport-sol/SeaportEnums.sol";
 
-import {OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { SeaportInterface } from "seaport-sol/SeaportInterface.sol";
 
-import {BasicOrder_additionalRecipients_data_cdPtr, TwoWords} from "seaport-types/lib/ConsiderationConstants.sol";
+import { setLabel, BaseSeaportTest } from "./helpers/BaseSeaportTest.sol";
 
-import {ArithmeticUtil} from "./ArithmeticUtil.sol";
+import { ArithmeticUtil } from "./helpers/ArithmeticUtil.sol";
 
-import {OrderBuilder} from "./OrderBuilder.sol";
+import { CriteriaResolverHelper } from "./helpers/CriteriaResolverHelper.sol";
 
-import {AmountDeriver} from "seaport-core/lib/AmountDeriver.sol";
+import { ERC1155Recipient } from "./helpers/ERC1155Recipient.sol";
 
-/// @dev base test class for cases that depend on pre-deployed token contracts
-contract BaseOrderTest is OrderBuilder, AmountDeriver {
-    using ArithmeticUtil for uint256;
-    using ArithmeticUtil for uint128;
-    using ArithmeticUtil for uint120;
+import { ERC721Recipient } from "./helpers/ERC721Recipient.sol";
 
-    FulfillmentComponent firstOrderFirstItem;
-    FulfillmentComponent firstOrderSecondItem;
-    FulfillmentComponent secondOrderFirstItem;
-    FulfillmentComponent secondOrderSecondItem;
-    FulfillmentComponent[] firstOrderFirstItemArray;
-    FulfillmentComponent[] firstOrderSecondItemArray;
-    FulfillmentComponent[] secondOrderFirstItemArray;
-    FulfillmentComponent[] secondOrderSecondItemArray;
-    Fulfillment firstFulfillment;
-    Fulfillment secondFulfillment;
-    Fulfillment thirdFulfillment;
-    Fulfillment fourthFulfillment;
+import { ExpectedBalances } from "./helpers/ExpectedBalances.sol";
 
-    AdditionalRecipient[] additionalRecipients;
+import { PreapprovedERC721 } from "./helpers/PreapprovedERC721.sol";
+
+import { AmountDeriver } from "seaport-core/src/lib/AmountDeriver.sol";
+
+import { TestERC20 } from "../../../contracts/test/TestERC20.sol";
+
+import { TestERC721 } from "../../../contracts/test/TestERC721.sol";
+
+import { TestERC1155 } from "../../../contracts/test/TestERC1155.sol";
+
+import {
+    SeaportValidatorHelper,
+    SeaportValidator
+} from "../../../contracts/helpers/order-validator/SeaportValidator.sol";
+
+/**
+ * @dev This is a base test class for cases that depend on pre-deployed token
+ *      contracts. Note that it is different from the BaseOrderTest in the
+ *      legacy test suite.
+ */
+contract BaseOrderTest is
+    BaseSeaportTest,
+    AmountDeriver,
+    ERC721Recipient,
+    ERC1155Recipient
+{
+    using ArithmeticUtil for *;
+    using Strings for uint256;
+
+    using AdvancedOrderLib for AdvancedOrder;
+    using AdvancedOrderLib for AdvancedOrder[];
+    using ConsiderationItemLib for ConsiderationItem;
+    using ConsiderationItemLib for ConsiderationItem[];
+    using FulfillmentComponentLib for FulfillmentComponent;
+    using FulfillmentComponentLib for FulfillmentComponent[];
+    using FulfillmentLib for Fulfillment;
+    using FulfillmentLib for Fulfillment[];
+    using OfferItemLib for OfferItem;
+    using OfferItemLib for OfferItem[];
+    using OrderComponentsLib for OrderComponents;
+    using OrderLib for Order;
+    using OrderLib for Order[];
+    using OrderParametersLib for OrderParameters;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
+
+    struct Context {
+        SeaportInterface seaport;
+    }
+
+    SeaportValidatorHelper validatorHelper;
+    SeaportValidator validator;
+    FulfillAvailableHelper fulfill;
+    MatchFulfillmentHelper matcher;
 
     Account offerer1;
     Account offerer2;
 
-    FulfillAvailableHelper fulfill;
-    MatchFulfillmentHelper matcher;
+    Account dillon;
+    Account eve;
+    Account frank;
 
-    event Transfer(address indexed from, address indexed to, uint256 value);
+    PreapprovedERC721 internal preapproved721;
 
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+    TestERC20[] erc20s;
+    TestERC721[] erc721s;
+    TestERC1155[] erc1155s;
 
-    modifier onlyPayable(address _addr) {
-        {
-            bool success;
-            assembly {
-                // Transfer the native token and store if it succeeded or not.
-                success := call(gas(), _addr, 1, 0, 0, 0, 0)
-            }
-            vm.assume(success);
-            vm.deal(address(this), uint128(MAX_INT));
-        }
-        _;
-    }
+    ExpectedBalances public balanceChecker;
+    CriteriaResolverHelper public criteriaResolverHelper;
 
-    /**
-     * @dev convenience wrapper for makeAddrAndKey
-     */
-    function makeAccountWrapper(string memory name) public returns (Account memory) {
-        return makeAccount(name);
-    }
+    address[] preapprovals;
 
-    /**
-     * @dev convenience wrapper for makeAddrAndKey that also allocates tokens,
-     *      ether, and approvals
-     */
-    function makeAndAllocateAccount(string memory name) internal returns (Account memory) {
-        Account memory account = makeAccountWrapper(name);
-        allocateTokensAndApprovals(account.addr, uint128(MAX_INT));
-        return account;
-    }
+    string constant SINGLE_ERC721 = "single erc721";
+    string constant STANDARD = "standard";
+    string constant STANDARD_CONDUIT = "standard conduit";
+    string constant FULL = "full";
+    string constant FIRST_FIRST = "first first";
+    string constant FIRST_SECOND = "first second";
+    string constant SECOND_FIRST = "second first";
+    string constant SECOND_SECOND = "second second";
+    string constant FF_SF = "ff to sf";
+    string constant SF_FF = "sf to ff";
 
     function setUp() public virtual override {
         super.setUp();
 
-        vm.label(alice, "alice");
-        vm.label(bob, "bob");
-        vm.label(cal, "cal");
-        vm.label(address(this), "testContract");
+        balanceChecker = new ExpectedBalances();
+
+        // TODO: push to 24 if performance allows
+        criteriaResolverHelper = new CriteriaResolverHelper(6);
+
+        preapprovals = [
+            address(seaport),
+            address(referenceSeaport),
+            address(conduit),
+            address(referenceConduit)
+        ];
 
         _deployTestTokenContracts();
-        erc20s = [token1, token2, token3];
-        erc721s = [test721_1, test721_2, test721_3];
-        erc1155s = [test1155_1, test1155_2, test1155_3];
+
+        offerer1 = makeAndAllocateAccount("alice");
+        offerer2 = makeAndAllocateAccount("bob");
+
+        dillon = makeAndAllocateAccount("dillon");
+        eve = makeAndAllocateAccount("eve");
+        frank = makeAndAllocateAccount("frank");
 
         // allocate funds and tokens to test addresses
-        allocateTokensAndApprovals(address(this), uint128(MAX_INT));
-        allocateTokensAndApprovals(alice, uint128(MAX_INT));
-        allocateTokensAndApprovals(bob, uint128(MAX_INT));
-        allocateTokensAndApprovals(cal, uint128(MAX_INT));
-        allocateTokensAndApprovals(offerer1.addr, uint128(MAX_INT));
-        allocateTokensAndApprovals(offerer2.addr, uint128(MAX_INT));
+        allocateTokensAndApprovals(address(this), type(uint128).max);
 
-        offerer1 = makeAndAllocateAccount("offerer1");
-        offerer2 = makeAndAllocateAccount("offerer2");
+        _configureStructDefaults();
+
+        validatorHelper = new SeaportValidatorHelper();
+
+        validator = new SeaportValidator(
+            address(validatorHelper),
+            address(getConduitController())
+        );
 
         fulfill = new FulfillAvailableHelper();
         matcher = new MatchFulfillmentHelper();
     }
 
-    function resetOfferComponents() internal {
-        delete offerComponents;
+    /**
+     * @dev Creates a set of globally available default structs for use in
+     *      tests.
+     */
+    function _configureStructDefaults() internal {
+        OfferItemLib
+            .empty()
+            .withItemType(ItemType.ERC721)
+            .withStartAmount(1)
+            .withEndAmount(1)
+            .saveDefault(SINGLE_ERC721);
+        ConsiderationItemLib
+            .empty()
+            .withItemType(ItemType.ERC721)
+            .withStartAmount(1)
+            .withEndAmount(1)
+            .saveDefault(SINGLE_ERC721);
+
+        OrderComponentsLib
+            .empty()
+            .withOrderType(OrderType.FULL_OPEN)
+            .withStartTime(block.timestamp)
+            .withEndTime(block.timestamp + 100)
+            .saveDefault(STANDARD);
+
+        OrderComponentsLib
+            .fromDefault(STANDARD)
+            .withConduitKey(conduitKey)
+            .saveDefault(STANDARD_CONDUIT);
+
+        AdvancedOrderLib
+            .empty()
+            .withNumerator(1)
+            .withDenominator(1)
+            .saveDefault(FULL);
+
+        FulfillmentComponentLib
+            .empty()
+            .withOrderIndex(0)
+            .withItemIndex(0)
+            .saveDefault(FIRST_FIRST);
+        FulfillmentComponentLib
+            .empty()
+            .withOrderIndex(0)
+            .withItemIndex(1)
+            .saveDefault(FIRST_SECOND);
+        FulfillmentComponentLib
+            .empty()
+            .withOrderIndex(1)
+            .withItemIndex(0)
+            .saveDefault(SECOND_FIRST);
+        FulfillmentComponentLib
+            .empty()
+            .withOrderIndex(1)
+            .withItemIndex(1)
+            .saveDefault(SECOND_SECOND);
+
+        SeaportArrays
+            .FulfillmentComponents(
+                FulfillmentComponentLib.fromDefault(FIRST_FIRST)
+            )
+            .saveDefaultMany(FIRST_FIRST);
+        SeaportArrays
+            .FulfillmentComponents(
+                FulfillmentComponentLib.fromDefault(FIRST_SECOND)
+            )
+            .saveDefaultMany(FIRST_SECOND);
+        SeaportArrays
+            .FulfillmentComponents(
+                FulfillmentComponentLib.fromDefault(SECOND_FIRST)
+            )
+            .saveDefaultMany(SECOND_FIRST);
+        SeaportArrays
+            .FulfillmentComponents(
+                FulfillmentComponentLib.fromDefault(SECOND_SECOND)
+            )
+            .saveDefaultMany(SECOND_SECOND);
+
+        FulfillmentLib
+            .empty()
+            .withOfferComponents(
+                FulfillmentComponentLib.fromDefaultMany(SECOND_FIRST)
+            )
+            .withConsiderationComponents(
+                FulfillmentComponentLib.fromDefaultMany(FIRST_FIRST)
+            )
+            .saveDefault(SF_FF);
+        FulfillmentLib
+            .empty()
+            .withOfferComponents(
+                FulfillmentComponentLib.fromDefaultMany(FIRST_FIRST)
+            )
+            .withConsiderationComponents(
+                FulfillmentComponentLib.fromDefaultMany(SECOND_FIRST)
+            )
+            .saveDefault(FF_SF);
     }
 
-    function resetConsiderationComponents() internal {
-        delete considerationComponents;
-    }
-
-    function _validateOrder(Order memory order, ConsiderationInterface _consideration) internal returns (bool) {
-        Order[] memory orders = new Order[](1);
-        orders[0] = order;
-        return _validateOrders(orders, _consideration);
-    }
-
-    function _validateOrders(Order[] memory orders, ConsiderationInterface _consideration) internal returns (bool) {
-        return _consideration.validate(orders);
-    }
-
-    function _prepareOrder(uint256 tokenId, uint256 totalConsiderationItems)
-        internal
-        returns (Order memory order, OrderParameters memory orderParameters, bytes memory signature)
-    {
-        test1155_1.mint(address(this), tokenId, 10);
-
-        addErc1155OfferItem(tokenId, 10);
-        for (uint256 i = 0; i < totalConsiderationItems; i++) {
-            addErc20ConsiderationItem(alice, 10);
-        }
-        uint256 nonce = consideration.getCounter(address(this));
-
-        orderParameters = getOrderParameters(payable(this), OrderType.FULL_OPEN);
-        OrderComponents memory orderComponents = toOrderComponents(orderParameters, nonce);
-
-        bytes32 orderHash = consideration.getOrderHash(orderComponents);
-
-        signature = signOrder(consideration, alicePk, orderHash);
-        order = Order(orderParameters, signature);
-    }
-
-    function _subtractAmountFromLengthInOrderCalldata(
-        bytes memory orderCalldata,
-        uint256 relativeOrderParametersOffset,
-        uint256 relativeItemsLengthOffset,
-        uint256 amtToSubtractFromLength
-    ) internal pure {
-        bytes32 lengthPtr = _getItemsLengthPointerInOrderCalldata(
-            orderCalldata, relativeOrderParametersOffset, relativeItemsLengthOffset
-        );
-        assembly {
-            let length := mload(lengthPtr)
-            mstore(lengthPtr, sub(length, amtToSubtractFromLength))
-        }
-    }
-
-    function _dirtyFirstAdditionalRecipient(bytes memory orderCalldata) internal pure {
-        assembly {
-            let firstAdditionalRecipientOffset :=
-                add(orderCalldata, add(TwoWords, BasicOrder_additionalRecipients_data_cdPtr))
-            // Dirty the top byte of the first additional recipient address.
-            mstore8(firstAdditionalRecipientOffset, 1)
-        }
-    }
-
-    function _getItemsLengthPointerInOrderCalldata(
-        bytes memory orderCalldata,
-        uint256 relativeOrderParametersOffset,
-        uint256 relativeItemsLengthOffset
-    ) internal pure returns (bytes32 lengthPtr) {
-        assembly {
-            // Points to the order parameters in the order calldata.
-            let orderParamsOffsetPtr := add(orderCalldata, relativeOrderParametersOffset)
-            // Points to the items offset value.
-            // Note: itemsOffsetPtr itself is not the offset value;
-            // the value stored at itemsOffsetPtr is the offset value.
-            let itemsOffsetPtr := add(orderParamsOffsetPtr, relativeItemsLengthOffset)
-            // Value of the items offset, which is the offset of the items
-            // array relative to the start of order parameters.
-            let itemsOffsetValue := mload(itemsOffsetPtr)
-
-            // The memory for an array will always start with a word
-            // indicating the length of the array, so length pointer
-            // can simply point to the start of the items array.
-            lengthPtr := add(orderParamsOffsetPtr, itemsOffsetValue)
-        }
-    }
-
-    function _getItemsLengthAtOffsetInOrderCalldata(
-        bytes memory orderCalldata,
-        // Relative offset of start of order parameters
-        // in the order calldata.
-        uint256 relativeOrderParametersOffset,
-        // Relative offset of items pointer (which points to items' length)
-        // to the start of order parameters in order calldata.
-        uint256 relativeItemsLengthOffset
-    ) internal pure returns (uint256 length) {
-        bytes32 lengthPtr = _getItemsLengthPointerInOrderCalldata(
-            orderCalldata, relativeOrderParametersOffset, relativeItemsLengthOffset
-        );
-        assembly {
-            length := mload(lengthPtr)
-        }
-    }
-
-    function _performTestFulfillOrderRevertInvalidArrayLength(
-        ConsiderationInterface _consideration,
-        Order memory order,
-        bytes memory fulfillOrderCalldata,
-        // Relative offset of start of order parameters
-        // in the order calldata.
-        uint256 relativeOrderParametersOffset,
-        // Relative offset of items pointer (which points to items' length)
-        // to the start of order parameters in order calldata.
-        uint256 relativeItemsLengthOffset,
-        uint256 originalItemsLength,
-        uint256 amtToSubtractFromItemsLength
+    function test(
+        function(Context memory) external fn,
+        Context memory context
     ) internal {
-        assertTrue(_validateOrder(order, _consideration));
-
-        bool overwriteItemsLength = amtToSubtractFromItemsLength > 0;
-        if (overwriteItemsLength) {
-            // Get the array length from the calldata and
-            // store the length - amtToSubtractFromItemsLength in the calldata
-            // so that the length value does _not_ accurately represent the
-            // actual total array length.
-            _subtractAmountFromLengthInOrderCalldata(
-                fulfillOrderCalldata,
-                relativeOrderParametersOffset,
-                relativeItemsLengthOffset,
-                amtToSubtractFromItemsLength
-            );
+        try fn(context) {
+            fail("Differential test should have reverted with failure status");
+        } catch (bytes memory reason) {
+            assertPass(reason);
         }
-
-        uint256 finalItemsLength = _getItemsLengthAtOffsetInOrderCalldata(
-            fulfillOrderCalldata,
-            // Relative offset of start of order parameters
-            // in the order calldata.
-            relativeOrderParametersOffset,
-            // Relative offset of items
-            // pointer to the start of order parameters in order calldata.
-            relativeItemsLengthOffset
-        );
-
-        assertEq(finalItemsLength, originalItemsLength - amtToSubtractFromItemsLength);
-
-        bool success = _callConsiderationFulfillOrderWithCalldata(address(_consideration), fulfillOrderCalldata);
-
-        // If overwriteItemsLength is true, the call should
-        // have failed (success should be False) and if overwriteItemsLength is
-        // false, the call should have succeeded (success should be true).
-        assertEq(success, !overwriteItemsLength);
-    }
-
-    function _callConsiderationFulfillOrderWithCalldata(address considerationAddress, bytes memory orderCalldata)
-        internal
-        returns (bool success)
-    {
-        (success,) = considerationAddress.call(orderCalldata);
-    }
-
-    function getMaxConsiderationValue() internal view returns (uint256) {
-        uint256 value = 0;
-        for (uint256 i = 0; i < considerationItems.length; ++i) {
-            uint256 amount = considerationItems[i].startAmount > considerationItems[i].endAmount
-                ? considerationItems[i].startAmount
-                : considerationItems[i].endAmount;
-            value += amount;
-        }
-        return value;
     }
 
     /**
-     * @dev return OrderComponents for a given OrderParameters and offerer
-     *      counter
+     * @dev Wrapper for forge-std's makeAccount that has public visibility
+     *      instead of internal visibility, so that we can access it in
+     *      libraries.
      */
-    function getOrderComponents(OrderParameters memory parameters, uint256 counter)
-        internal
-        pure
-        returns (OrderComponents memory)
-    {
-        return OrderComponents(
-            parameters.offerer,
-            parameters.zone,
-            parameters.offer,
-            parameters.consideration,
-            parameters.orderType,
-            parameters.startTime,
-            parameters.endTime,
-            parameters.zoneHash,
-            parameters.salt,
-            parameters.conduitKey,
-            counter
-        );
+    function makeAccountWrapper(
+        string memory name
+    ) public returns (Account memory) {
+        return makeAccount(name);
     }
 
-    function getOrderParameters(address offerer, OrderType orderType) internal returns (OrderParameters memory) {
-        return OrderParameters({
-            offerer: offerer,
-            zone: address(0),
-            offer: offerItems,
-            consideration: considerationItems,
-            orderType: orderType,
-            startTime: block.timestamp,
-            endTime: block.timestamp + 1,
-            zoneHash: bytes32(0),
-            salt: globalSalt++,
-            conduitKey: bytes32(0),
-            totalOriginalConsiderationItems: considerationItems.length
-        });
+    /**
+     * @dev Convenience wrapper for makeAddrAndKey that also allocates tokens,
+     *      ether, and approvals.
+     */
+    function makeAndAllocateAccount(
+        string memory name
+    ) internal returns (Account memory) {
+        Account memory account = makeAccountWrapper(name);
+        allocateTokensAndApprovals(account.addr, type(uint128).max);
+        return account;
     }
 
-    function toOrderComponents(OrderParameters memory _params, uint256 nonce)
-        internal
-        pure
-        returns (OrderComponents memory)
-    {
-        return OrderComponents(
-            _params.offerer,
-            _params.zone,
-            _params.offer,
-            _params.consideration,
-            _params.orderType,
-            _params.startTime,
-            _params.endTime,
-            _params.zoneHash,
-            _params.salt,
-            _params.conduitKey,
-            nonce
+    /**
+     * @dev Sets up a new address and sets up token approvals for it.
+     */
+    function makeAddrWithAllocationsAndApprovals(
+        string memory label
+    ) internal returns (address) {
+        address addr = makeAddr(label);
+        allocateTokensAndApprovals(addr, type(uint128).max);
+        return addr;
+    }
+
+    /**
+     * @dev Deploy test token contracts.
+     */
+    function _deployTestTokenContracts() internal {
+        for (uint256 i; i < 3; i++) {
+            createErc20Token();
+            createErc721Token();
+            createErc1155Token();
+        }
+        preapproved721 = new PreapprovedERC721(preapprovals);
+    }
+
+    /**
+     * @dev Creates a new ERC20 token contract and stores it in the erc20s
+     *      array.
+     */
+    function createErc20Token() internal returns (uint256 i) {
+        i = erc20s.length;
+        TestERC20 token = new TestERC20();
+        erc20s.push(token);
+        setLabel(address(token), string.concat("ERC20", LibString.toString(i)));
+    }
+
+    /**
+     * @dev Creates a new ERC721 token contract and stores it in the erc721s
+     *      array.
+     */
+    function createErc721Token() internal returns (uint256 i) {
+        i = erc721s.length;
+        TestERC721 token = new TestERC721();
+        erc721s.push(token);
+        setLabel(
+            address(token),
+            string.concat("ERC721", LibString.toString(i))
         );
     }
 
     /**
-     * @dev allow signing for this contract since it needs to be recipient of
-     *       basic order to reenter on receive
+     * @dev Creates a new ERC1155 token contract and stores it in the erc1155s
+     *      array.
      */
-    function isValidSignature(bytes32, bytes memory) external pure virtual returns (bytes4) {
-        return 0x1626ba7e;
+    function createErc1155Token() internal returns (uint256 i) {
+        i = erc1155s.length;
+        TestERC1155 token = new TestERC1155();
+        erc1155s.push(token);
+        setLabel(
+            address(token),
+            string.concat("ERC1155", LibString.toString(i))
+        );
+    }
+
+    /**
+     * @dev Allocate amount of ether and each erc20 token; set approvals for all
+     *      tokens.
+     */
+    function allocateTokensAndApprovals(address _to, uint128 _amount) public {
+        vm.deal(_to, _amount);
+        for (uint256 i = 0; i < erc20s.length; ++i) {
+            erc20s[i].mint(_to, _amount);
+        }
+        _setApprovals(_to);
+    }
+
+    /**
+     * @dev Set approvals for all tokens.
+     *
+     * @param _owner The address to set approvals for.
+     */
+    function _setApprovals(address _owner) internal virtual {
+        vm.startPrank(_owner);
+        for (uint256 i = 0; i < erc20s.length; ++i) {
+            erc20s[i].approve(address(seaport), type(uint256).max);
+            erc20s[i].approve(address(referenceSeaport), type(uint256).max);
+            erc20s[i].approve(address(conduit), type(uint256).max);
+            erc20s[i].approve(address(referenceConduit), type(uint256).max);
+        }
+        for (uint256 i = 0; i < erc721s.length; ++i) {
+            erc721s[i].setApprovalForAll(address(seaport), true);
+            erc721s[i].setApprovalForAll(address(referenceSeaport), true);
+            erc721s[i].setApprovalForAll(address(conduit), true);
+            erc721s[i].setApprovalForAll(address(referenceConduit), true);
+        }
+        for (uint256 i = 0; i < erc1155s.length; ++i) {
+            erc1155s[i].setApprovalForAll(address(seaport), true);
+            erc1155s[i].setApprovalForAll(address(referenceSeaport), true);
+            erc1155s[i].setApprovalForAll(address(conduit), true);
+            erc1155s[i].setApprovalForAll(address(referenceConduit), true);
+        }
+
+        vm.stopPrank();
     }
 
     receive() external payable virtual {}
