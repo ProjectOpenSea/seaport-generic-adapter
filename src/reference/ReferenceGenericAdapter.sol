@@ -3,15 +3,34 @@ pragma solidity ^0.8.13;
 
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import {
+    AdvancedOrder,
+    ConsiderationItem,
+    CriteriaResolver,
+    OfferItem,
+    OrderParameters,
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
+
+import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
 
 import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
 
 import {ReferenceFlashloanOfferer} from "./ReferenceFlashloanOfferer.sol";
+
+import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
+
+import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
+
+import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
+
+import "forge-std/console.sol";
 
 /**
  * @title ReferenceGenericAdapter
@@ -27,6 +46,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     address private immutable _SIDECAR_ADDRESS;
     address private immutable _FLASHLOAN_OFFERER_ADDRESS;
 
+    ConsiderationInterface private immutable _SEAPORT_INSTANCE;
     ReferenceGenericAdapterSidecar private immutable _SIDECAR_INSTANCE;
     ReferenceFlashloanOfferer private immutable _FLASHLOAN_OFFERER_INSTANCE;
 
@@ -46,8 +66,14 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
 
     event SeaportCompatibleContractDeployed(address);
 
+    using AdvancedOrderLib for AdvancedOrder;
+    using ConsiderationItemLib for ConsiderationItem;
+    using OrderParametersLib for OrderParameters;
+
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
+        _SEAPORT_INSTANCE = ConsiderationInterface(seaport);
+
         _SIDECAR_INSTANCE = new ReferenceGenericAdapterSidecar();
         _SIDECAR_ADDRESS = address(_SIDECAR_INSTANCE);
 
@@ -227,10 +253,6 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
         }
 
-        if (value > 0) {
-            // Get native tokens from the flashloan offerer.
-        }
-
         // Call sidecar, performing generic execution consuming supplied items.
         {
             uint256 payloadSize = contextLength - (33 + approvalDataSize);
@@ -252,32 +274,6 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                         prebuiltPayload = abi.encodePacked(prebuiltPayload, context[i]);
                     }
                 }
-
-                // TODO: come back and wire this up after testing flashloan offerer directly.
-                // if (value > address(this).balance) {
-                //     // If the value of the planned call is greater than the
-                //     // available balance, pull the difference from the
-                //     // flashloan offerer.
-
-                //     SpentItem[] memory maximumSpentArg = new SpentItem[](1);
-                //     maximumSpentArg[0] = SpentItem({
-                //         itemType: ItemType.NATIVE,
-                //         token: address(0),
-                //         identifier: 0,
-                //         amount: value - address(this).balance
-                //     });
-
-                //     // Create the context arg here.
-                //     // INGREDIENT ONE:
-                //     // The first byte is the SIP encoding (0)
-
-                //     _FLASHLOAN_OFFERER_INSTANCE.generateOrder(
-                //         address(this),      // fulfiller
-                //         new SpentItem[](0), // minimumReceived, 0 length means "give me a flashloan".
-                //         maximumSpentArg,    // maximumSpent
-                //         bytes("")           // context
-                //     );
-                // }
 
                 // Call the sidecar with the supplied payload.
                 (bool success,) = target.call{value: value}(prebuiltPayload);

@@ -3,13 +3,34 @@ pragma solidity ^0.8.17;
 
 import {Vm} from "forge-std/Vm.sol";
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import {OfferItemLib} from "seaport-sol/lib/OfferItemLib.sol";
+
+import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
 
 import {SpentItemLib} from "seaport-sol/lib/SpentItemLib.sol";
+
+import {UnavailableReason} from "seaport-sol/SpaceEnums.sol";
+
+import {
+    AdvancedOrder,
+    ConsiderationItem,
+    CriteriaResolver,
+    Fulfillment,
+    FulfillmentComponent,
+    OfferItem,
+    OrderParameters,
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
+
+import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+
+import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import {GenericAdapterInterface} from "../src/interfaces/GenericAdapterInterface.sol";
 
@@ -35,9 +56,17 @@ import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
 
 import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
 
+import {MatchFulfillmentHelper} from "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
+
 import "forge-std/console.sol";
 
 contract GenericAdapterTest is BaseOrderTest {
+    using AdvancedOrderLib for AdvancedOrder;
+    using ConsiderationItemLib for ConsiderationItem;
+    using ConsiderationItemLib for ConsiderationItem[];
+    using OfferItemLib for OfferItem;
+    using OfferItemLib for OfferItem[];
+    using OrderParametersLib for OrderParameters;
     using SpentItemLib for SpentItem;
     using SpentItemLib for SpentItem[];
 
@@ -48,6 +77,7 @@ contract GenericAdapterTest is BaseOrderTest {
         bool isReference;
     }
 
+    MatchFulfillmentHelper matchFulfillmentHelper;
     GenericAdapterInterface testAdapter;
     GenericAdapterInterface testAdapterReference;
     FlashloanOffererInterface testFlashloanOfferer;
@@ -70,6 +100,8 @@ contract GenericAdapterTest is BaseOrderTest {
 
     function setUp() public override {
         super.setUp();
+
+        matchFulfillmentHelper = new MatchFulfillmentHelper();
 
         testFlashloanOfferer = FlashloanOffererInterface(
             deployCode("out/FlashloanOfferer.sol/FlashloanOfferer.json", abi.encode(address(consideration)))
@@ -648,9 +680,7 @@ contract GenericAdapterTest is BaseOrderTest {
 
         bytes memory contextArgCalldataPortion = abi.encode(calls);
 
-        bytes memory contextArg;
-
-        contextArg = abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
+        bytes memory contextArg = abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
@@ -658,14 +688,277 @@ contract GenericAdapterTest is BaseOrderTest {
         // funded.
         vm.deal(address(context.flashloanOfferer), 4 ether);
 
-        // TODO: get this working without the cheat. Fund the flashloan offerer
-        //       with 3 ether and then have it send it back to the adapter to
-        //       fund the sidecar. It will require wiring up the generic
-        //       adapter's generateOrder function to the flashloan offerer's.
+        // TODO: generateOrder is non-payable, so this is like the value on the
+        //       message to seaport's (e.g.) `fulfillAvailableAdvanced`.
         vm.deal(address(context.adapter), 3 ether);
 
         vm.prank(address(consideration));
         context.adapter.generateOrder(address(this), new SpentItem[](0), spentItems, contextArg);
+
+        assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
+    }
+
+    function testSeaportWrappedCallAndExecute() public {
+        test(
+            this.execSeaportWrappedCallAndExecute,
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false
+            })
+        );
+        test(
+            this.execSeaportWrappedCallAndExecute,
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execSeaportWrappedCallAndExecute(Context memory context) external stateless {
+        // SET UP THE FLASHLOAN ORDER HERE.
+
+        // To request a flashloan from the flashloan offerer, its
+        // generateOrder function needs to be called with a
+        // zero length minimumReceived array and a maximumSpent
+        // array with a single item, which generateOrder will
+        // eventually return as the consideration. The flashloan
+        // details go in the extraData field of the order.
+        //
+        // To do this, this contract needs to call Seaport's
+        // fulfillAdvancedOrder (or some other function) with an
+        // advanced order that has a zero length offer and a
+        // consideration array with a single item, which must have
+        // an amount greater than or equal to the flashloan value
+        // requested.
+
+        // Create an order.
+        AdvancedOrder memory flashloanOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        // Create the consideration array.
+        ConsiderationItem[] memory considerationArray = new ConsiderationItem[](1);
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
+            considerationItem = considerationItem.withToken(address(0));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(3 ether);
+            considerationItem = considerationItem.withEndAmount(3 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+            considerationArray[0] = considerationItem;
+        }
+
+        // Create the parameters for the order.
+        OrderParameters memory orderParameters;
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+
+            flashloanOrder.withParameters(orderParameters);
+        }
+
+        // Create the value that will populate the extraData field.
+        // When the flashloan offerer receives the call to
+        // generateOrder, it will decode the extraData field into
+        // instructions for handling the flashloan.
+
+        // The first byte is the SIP encoding (0). The 1s are just
+        // placeholders. They're ignored by the flashloan offerer.
+        // The 4 bytes of 0s at the end will eventually contain the
+        // size of the extraData field.
+        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
+        // Set the cleanup recipient in the first 20 bytes of the
+        // second word.
+        uint256 secondWord = uint256(uint160(address(this))) << 96;
+        // Since this contract [FOR NOW] just wants to turn WETH
+        // into ETH, there will only be one chunk of flashloan data.
+        // Add a 0x01 byte to the second word to indicate one
+        // flashloan.
+        secondWord = secondWord | (1 << 88);
+        // Add the amount for the flashloan to the second word.
+        secondWord = secondWord | 3 ether;
+
+        // Add the shouldCallback flag to the start of the third
+        // word.
+        uint256 thirdWord = 1 << 248;
+        // Add the recipient to the third word.
+        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
+
+        // Now, the three words that will make up the extradata
+        // field are ready. Here's what they look like:
+        //
+        // 0x0011111111111111111111111111111111111111111111111111111100000000
+        // (below, `a` is the cleanup recipient, `c` is the number
+        // of flashloans, and `b` is the flashloan amount requested)
+        // 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccbbbbbbbbbbbbbbbbbbbbbb
+        // e.g.
+        // 0x886d6d1eb8d415b00052828cd6d5b321f072073d0100000029a2241af62c0000
+        // (below, `c` is the shouldCallback flag, `f` is the
+        // flashloan recipient, which is this address, and `e` is
+        // empty)
+        // 0xccffffffffffffffffffffffffffffffffffffffffeeeeeeeeeeeeeeeeeeeeee
+        // e.g.
+        // 0x01886d6d1eb8d415b00052828cd6d5b321f072073d0000000000000000000000
+        //
+        // So, at this point, the last 4 bytes of the first word can
+        // be replaced with the size of the extraData field.
+        // The size of the extraData field is:
+        // 1 byte for the SIP encoding
+        // 27 bytes for the empty bytes
+        // 4 bytes for the context length
+        // 20 bytes for the cleanup recipient
+        // 1 byte for the number of flashloans
+        // 11 bytes for the flashloan amount
+        // 1 byte for the shouldCallback flag
+        // 20 bytes for the flashloan recipient
+        // For a total or 85 bytes.
+
+        // Set the size of the extraData field in the first word.
+        firstWord = firstWord | 85;
+        // 0x0011111111111111111111111111111111111111111111111111111100000055
+
+        bytes memory extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+
+        {
+            // Add it all to the order.
+            flashloanOrder.withExtraData(extraData);
+        }
+
+        AdvancedOrder[] memory orders = new AdvancedOrder[](3);
+        orders[0] = flashloanOrder;
+
+        // SET UP THE GENERIC ADAPTER ORDER HERE.
+        // Create an order.
+        AdvancedOrder memory order;
+        {
+            order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+        }
+
+        considerationArray = new ConsiderationItem[](3);
+
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
+            considerationItem = considerationItem.withToken(address(0));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(1 ether);
+            considerationItem = considerationItem.withEndAmount(1 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+            considerationArray[0] = considerationItem;
+            considerationArray[1] = considerationItem;
+            considerationArray[2] = considerationItem;
+        }
+
+        // Create the parameters for the order.
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.adapter));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(3);
+
+            order = order.withParameters(orderParameters);
+        }
+
+        // Create the context.
+        // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
+        firstWord = 0x0022222222222222222222222222222222222222222222222222222200000340;
+
+        Call[] memory calls = new Call[](3);
+
+        {
+            Call memory callNative = Call(
+                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+            );
+
+            calls[0] = callNative;
+            calls[1] = callNative;
+            calls[2] = callNative;
+        }
+
+        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
+        order = order.withExtraData(extraData);
+        orders[1] = order;
+
+
+        // SET UP THE MIRROR ORDER HERE.
+        // This is just a dummy order to make the flashloan offerer's
+        // consideration requirement happy.
+        AdvancedOrder memory mirrorOrder;
+        {
+            mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            // Create the parameters for the order.
+            {
+                OfferItem[] memory offerItems = new OfferItem[](1);
+                OfferItem memory offerItem = OfferItemLib.empty();
+                offerItem = offerItem.withItemType(ItemType.NATIVE);
+                offerItem = offerItem.withToken(address(0));
+                offerItem = offerItem.withIdentifierOrCriteria(0);
+                offerItem = offerItem.withStartAmount(3 ether);
+                offerItem = offerItem.withEndAmount(3 ether);
+                offerItems[0] = offerItem;
+
+                orderParameters = OrderParametersLib.empty();
+                orderParameters = orderParameters.withOfferer(address(this));
+                orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
+                orderParameters = orderParameters.withStartTime(block.timestamp);
+                orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+                orderParameters = orderParameters.withOffer(offerItems);
+                orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
+                orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+
+                mirrorOrder = mirrorOrder.withParameters(orderParameters);
+                orders[2] = mirrorOrder;
+            }
+        }
+
+        assertEq(nativeAction, 0, "nativeAction should be 0");
+
+        // For now, just assume that everyone has lots of ETH. Just testing the
+        // code paths for now. TODO: remove.
+        vm.deal(address(context.flashloanOfferer), 4 ether);
+
+        Fulfillment[] memory fulfillments = new Fulfillment[](2);
+        {
+            FulfillmentComponent[] memory offerComponentsOne = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsOne = new FulfillmentComponent[](1);
+            // FulfillmentComponent[] memory offerComponentsTwo = new FulfillmentComponent[](1);
+            // FulfillmentComponent[] memory considerationComponentsTwo = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsThree = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsThree = new FulfillmentComponent[](1);
+
+            // Flashloan order, native consideration.
+            offerComponentsOne[0] = FulfillmentComponent(0, 0);
+            // Mirror order, native offer
+            considerationComponentsOne[0] = FulfillmentComponent(2, 0);
+            // offerComponentsTwo[0] = FulfillmentComponent(1, 0);
+            // considerationComponentsTwo[0] = FulfillmentComponent(1, 0);
+            // Mirror order, native offer.
+            offerComponentsThree[0] = FulfillmentComponent(2, 0);
+            // Mirror order, native consideration.
+            considerationComponentsThree[0] = FulfillmentComponent(0, 0);
+
+            fulfillments[0] = Fulfillment(offerComponentsOne, considerationComponentsOne);
+            // fulfillments[1] = Fulfillment(offerComponentsTwo, considerationComponentsTwo);
+            fulfillments[1] = Fulfillment(offerComponentsThree, considerationComponentsThree);
+        }
+
+        consideration.matchAdvancedOrders{value: 3 ether}(
+            orders, new CriteriaResolver[](0), fulfillments, address(0)
+        );
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
     }

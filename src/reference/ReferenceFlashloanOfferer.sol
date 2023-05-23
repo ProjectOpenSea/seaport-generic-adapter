@@ -222,7 +222,6 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 uint160(bytes20(context[32:52]))
             );
 
-
             // Retrieve the number of flashloans.
             uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
 
