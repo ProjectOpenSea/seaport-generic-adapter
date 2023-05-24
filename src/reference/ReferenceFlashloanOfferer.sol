@@ -7,7 +7,9 @@ import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
-// Right now this is just here to allow `this.cleanup.selector` to be used
+import "forge-std/console.sol";
+
+// Right now this is just here to allow `cleanup.selector` to be used
 // below. Think about inheriting an interface or something.
 interface Cleanup {
     function cleanup(address recipient) external payable returns (bytes4);
@@ -41,6 +43,11 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     error CallFailed(); // 0x3204506f
     error NotImplemented();
+
+    error MinGreaterThanMax(); // 0xc9b4d6ba
+    error SharedItemTypes(); // 0xc25bddad
+    error UnacceptableTokenPairing(); // 0xdd55e6a8
+    error MismatchedAddresses(); // 0x67306d70
 
     constructor(address seaport) {
         _SEAPORT = seaport;
@@ -120,32 +127,42 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // One minimumReceived item indicates a deposit or withdrawal.
             SpentItem calldata minimumReceivedItem = minimumReceived[0];
 
-            bool unacceptableItemTypePair = (
-                minimumReceivedItem.itemType == ItemType.ERC20 && maximumSpentItem.itemType == ItemType.NATIVE
-            ) || (minimumReceivedItem.itemType == ItemType.NATIVE && maximumSpentItem.itemType == ItemType.ERC20);
-
-            bool unacceptableAddressPair = (
-                minimumReceivedItem.token == address(this) && maximumSpentItem.token == address(0)
-            ) || (minimumReceivedItem.token == address(0) && maximumSpentItem.token == address(this));
-
-            bool minimumReceivedItemTypeAddressMismatch = (
-                minimumReceivedItem.itemType == ItemType.ERC20 && minimumReceivedItem.token == address(this)
-            ) || (minimumReceivedItem.itemType == ItemType.NATIVE && minimumReceivedItem.token == address(0));
-
-            bool maximumSpentItemTypeAddressMismatch = (
-                maximumSpentItem.itemType == ItemType.ERC20 && maximumSpentItem.token == address(this)
-            ) || (maximumSpentItem.itemType == ItemType.NATIVE && maximumSpentItem.token == address(0));
-
             // Revert if minimumReceived item amount is greater than
             // maximumSpent, or if any of the following are not true:
             //  - one of the item types is 1 and the other is 0
             //  - one of the tokens is address(this) and the other is null
             //  - item type 1 has address(this) token and 0 is null token
+
+            if (minimumReceivedItem.amount > maximumSpentAmount) {
+                revert MinGreaterThanMax();
+            }
+
+            if (minimumReceivedItem.itemType == maximumSpentItem.itemType) {
+                revert SharedItemTypes();
+            }
+
+            // These are silly, just an experiment in more closely modeling
+            // the behavior of the optimized contracts.
+
+            address typeNeutralizedAddressMin =
+                minimumReceivedItem.itemType == ItemType.ERC20 ? minimumReceivedItem.token : address(0);
+            address typeNeutralizedAddressMax =
+                maximumSpentItem.itemType == ItemType.ERC20 ? maximumSpentItem.token : address(0);
+            address xorAddress = address(uint160(typeNeutralizedAddressMin) ^ uint160(typeNeutralizedAddressMax));
+
+            if (xorAddress != address(this)) {
+                revert UnacceptableTokenPairing();
+            }
+
+            bool isOneButNotBoth = (
+                minimumReceivedItem.token == address(this) || maximumSpentItem.token == address(this)
+            ) && !(minimumReceivedItem.token == address(this) && maximumSpentItem.token == address(this));
+
             if (
-                minimumReceivedItem.amount > maximumSpentAmount || unacceptableItemTypePair || unacceptableAddressPair
-                    || minimumReceivedItemTypeAddressMismatch || maximumSpentItemTypeAddressMismatch
+                !(isOneButNotBoth)
+                    || !(minimumReceivedItem.itemType == ItemType.NATIVE || maximumSpentItem.itemType == ItemType.NATIVE)
             ) {
-                revert InvalidItems();
+                revert MismatchedAddresses();
             }
 
             // Process the deposit or withdrawal.
@@ -199,58 +216,45 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         if (context.length > 0) {
             // ...look for flashloans with callback flags.
 
-            // The First byte of the context is the schema ID.
-            // Bytes at indexes 1-21 of the context are the cleanup recipient
-            //address.
-            // Bytes n-n of the context are the flashloan data length.
-            // 36-40?  44-52?  24-32?
-
             // Extract the cleanup recipient address from the context.
             address cleanupRecipient = address(
                 // My God the assembly might be clearer than this.
-                uint160(bytes20(context[1:21]))
+                uint160(bytes20(context[32:52]))
             );
-            // TODO: Come back and figure this out.  I thought I had it but now
-            // I'm confused as hell.
-            uint256 flashloanDataLengthRaw = uint256(bytes32(context[36:40]));
-            uint256 flashloanDataLength = 5 * (2 ^ flashloanDataLengthRaw);
+
+            // Retrieve the number of flashloans.
+            uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
+
+            // Include one word of flashloan data for each flashloan.
+            uint256 flashloanDataSize = 32 * totalFlashloans;
+
             uint256 flashloanDataInitialOffset = 21;
             uint256 startingIndex;
             uint256 endingIndex;
             bool shouldCall;
 
             // Iterate over each flashloan, one word of memory at a time.
-            for (uint256 i = 0; i < flashloanDataLength;) {
+            for (uint256 i = 0; i < flashloanDataSize;) {
                 // Increment i by 32 bytes (1 word) to get the next word.
                 i += 32;
 
-                // TODO: Switch all ranges in comments to use indexes.
-                // The first 21 bytes of the context are the cleanup recipient
-                // address, which is where the `flashloanDataInitialOffset`
-                // comes from.
-                // So, the first flashloan starts at byte 22 and goes to byte
-                // 53.  The next is 54-85, etc. `startingIndex` and
-                // `endingIndex` define the range of bytes for each flashloan.
-                startingIndex = flashloanDataInitialOffset + i - 32;
-                endingIndex = flashloanDataInitialOffset + i;
-
-                // Each flashloan is 32 bytes long.
-                // Bytes at indexes 0-10 are the value, at index 11 is the
-                // callback flag, and indexes 12-31 are the recipient address.
+                startingIndex = flashloanDataInitialOffset + i;
+                endingIndex = flashloanDataInitialOffset + i + 32;
 
                 // Extract the shouldCall flag from the flashloan data.
                 shouldCall = context[startingIndex + 11] == 0x01;
+
                 // Extract the recipient address from the flashloan data.
                 address recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
-                // TODO: Figure out where I should be using `shouldCall`.
-                // Call the recipient's cleanup function.
-                (bool success, bytes memory returnData) =
-                    recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
+                if (shouldCall == true) {
+                    // Call the generic adapter's cleanup function.
+                    (bool success, bytes memory returnData) =
+                        recipient.call(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
 
-                // TODO: Fix `this.cleanup.selector`.
-                if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
-                    revert CallFailed();
+                    if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
+                        revert CallFailed();
+                    }
                 }
             }
 
@@ -305,9 +309,13 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
 
     function _processFlashloan(bytes calldata context) internal returns (uint256 totalSpent) {
         // Get the length of the context array from calldata.
-        uint256 contextLength = uint256(bytes32(context[24:32]));
+        uint256 contextLength = uint256(bytes32(context[31:32])) >> 248;
 
-        uint256 flashloanDataLength;
+        if (contextLength == 0 || context.length == 0) {
+            revert InvalidExtraDataEncoding(uint8(context[0]));
+        }
+
+        uint256 flashloanDataSize;
         {
             // Check is that caller is Seaport.
             if (msg.sender != _SEAPORT) {
@@ -320,12 +328,12 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             }
 
             // Retrieve the number of flashloans.
-            uint256 flashloanLength = uint256(bytes32(context[36:40]));
+            uint256 totalFlashloans = uint256(bytes32(context[52:53])) >> 248;
 
             // Include one word of flashloan data for each flashloan.
-            flashloanDataLength = 5 * (2 ^ flashloanLength);
+            flashloanDataSize = 32 * totalFlashloans;
 
-            if (contextLength < 22 + flashloanDataLength) {
+            if (contextLength < 22 + flashloanDataSize) {
                 revert InvalidExtraDataEncoding(uint8(context[0]));
             }
         }
@@ -338,23 +346,24 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         uint256 totalValue;
 
         // Iterate over each flashloan, one word of memory at a time.
-        for (uint256 i = 0; i < flashloanDataLength;) {
+        for (uint256 i = 0; i < flashloanDataSize;) {
             // Increment i by 32 bytes (1 word) to get the next word.
             i += 32;
 
             // TODO: Switch all ranges in comments to use indexes.
-            // The first 21 bytes of the context are the cleanup recipient
-            // address, which is where the `flashloanDataInitialOffset`
-            // comes from.
-            // So, the first flashloan starts at byte 22 and goes to byte
-            // 53.  The next is 54-85, etc. `startingIndex` and
-            // `endingIndex` define the range of bytes for each flashloan.
-            startingIndex = flashloanDataInitialOffset + i - 32;
-            endingIndex = flashloanDataInitialOffset + i;
+            // The first 32 bytes of the context are the SIP encoding and the
+            // context length with some ignored bytes in between. The next 21
+            // bytes of the context are the cleanup recipient address, the sum
+            // of the two gives the start i value.
+            // So, the first flashloan starts at byte 53 and goes to byte
+            // 85. `startingIndex` and `endingIndex` define the range of bytes
+            // for each flashloan.
+            startingIndex = flashloanDataInitialOffset + i;
+            endingIndex = flashloanDataInitialOffset + i + 32;
 
             // Bytes at indexes 0-10 are the value, at index 11 is the flag, and
             // at indexes 12-31 are the recipient address.
-            value = uint256(bytes32(context[startingIndex:11]));
+            value = uint256(bytes32(context[startingIndex:startingIndex + 11])) >> 168;
             recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
             // Track the total value of all flashloans for a subsequent check in
@@ -386,23 +395,22 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         }
 
         // Next, check that context is empty.
-        if (contextLength != 0) {
+        if (contextLength != 0 || context.length != 0) {
             revert InvalidExtraDataEncoding(0);
         }
 
-        // If the item has this contract as its token, process as a deposit...
+        // If the item has this contract as its token, process as a deposit.
         if (spentItem.token == address(this)) {
             balanceOf[fulfiller] += spentItem.amount;
         } else {
-            // ...otherwise it is a withdrawal.
+            // Otherwise it is a withdrawal.
             balanceOf[fulfiller] -= spentItem.amount;
         }
     }
 
     /**
      * @dev Copies a spent item from calldata and converts into a received item,
-     *      applying address(this) as the recipient. Note that this currently
-     *      clobbers the word directly after the spent item in memory.
+     *      applying address(this) as the recipient.
      *
      * @param spentItem The spent item.
      *
@@ -420,5 +428,9 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             amount: spentItem.amount,
             recipient: payable(address(this))
         });
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balanceOf[account];
     }
 }

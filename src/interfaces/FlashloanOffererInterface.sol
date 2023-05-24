@@ -6,6 +6,21 @@ import {ContractOffererInterface} from "seaport-types/interfaces/ContractOfferer
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
 interface FlashloanOffererInterface is ContractOffererInterface {
+    error InvalidCaller(address caller);
+    error InvalidTotalMaximumSpentItems();
+    error InsufficientMaximumSpentAmount();
+    error InvalidItems();
+    error InvalidTotalMinimumReceivedItems();
+    error UnsupportedExtraDataVersion(uint8 version);
+    error InvalidExtraDataEncoding(uint8 version);
+    error CallFailed(); // 0x3204506f
+    error NotImplemented();
+
+    error MinGreaterThanMax(); // 0xc9b4d6ba
+    error SharedItemTypes(); // 0xc25bddad
+    error UnacceptableTokenPairing(); // 0xdd55e6a8
+    error MismatchedAddresses(); // 0x67306d70
+
     function generateOrder(
         address fulfiller,
         SpentItem[] calldata minimumReceived,
@@ -27,4 +42,6 @@ interface FlashloanOffererInterface is ContractOffererInterface {
         returns (SpentItem[] memory, ReceivedItem[] memory);
 
     function getSeaportMetadata() external pure returns (string memory name, Schema[] memory schemas); // map to Seaport Improvement Proposal IDs
+
+    function getBalance(address account) external view returns (uint256);
 }

@@ -12,13 +12,15 @@ interface GenericAdapterInterface is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
+    // // 0x2e3f1f34
+    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed();
+    event SeaportCompatibleContractDeployed(address);
 
     function generateOrder(
         address fulfiller,

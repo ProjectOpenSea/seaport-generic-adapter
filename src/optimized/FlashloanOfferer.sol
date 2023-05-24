@@ -7,6 +7,8 @@ import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title FlashloanOfferer
  * @author 0age
@@ -32,6 +34,11 @@ contract FlashloanOfferer is ContractOffererInterface {
     error InvalidExtraDataEncoding(uint8 version);
     error CallFailed(); // 0x3204506f
     error NotImplemented();
+
+    error MinGreaterThanMax(); // 0xc9b4d6ba
+    error SharedItemTypes(); // 0xc25bddad
+    error UnacceptableTokenPairing(); // 0xdd55e6a8
+    error MismatchedAddresses(); // 0x67306d70
 
     constructor(address seaport) {
         _SEAPORT = seaport;
@@ -80,11 +87,15 @@ contract FlashloanOfferer is ContractOffererInterface {
      *                        provided with amount not less than the sum of all
      *                        flashloaned amounts.
      * @param context         Additional context of the order when flashloaning:
-     *                          - cleanupRecipient: arg for cleanup (20 bytes)
-     *                          - totalRecipients: flashloans to send (1 byte)
-     *                              - amount (11 bytes * totalRecipients)
-     *                              - shouldCallback (1 byte * totalRecipients)
-     *                              - recipient (20 bytes * totalRecipients)
+     *                          - SIP encoding version (1 byte)
+     *                          - 27 empty bytes
+     *                           - context length (4 bytes)
+     *                           - cleanupRecipient: arg for cleanup (20 bytes)
+     *                           - flashloans to send (1 byte)
+     *                           - flashloan data:
+     *                               - amount (11 bytes * totalRecipients)
+     *                               - shouldCallback (1 byte * totalRecipients)
+     *                               - recipient (20 bytes * totalRecipients)
      *
      * @return offer         A tuple containing the offer items.
      * @return consideration An array containing a single consideration item,
@@ -119,60 +130,125 @@ contract FlashloanOfferer is ContractOffererInterface {
 
             assembly {
                 // Revert if minimumReceived item amount is greater than
-                // maximumSpent, or if any of the following are not true:
-                //  - one of the item types is 1 and the other is 0
-                //  - one of the tokens is address(this) and the other is null
+                // maximumSpent, or if any of the following is not true:
+                //  - one of the item types is 1 and the other is 0 (so, both item items same, revert)
+                //  - one of the tokens is address(this) and the other is null (so, both same, revert or neither is this, revert) IS THIS REDUNDANT?
                 //  - item type 1 has address(this) token and 0 is null token
-                if or(
+
+                // TODO: look at how expensive it would be to swap these in for readbility.
+                // let minimumReceivedItemType := and(calldataload(minimumReceivedItem), 0xff)
+                // let maximumSpentItemType := and(calldataload(maximumSpentItem), 0xff)
+                // let minimumReceivedToken := calldataload(add(minimumReceivedItem, 0x20))
+                // let maximumSpentToken := calldataload(add(maximumSpentItem, 0x20))
+                // let minimumReceivedAmount := calldataload(add(minimumReceivedItem, 0x60))
+
+                // Ensure that minimumReceived item amount is less than or equal
+                // to maximumSpent.
+                let errorBuffer := gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount)
+
+                // Ensure that the items don't share a type.
+                errorBuffer :=
                     or(
-                        gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount),
-                        or(
+                        errorBuffer,
+                        shl(
+                            1,
+                            // returns 1 if both native or both ERC20. 0 otherwise.
                             iszero(
+                                // returns 1 if one of each. 0 otherwise.
                                 eq(
+                                    // returns 0 if both native. 1 if one of
+                                    // each. 2 if both ERC20.
                                     add(
                                         and(calldataload(minimumReceivedItem), 0xff),
                                         and(calldataload(maximumSpentItem), 0xff)
                                     ),
                                     0x01
                                 )
-                            ),
+                            )
+                        )
+                    )
+
+                // Ensure that at one of the tokens is and ERC20 with
+                // address(this).
+                errorBuffer :=
+                    or(
+                        errorBuffer,
+                        shl(
+                            2,
+                            // 1 if the ERC20 address is not this contract.
                             iszero(
+                                // 1 if the ERC20 address is this contract.
                                 eq(
+                                    // Since it has to be a zero and a 1 for item types, this just
+                                    // returns the non-null address token.
                                     add(
-                                        mul(
-                                            calldataload(minimumReceivedItem),
-                                            calldataload(add(minimumReceivedItem, 0x20))
-                                        ),
+                                        // Token value if ERC20, 0 otherwise.
+                                        mul(calldataload(minimumReceivedItem), calldataload(add(minimumReceivedItem, 0x20))),
+                                        // Token value if ERC20, 0 otherwise.
                                         mul(calldataload(maximumSpentItem), calldataload(add(maximumSpentItem, 0x20)))
                                     ),
                                     address()
                                 )
                             )
                         )
-                    ),
-                    iszero(
-                        and(
+                    )
+
+                // Ensure that exactly one of the items uses address(this).
+                errorBuffer :=
+                    or(
+                        errorBuffer,
+                        shl(
+                            3,
                             iszero(
-                                mul(
-                                    calldataload(add(minimumReceivedItem, 0x20)),
-                                    calldataload(add(maximumSpentItem, 0x20))
-                                )
-                            ),
-                            iszero(
-                                xor(
-                                    add(
-                                        calldataload(add(minimumReceivedItem, 0x20)),
-                                        calldataload(add(maximumSpentItem, 0x20))
+                                // 1 if one is native and the other is this address.
+                                and(
+                                    // 1 if either is native.
+                                    iszero(
+                                        // 0 if either is native.
+                                        mul(
+                                            calldataload(add(minimumReceivedItem, 0x20)),
+                                            calldataload(add(maximumSpentItem, 0x20))
+                                        )
                                     ),
-                                    address()
+                                    // 1 if the lone non-null address is this contract.
+                                    iszero(
+                                        // Returns either this address or 0.
+                                        // Is only zero if the address from the `add` is
+                                        // this address.
+                                        xor(
+                                            // Just returns the non-null address token.
+                                            add(
+                                                calldataload(add(minimumReceivedItem, 0x20)),
+                                                calldataload(add(maximumSpentItem, 0x20))
+                                            ),
+                                            address()
+                                        )
+                                    )
                                 )
                             )
                         )
                     )
-                ) {
-                    // revert InvalidItems()
-                    mstore(0, 0x913c728a)
-                    revert(0x1c, 0x04)
+
+                if errorBuffer {
+                    if shl(255, errorBuffer) {
+                        mstore(0, 0xc9b4d6ba)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(254, errorBuffer) {
+                        mstore(0, 0xc25bddad)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(253, errorBuffer) {
+                        mstore(0, 0xdd55e6a8)
+                        revert(0x1c, 0x04)
+                    }
+
+                    if shl(252, errorBuffer) {
+                        mstore(0, 0x67306d70)
+                        revert(0x1c, 0x04)
+                    }
                 }
             }
 
@@ -220,43 +296,46 @@ contract FlashloanOfferer is ContractOffererInterface {
         assembly {
             // If context is present, look for flashloans with callback flags.
             if and(calldataload(context.offset), 0xfffffff) {
-                let cleanupRecipient := calldataload(add(context.offset, 1))
-                let flashloanDataStarts := add(context.offset, 21)
+                let cleanupRecipient := shr(96, calldataload(add(32, context.offset)))
+                let flashloanDataStarts := add(context.offset, 53)
                 let flashloanDataEnds :=
-                    add(flashloanDataStarts, shl(0x05, and(0xff, calldataload(add(context.offset, 20)))))
+                    add(flashloanDataStarts, shl(0x05, and(0xff, calldataload(add(context.offset, 52)))))
 
                 mstore(0, 0xfbacefce) // cleanup(address) selector
                 mstore(0x20, cleanupRecipient)
 
                 // Iterate over each flashloan.
                 for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
-                    flashloanDataOffset := add(flashloanDataOffset, 0x20)
+                    flashloanDataOffset := add(flashloanDataOffset, 32)
                 } {
-                    // Note: confirm that this is the correct usage of byte opcode
                     let flashloanData := calldataload(flashloanDataOffset)
-                    // let shouldCall := byte(12, flashloanData)
-                    let recipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
+                    let shouldCall := byte(12, flashloanData)
+                    let flashloanRecipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
                     let value := shr(168, flashloanData)
 
-                    // Fire off call to recipient. Revert & bubble up revert
+                    // Fire off call to flashloanRecipient. Revert & bubble up revert
                     // data if present & reasonably-sized, else revert with a
                     // custom error. Note that checking for sufficient native
                     // token balance is an option here if more specific custom
                     // reverts are preferred.
-                    let success := call(gas(), recipient, value, 0x1c, 0x24, 0, 4)
+                    if shouldCall {
+                        let success := call(gas(), flashloanRecipient, value, 0x1c, 0x24, 0, 4)
 
-                    if or(
-                        iszero(success),
-                        xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
-                    ) {
-                        if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff)) {
-                            returndatacopy(0, 0, returndatasize())
-                            revert(0, returndatasize())
+                        if or(
+                            or(iszero(success), iszero(shouldCall)),
+                            // magic cleanup(address) selector
+                            xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
+                        ) {
+                            if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff))
+                            {
+                                returndatacopy(0, 0, returndatasize())
+                                revert(0, returndatasize())
+                            }
+
+                            // CallFailed()
+                            mstore(0, 0x3204506f)
+                            revert(0x1c, 0x04)
                         }
-
-                        // CallFailed()
-                        mstore(0, 0x3204506f)
-                        revert(0x1c, 0x04)
                     }
                 }
             }
@@ -318,23 +397,40 @@ contract FlashloanOfferer is ContractOffererInterface {
             contextLength := and(calldataload(context.offset), 0xfffffff)
         }
 
+        if (contextLength == 0 || context.length == 0) {
+            revert InvalidExtraDataEncoding(uint8(context[0]));
+        }
+
+        // The expected structure of the context is:
+        // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        //
+        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
+        // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
+
         uint256 flashloanDataSize;
         {
             // Declare an error buffer; first check is that caller is Seaport.
-            uint256 errorBuffer = _cast(msg.sender == _SEAPORT);
+            // If the caller is not Seaport, revert with an InvalidCaller error.
+            uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
 
-            // Next, check for sip-6 version byte.
-            errorBuffer |= errorBuffer ^ (_cast(context[0] == 0x00) << 1);
+            // Next, check for sip-6 version byte. If the version byte is not
+            // 0, revert with an UnsupportedExtraDataVersion error.
+            errorBuffer |= errorBuffer ^ (_cast(context[0] != 0x00) << 1);
+
+            uint256 totalFlashloans;
 
             // Retrieve the number of flashloans.
             assembly {
-                let totalFlashloans := and(0xff, calldataload(add(context.offset, 20)))
+                totalFlashloans := and(0xff, calldataload(add(context.offset, 21)))
 
                 // Include one word of flashloan data for each flashloan.
                 flashloanDataSize := shl(0x05, totalFlashloans)
             }
 
-            // Next, check for sufficient context length.
+            // Next, check for sufficient context length. If the context length
+            // is less than 22 + flashloanDataSize, revert with an
+            // InvalidExtraDataEncoding error.
             unchecked {
                 errorBuffer |= errorBuffer ^ (_cast(contextLength < 22 + flashloanDataSize) << 2);
             }
@@ -356,13 +452,20 @@ contract FlashloanOfferer is ContractOffererInterface {
         uint256 totalValue;
 
         assembly {
-            let flashloanDataStarts := add(context.offset, 21)
+            // 53 = 32 bytes for the first word (SIP encoding and length), plus
+            // 20 bytes for the cleanup recipient, plus one for the total
+            // flashloans.
+            let flashloanDataStarts := add(context.offset, 53)
             let flashloanDataEnds := add(flashloanDataStarts, flashloanDataSize)
             // Iterate over each flashloan.
             for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
                 flashloanDataOffset := add(flashloanDataOffset, 0x20)
             } {
+                // Load the entire flashloan data word. Shift right 21 bytes to
+                // get the value, and mask the recipient address.
                 let value := shr(168, calldataload(flashloanDataOffset))
+                // Load the entire flashloan data word. Mask it to get the
+                // recipient address.
                 let recipient := and(0xffffffffffffffffffffffffffffffffffffffff, calldataload(flashloanDataOffset))
 
                 totalValue := add(totalValue, value)
@@ -398,10 +501,10 @@ contract FlashloanOfferer is ContractOffererInterface {
             }
 
             // Declare an error buffer; first check is that caller is Seaport.
-            uint256 errorBuffer = _cast(msg.sender == _SEAPORT);
+            uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
 
             // Next, check that context is empty.
-            errorBuffer |= errorBuffer ^ (_cast(contextLength == 0) << 1);
+            errorBuffer |= errorBuffer ^ (_cast(contextLength != 0 || context.length != 0) << 1);
 
             // Handle decoding errors.
             if (errorBuffer != 0) {
@@ -453,5 +556,9 @@ contract FlashloanOfferer is ContractOffererInterface {
             calldatacopy(receivedItem, spentItem, 0x80)
             mstore(add(receivedItem, 0x80), address())
         }
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balanceOf[account];
     }
 }

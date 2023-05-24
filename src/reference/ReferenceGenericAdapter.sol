@@ -3,13 +3,34 @@ pragma solidity ^0.8.13;
 
 import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import {
+    AdvancedOrder,
+    ConsiderationItem,
+    CriteriaResolver,
+    OfferItem,
+    OrderParameters,
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
 
-import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
+import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+
+import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
+
+import {ReferenceFlashloanOfferer} from "./ReferenceFlashloanOfferer.sol";
+
+import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
+
+import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
+
+import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
+
+import "forge-std/console.sol";
 
 /**
  * @title ReferenceGenericAdapter
@@ -22,8 +43,12 @@ import {ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.s
  */
 contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     address private immutable _SEAPORT;
-    address private immutable _SIDECAR;
-    address private immutable _FLASHLOAN_OFFERER;
+    address private immutable _SIDECAR_ADDRESS;
+    address private immutable _FLASHLOAN_OFFERER_ADDRESS;
+
+    ConsiderationInterface private immutable _SEAPORT_INSTANCE;
+    ReferenceGenericAdapterSidecar private immutable _SIDECAR_INSTANCE;
+    ReferenceFlashloanOfferer private immutable _FLASHLOAN_OFFERER_INSTANCE;
 
     error InvalidCaller(address caller);
     error InvalidFulfiller(address fulfiller);
@@ -31,16 +56,31 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
+    // // 0x2e3f1f34
+    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
     error NotImplemented();
 
+    event SeaportCompatibleContractDeployed(address);
+
+    using AdvancedOrderLib for AdvancedOrder;
+    using ConsiderationItemLib for ConsiderationItem;
+    using OrderParametersLib for OrderParameters;
+
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
-        _SIDECAR = address(new ReferenceGenericAdapterSidecar());
-        _FLASHLOAN_OFFERER = flashloanOfferer;
+        _SEAPORT_INSTANCE = ConsiderationInterface(seaport);
+
+        _SIDECAR_INSTANCE = new ReferenceGenericAdapterSidecar();
+        _SIDECAR_ADDRESS = address(_SIDECAR_INSTANCE);
+
+        _FLASHLOAN_OFFERER_ADDRESS = flashloanOfferer;
+        _FLASHLOAN_OFFERER_INSTANCE = ReferenceFlashloanOfferer(payable(flashloanOfferer));
+
+        emit SeaportCompatibleContractDeployed(_SIDECAR_ADDRESS);
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
@@ -82,10 +122,16 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
     ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
-        // Get the length of the context array from calldata (masked).
-        uint256 contextLength = uint256(bytes32(context[24:32]));
+        // The block below expects to be able to check indexes up to 32 of
+        // context. So, if context is empty, revert early with a descriptive
+        // error.
+        if (context.length < 35) {
+            revert InvalidExtraDataEncoding(0);
+        }
 
+        uint256 contextLength;
         uint256 approvalDataSize;
+
         {
             // Check is that caller is Seaport.
             if (msg.sender != _SEAPORT) {
@@ -98,12 +144,15 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
 
             // Retrieve the number of approvals.
-            uint256 approvalCount = uint256(bytes32(context[34 - 8:34]));
+            uint256 approvalCount = uint256(bytes32(context[32:33])) >> 248;
             // Each approval block is 21 bytes long.
             approvalDataSize = approvalCount * 21;
 
+            // Get the length of the context array from calldata.
+            contextLength = uint256(bytes32(context[28:32])) >> 224;
+
             // Check that the context length is acceptable.
-            if (contextLength < 2 + approvalDataSize) {
+            if (contextLength < (2 + approvalDataSize)) {
                 // If it's not, revert.
                 revert InvalidExtraDataEncoding(uint8(context[0]));
             }
@@ -168,7 +217,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         }
 
         // Read the sidecar address from runtime code and place on the stack.
-        address target = _SIDECAR;
+        address target = _SIDECAR_ADDRESS;
 
         // Track cumulative native tokens to be spent.
         uint256 value;
@@ -206,15 +255,33 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
 
         // Call sidecar, performing generic execution consuming supplied items.
         {
-            uint256 payloadSize = contextLength - (2 + approvalDataSize);
-            bytes calldata payload = context[approvalDataEnds:approvalDataEnds + payloadSize];
+            uint256 payloadSize = contextLength - (33 + approvalDataSize);
+            if (payloadSize != 0) {
+                // Construct the payload in such a way that it can be passed in
+                // as calldata to the sidecar.
 
-            // Call the sidecar with the supplied payload.
-            (bool success,) = target.call{value: 0}(abi.encodeWithSignature("execute(Calls[])", payload));
+                // Start by sticking the selector in the first 4 bytes.
+                bytes memory prebuiltPayload = abi.encode(bytes32(uint256(0xb252b6e5) << 224));
 
-            // Revert if the call failed.
-            if (!success) {
-                revert CallFailed();
+                // Iterate over the payload portion of the context arg.
+                for (uint256 i = approvalDataEnds; i < context.length; i++) {
+                    // Fill in the empty space in the prebuilt payload and then
+                    // tack each byte onto the end.
+                    uint256 targetIndex = 4 + (i - approvalDataEnds);
+                    if (targetIndex < prebuiltPayload.length) {
+                        prebuiltPayload[targetIndex] = context[i];
+                    } else {
+                        prebuiltPayload = abi.encodePacked(prebuiltPayload, context[i]);
+                    }
+                }
+
+                // Call the sidecar with the supplied payload.
+                (bool success,) = target.call{value: value}(prebuiltPayload);
+
+                // Revert if the call failed.
+                if (!success) {
+                    revert CallFailed();
+                }
             }
         }
 
@@ -238,7 +305,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
      */
     function cleanup(address recipient) external payable returns (bytes4) {
         // Ensure that only designated flashloan offerer can call this function.
-        if (msg.sender != _FLASHLOAN_OFFERER) {
+        if (msg.sender != _FLASHLOAN_OFFERER_ADDRESS) {
             revert InvalidCaller(msg.sender);
         }
 
