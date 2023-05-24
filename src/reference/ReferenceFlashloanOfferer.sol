@@ -250,7 +250,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 if (shouldCall == true) {
                     // Call the generic adapter's cleanup function.
                     (bool success, bytes memory returnData) =
-                        recipient.call{value: 0}(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
+                        recipient.call(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
 
                     if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
                         revert CallFailed();

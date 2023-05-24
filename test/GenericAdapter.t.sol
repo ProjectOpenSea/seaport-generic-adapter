@@ -927,33 +927,28 @@ contract GenericAdapterTest is BaseOrderTest {
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
-        // For now, just assume that everyone has lots of ETH. Just testing the
-        // code paths for now. TODO: remove.
+        // For now, just assume that the flashloan offerer is well stocked with
+        // native tokens.
         vm.deal(address(context.flashloanOfferer), 4 ether);
 
         Fulfillment[] memory fulfillments = new Fulfillment[](2);
         {
-            FulfillmentComponent[] memory offerComponentsOne = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsOne = new FulfillmentComponent[](1);
-            // FulfillmentComponent[] memory offerComponentsTwo = new FulfillmentComponent[](1);
-            // FulfillmentComponent[] memory considerationComponentsTwo = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory offerComponentsThree = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsThree = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsFlashloan = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsFlashloan = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsMirror = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsMirror = new FulfillmentComponent[](1);
 
             // Flashloan order, native consideration.
-            offerComponentsOne[0] = FulfillmentComponent(0, 0);
+            offerComponentsFlashloan[0] = FulfillmentComponent(0, 0);
             // Mirror order, native offer
-            considerationComponentsOne[0] = FulfillmentComponent(2, 0);
-            // offerComponentsTwo[0] = FulfillmentComponent(1, 0);
-            // considerationComponentsTwo[0] = FulfillmentComponent(1, 0);
+            considerationComponentsFlashloan[0] = FulfillmentComponent(2, 0);
             // Mirror order, native offer.
-            offerComponentsThree[0] = FulfillmentComponent(2, 0);
+            offerComponentsMirror[0] = FulfillmentComponent(2, 0);
             // Mirror order, native consideration.
-            considerationComponentsThree[0] = FulfillmentComponent(0, 0);
+            considerationComponentsMirror[0] = FulfillmentComponent(0, 0);
 
-            fulfillments[0] = Fulfillment(offerComponentsOne, considerationComponentsOne);
-            // fulfillments[1] = Fulfillment(offerComponentsTwo, considerationComponentsTwo);
-            fulfillments[1] = Fulfillment(offerComponentsThree, considerationComponentsThree);
+            fulfillments[0] = Fulfillment(offerComponentsFlashloan, considerationComponentsFlashloan);
+            fulfillments[1] = Fulfillment(offerComponentsMirror, considerationComponentsMirror);
         }
 
         consideration.matchAdvancedOrders{value: 3 ether}(
