@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
+import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
 
-import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
+import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
-import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
+import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
 import {
     AdvancedOrder,
@@ -15,19 +15,19 @@ import {
     OrderParameters
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInterface.sol";
+import { FlashloanOffererInterface } from "../src/interfaces/FlashloanOffererInterface.sol";
 
-import {TestERC721} from "../src/contracts/test/TestERC721.sol";
+import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
-import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
+import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
-import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
+import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import "forge-std/console.sol";
 
@@ -74,12 +74,12 @@ contract FlashloanOffererTest is BaseOrderTest {
     }
 
     function testFlashloanOffererReceive() public {
-        test(this.execReceive, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
-        test(this.execReceive, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+        test(this.execReceive, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
+        test(this.execReceive, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true }));
     }
 
     function execReceive(Context memory context) external stateless {
-        (bool success,) = address(context.flashloanOfferer).call{value: 1 ether}("");
+        (bool success,) = address(context.flashloanOfferer).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.flashloanOfferer).balance, 1 ether);
 
@@ -89,8 +89,10 @@ contract FlashloanOffererTest is BaseOrderTest {
     }
 
     function testSupportsInterface() public {
-        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
-        test(this.execSupportsInterface, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+        test(this.execSupportsInterface, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
+        test(
+            this.execSupportsInterface, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+        );
     }
 
     function execSupportsInterface(Context memory context) external stateless {
@@ -98,8 +100,10 @@ contract FlashloanOffererTest is BaseOrderTest {
     }
 
     function testGetSeaportMetadata() public {
-        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOfferer, isReference: false}));
-        test(this.execGetSeaportMetadata, Context({flashloanOfferer: testFlashloanOffererReference, isReference: true}));
+        test(this.execGetSeaportMetadata, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
+        test(
+            this.execGetSeaportMetadata, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+        );
     }
 
     function execGetSeaportMetadata(Context memory context) external stateless {
@@ -111,11 +115,11 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testGenerateOrderThresholdReverts() public {
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
         );
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
         );
     }
 
@@ -256,11 +260,11 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testDepositAndWithdrawFunctionality() public {
         test(
             this.execDepositAndWithdrawFunctionality,
-            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
         );
         test(
             this.execDepositAndWithdrawFunctionality,
-            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
         );
     }
 
@@ -305,11 +309,11 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testProvideFlashloanFunctionality() public {
         test(
             this.execProvideFlashloanFunctionality,
-            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
         );
         test(
             this.execProvideFlashloanFunctionality,
-            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
         );
     }
 
@@ -373,11 +377,11 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testSeaportWrappedFlashloanFunctionality() public {
         test(
             this.execSeaportWrappedFlashloanFunctionality,
-            Context({flashloanOfferer: testFlashloanOfferer, isReference: false})
+            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
         );
         test(
             this.execSeaportWrappedFlashloanFunctionality,
-            Context({flashloanOfferer: testFlashloanOffererReference, isReference: true})
+            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
         );
     }
 
@@ -444,7 +448,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.deal(address(context.flashloanOfferer), 0x4444444444444444444444444);
 
         // Call Seaport with the order.
-        consideration.fulfillAdvancedOrder{value: flashloanValueRequested}(
+        consideration.fulfillAdvancedOrder{ value: flashloanValueRequested }(
             order, new CriteriaResolver[](0), bytes32(0), address(this)
         );
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {OfferConsiderationItemAdder} from "./OfferConsiderationItemAdder.sol";
+import { OfferConsiderationItemAdder } from "./OfferConsiderationItemAdder.sol";
 
 import {
     OrderParameters,
@@ -17,9 +17,9 @@ import {
     AdvancedOrder
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {OrderType, BasicOrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { OrderType, BasicOrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
 
 contract OrderBuilder is OfferConsiderationItemAdder {
     uint256 internal globalSalt;
@@ -118,14 +118,14 @@ contract OrderBuilder is OfferConsiderationItemAdder {
         delete fulfillments;
         for (uint256 i; i < order1.offer.length; ++i) {
             createFulfillmentFromComponentsAndAddToFulfillments({
-                _offer: FulfillmentComponent({orderIndex: 0, itemIndex: i}),
-                _consideration: FulfillmentComponent({orderIndex: 1, itemIndex: i})
+                _offer: FulfillmentComponent({ orderIndex: 0, itemIndex: i }),
+                _consideration: FulfillmentComponent({ orderIndex: 1, itemIndex: i })
             });
         }
         for (uint256 i; i < order2.offer.length; ++i) {
             createFulfillmentFromComponentsAndAddToFulfillments({
-                _offer: FulfillmentComponent({orderIndex: 1, itemIndex: i}),
-                _consideration: FulfillmentComponent({orderIndex: 0, itemIndex: i})
+                _offer: FulfillmentComponent({ orderIndex: 1, itemIndex: i }),
+                _consideration: FulfillmentComponent({ orderIndex: 0, itemIndex: i })
             });
         }
 
@@ -148,14 +148,14 @@ contract OrderBuilder is OfferConsiderationItemAdder {
         // create individual fulfillments for each offerItem
         for (uint256 i; i < params.offer.length; ++i) {
             addSingleFulfillmentComponentsTo({
-                component: FulfillmentComponent({orderIndex: orderIndex, itemIndex: i}),
+                component: FulfillmentComponent({ orderIndex: orderIndex, itemIndex: i }),
                 target: offerComponentsArray
             });
         }
         // create individual fulfillments for each considerationItem
         for (uint256 i; i < params.consideration.length; ++i) {
             addSingleFulfillmentComponentsTo({
-                component: FulfillmentComponent({orderIndex: orderIndex, itemIndex: i}),
+                component: FulfillmentComponent({ orderIndex: orderIndex, itemIndex: i }),
                 target: considerationComponentsArray
             });
         }
@@ -193,7 +193,7 @@ contract OrderBuilder is OfferConsiderationItemAdder {
         bytes32 orderHash = _consideration.getOrderHash(baseOrderComponents);
 
         Order memory order =
-            Order({parameters: baseOrderParameters, signature: signOrder(_consideration, pkey, orderHash)});
+            Order({ parameters: baseOrderParameters, signature: signOrder(_consideration, pkey, orderHash) });
         delete offerItems;
         delete considerationItems;
         delete baseOrderComponents;
@@ -225,7 +225,7 @@ contract OrderBuilder is OfferConsiderationItemAdder {
         configureOrderComponents(_consideration);
         bytes32 orderHash = _consideration.getOrderHash(baseOrderComponents);
         Order memory order =
-            Order({parameters: baseOrderParameters, signature: signOrder(_consideration, pkey, orderHash)});
+            Order({ parameters: baseOrderParameters, signature: signOrder(_consideration, pkey, orderHash) });
 
         delete offerItems;
         delete considerationItems;

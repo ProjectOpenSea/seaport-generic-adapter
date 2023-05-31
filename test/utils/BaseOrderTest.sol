@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {FulfillAvailableHelper, MatchFulfillmentHelper} from "seaport-sol/SeaportSol.sol";
+import { FulfillAvailableHelper, MatchFulfillmentHelper } from "seaport-sol/SeaportSol.sol";
 
 import {
     AdditionalRecipient,
@@ -12,17 +12,17 @@ import {
     OrderParameters
 } from "seaport-sol/SeaportStructs.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import {OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {BasicOrder_additionalRecipients_data_cdPtr, TwoWords} from "seaport-types/lib/ConsiderationConstants.sol";
+import { BasicOrder_additionalRecipients_data_cdPtr, TwoWords } from "seaport-types/lib/ConsiderationConstants.sol";
 
-import {ArithmeticUtil} from "./ArithmeticUtil.sol";
+import { ArithmeticUtil } from "./ArithmeticUtil.sol";
 
-import {OrderBuilder} from "./OrderBuilder.sol";
+import { OrderBuilder } from "./OrderBuilder.sol";
 
-import {AmountDeriver} from "seaport-core/lib/AmountDeriver.sol";
+import { AmountDeriver } from "seaport-core/lib/AmountDeriver.sol";
 
 /// @dev base test class for cases that depend on pre-deployed token contracts
 contract BaseOrderTest is OrderBuilder, AmountDeriver {
@@ -351,5 +351,5 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         return 0x1626ba7e;
     }
 
-    receive() external payable virtual {}
+    receive() external payable virtual { }
 }

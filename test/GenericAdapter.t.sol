@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Vm} from "forge-std/Vm.sol";
+import { Vm } from "forge-std/Vm.sol";
 
-import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
+import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
 
-import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
+import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
-import {OfferItemLib} from "seaport-sol/lib/OfferItemLib.sol";
+import { OfferItemLib } from "seaport-sol/lib/OfferItemLib.sol";
 
-import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
+import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
-import {SpentItemLib} from "seaport-sol/lib/SpentItemLib.sol";
+import { SpentItemLib } from "seaport-sol/lib/SpentItemLib.sol";
 
-import {UnavailableReason} from "seaport-sol/SpaceEnums.sol";
+import { UnavailableReason } from "seaport-sol/SpaceEnums.sol";
 
 import {
     AdvancedOrder,
@@ -28,35 +28,35 @@ import {
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {GenericAdapterInterface} from "../src/interfaces/GenericAdapterInterface.sol";
+import { GenericAdapterInterface } from "../src/interfaces/GenericAdapterInterface.sol";
 
-import {FlashloanOffererInterface} from "../src/interfaces/FlashloanOffererInterface.sol";
+import { FlashloanOffererInterface } from "../src/interfaces/FlashloanOffererInterface.sol";
 
-import {GenericAdapter} from "../src/optimized/GenericAdapter.sol";
+import { GenericAdapter } from "../src/optimized/GenericAdapter.sol";
 
-import {ReferenceGenericAdapter} from "../src/reference/ReferenceGenericAdapter.sol";
+import { ReferenceGenericAdapter } from "../src/reference/ReferenceGenericAdapter.sol";
 
-import {Call, GenericAdapterSidecarInterface} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
+import { Call, GenericAdapterSidecarInterface } from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
-import {TestERC20} from "../src/contracts/test/TestERC20.sol";
+import { TestERC20 } from "../src/contracts/test/TestERC20.sol";
 
-import {TestERC20Revert} from "../src/contracts/test/TestERC20Revert.sol";
+import { TestERC20Revert } from "../src/contracts/test/TestERC20Revert.sol";
 
-import {TestERC721} from "../src/contracts/test/TestERC721.sol";
+import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
-import {TestERC721Revert} from "../src/contracts/test/TestERC721Revert.sol";
+import { TestERC721Revert } from "../src/contracts/test/TestERC721Revert.sol";
 
-import {TestERC721} from "../src/contracts/test/TestERC721.sol";
+import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
-import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
+import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
-import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
+import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
-import {MatchFulfillmentHelper} from "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
+import { MatchFulfillmentHelper } from "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
 
 import "forge-std/console.sol";
 
@@ -167,7 +167,7 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function execReceive(Context memory context) external stateless {
-        (bool success,) = address(context.adapter).call{value: 1 ether}("");
+        (bool success,) = address(context.adapter).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.adapter).balance, 1 ether);
 
@@ -258,7 +258,7 @@ contract GenericAdapterTest is BaseOrderTest {
         context.adapter.cleanup(address(this));
 
         // Send the adapter some native tokens.
-        (bool success,) = address(context.adapter).call{value: 1 ether}("");
+        (bool success,) = address(context.adapter).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.adapter).balance, 1 ether);
 
@@ -893,7 +893,6 @@ contract GenericAdapterTest is BaseOrderTest {
         order = order.withExtraData(extraData);
         orders[1] = order;
 
-
         // SET UP THE MIRROR ORDER HERE.
         // This is just a dummy order to make the flashloan offerer's
         // consideration requirement happy.
@@ -951,9 +950,7 @@ contract GenericAdapterTest is BaseOrderTest {
             fulfillments[1] = Fulfillment(offerComponentsMirror, considerationComponentsMirror);
         }
 
-        consideration.matchAdvancedOrders{value: 3 ether}(
-            orders, new CriteriaResolver[](0), fulfillments, address(0)
-        );
+        consideration.matchAdvancedOrders{ value: 3 ether }(orders, new CriteriaResolver[](0), fulfillments, address(0));
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
     }

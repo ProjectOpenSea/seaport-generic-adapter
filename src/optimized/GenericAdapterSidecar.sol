@@ -33,7 +33,7 @@ contract GenericAdapterSidecar {
     /**
      * @dev Enable accepting native tokens.
      */
-    receive() external payable {}
+    receive() external payable { }
 
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.

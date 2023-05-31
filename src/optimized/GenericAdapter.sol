@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
+import { TokenTransferrer } from "seaport-core/lib/TokenTransferrer.sol";
 
-import {GenericAdapterSidecar} from "./GenericAdapterSidecar.sol";
+import { GenericAdapterSidecar } from "./GenericAdapterSidecar.sol";
 
 /**
  * @title GenericAdapter
@@ -336,7 +336,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
      *      allow for receipt of native tokens from either the sidecar or the
      *      flashloan offerer as an added precaution against accidental loss.
      */
-    receive() external payable {}
+    receive() external payable { }
 
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.

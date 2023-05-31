@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-import {TestERC721} from "./TestERC721.sol";
+import { TestERC721 } from "./TestERC721.sol";
 
 contract TestERC721Revert is TestERC721 {
     error AlwaysRevert();

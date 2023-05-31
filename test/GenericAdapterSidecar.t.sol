@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {Call, GenericAdapterSidecarInterface} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
+import { Call, GenericAdapterSidecarInterface } from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
-import {GenericAdapterSidecar} from "../src/optimized/GenericAdapterSidecar.sol";
+import { GenericAdapterSidecar } from "../src/optimized/GenericAdapterSidecar.sol";
 
-import {ReferenceGenericAdapterSidecar} from "../src/reference/ReferenceGenericAdapterSidecar.sol";
+import { ReferenceGenericAdapterSidecar } from "../src/reference/ReferenceGenericAdapterSidecar.sol";
 
-import {TestERC721} from "../src/contracts/test/TestERC721.sol";
+import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
-import {TestERC1155} from "../src/contracts/test/TestERC1155.sol";
+import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
-import {BaseOrderTest} from "./utils/BaseOrderTest.sol";
+import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
 contract GenericAdapterSidecarTest is BaseOrderTest {
     struct Context {
@@ -47,12 +47,12 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testReceive() public {
-        test(this.execReceive, Context({sidecar: testSidecar, isReference: false}));
-        test(this.execReceive, Context({sidecar: testSidecarReference, isReference: true}));
+        test(this.execReceive, Context({ sidecar: testSidecar, isReference: false }));
+        test(this.execReceive, Context({ sidecar: testSidecarReference, isReference: true }));
     }
 
     function execReceive(Context memory context) external stateless {
-        (bool success,) = address(context.sidecar).call{value: 1 ether}("");
+        (bool success,) = address(context.sidecar).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.sidecar).balance, 1 ether);
 
@@ -62,15 +62,15 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteReturnsNativeBalance() public {
-        test(this.execExecuteReturnsNativeBalance, Context({sidecar: testSidecar, isReference: false}));
-        test(this.execExecuteReturnsNativeBalance, Context({sidecar: testSidecarReference, isReference: true}));
+        test(this.execExecuteReturnsNativeBalance, Context({ sidecar: testSidecar, isReference: false }));
+        test(this.execExecuteReturnsNativeBalance, Context({ sidecar: testSidecarReference, isReference: true }));
     }
 
     function execExecuteReturnsNativeBalance(Context memory context) external stateless {
         Call[] memory calls;
         context.sidecar.execute(calls);
 
-        (bool success,) = address(context.sidecar).call{value: 1 ether}("");
+        (bool success,) = address(context.sidecar).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.sidecar).balance, 1 ether);
 
@@ -78,7 +78,7 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
         assertEq(address(context.sidecar).balance, 0);
 
         rejectReceive = true;
-        (success,) = address(context.sidecar).call{value: 1 ether}("");
+        (success,) = address(context.sidecar).call{ value: 1 ether }("");
 
         if (context.isReference) {
             vm.expectRevert(
@@ -94,8 +94,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteNotDesignatedCaller() public {
-        test(this.execExecuteNotDesignatedCaller, Context({sidecar: testSidecar, isReference: false}));
-        test(this.execExecuteNotDesignatedCaller, Context({sidecar: testSidecarReference, isReference: true}));
+        test(this.execExecuteNotDesignatedCaller, Context({ sidecar: testSidecar, isReference: false }));
+        test(this.execExecuteNotDesignatedCaller, Context({ sidecar: testSidecarReference, isReference: true }));
     }
 
     function execExecuteNotDesignatedCaller(Context memory context) external stateless {
@@ -172,8 +172,8 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteToggleFailureAllowed() public {
-        test(this.execExecuteToggleFailureAllowed, Context({sidecar: testSidecar, isReference: false}));
-        test(this.execExecuteToggleFailureAllowed, Context({sidecar: testSidecarReference, isReference: true}));
+        test(this.execExecuteToggleFailureAllowed, Context({ sidecar: testSidecar, isReference: false }));
+        test(this.execExecuteToggleFailureAllowed, Context({ sidecar: testSidecarReference, isReference: true }));
     }
 
     function execExecuteToggleFailureAllowed(Context memory context) external stateless {
@@ -287,7 +287,7 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
         context.sidecar.execute(mixedCalls);
 
         // Test native token handling with populated calls.
-        (bool success,) = address(context.sidecar).call{value: 1 ether}("");
+        (bool success,) = address(context.sidecar).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.sidecar).balance, 1 ether);
 
@@ -299,7 +299,7 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
         assertEq(address(context.sidecar).balance, 0);
 
         rejectReceive = true;
-        (success,) = address(context.sidecar).call{value: 1 ether}("");
+        (success,) = address(context.sidecar).call{ value: 1 ether }("");
 
         if (context.isReference) {
             vm.expectRevert(

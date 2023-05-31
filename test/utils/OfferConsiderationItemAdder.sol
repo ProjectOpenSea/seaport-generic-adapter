@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ConsiderationItem, OfferItem, ItemType, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import { ConsiderationItem, OfferItem, ItemType, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {TestTokenMinter} from "./TestTokenMinter.sol";
+import { TestTokenMinter } from "./TestTokenMinter.sol";
 
 contract OfferConsiderationItemAdder is TestTokenMinter {
     OfferItem offerItem;
@@ -37,7 +37,7 @@ contract OfferConsiderationItemAdder is TestTokenMinter {
     }
 
     function addOfferItem(ItemType itemType, address token, uint256 identifier, uint256 amount) internal {
-        addOfferItem({itemType: itemType, token: token, identifier: identifier, startAmount: amount, endAmount: amount});
+        addOfferItem({ itemType: itemType, token: token, identifier: identifier, startAmount: amount, endAmount: amount });
     }
 
     function addOfferItem(ItemType itemType, uint256 identifier, uint256 startAmount, uint256 endAmount) internal {

@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ConduitController} from "seaport-core/conduit/ConduitController.sol";
+import { ConduitController } from "seaport-core/conduit/ConduitController.sol";
 
-import {ConduitControllerInterface} from "seaport-types/interfaces/ConduitControllerInterface.sol";
+import { ConduitControllerInterface } from "seaport-types/interfaces/ConduitControllerInterface.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {OfferItem, ConsiderationItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import { OfferItem, ConsiderationItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {DifferentialTest} from "./DifferentialTest.sol";
+import { DifferentialTest } from "./DifferentialTest.sol";
 
-import {StructCopier} from "./StructCopier.sol";
+import { StructCopier } from "./StructCopier.sol";
 
-import {Conduit} from "seaport-core/conduit/Conduit.sol";
+import { Conduit } from "seaport-core/conduit/Conduit.sol";
 
-import {Consideration} from "seaport-core/lib/Consideration.sol";
+import { Consideration } from "seaport-core/lib/Consideration.sol";
 
 /// @dev Base test case that deploys Consideration and its dependencies
 contract BaseConsiderationTest is DifferentialTest, StructCopier {

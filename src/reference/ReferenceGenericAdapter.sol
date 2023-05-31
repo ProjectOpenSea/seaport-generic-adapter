@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import {
     AdvancedOrder,
@@ -14,21 +14,21 @@ import {
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {ItemType, OrderType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {TokenTransferrer} from "seaport-core/lib/TokenTransferrer.sol";
+import { TokenTransferrer } from "seaport-core/lib/TokenTransferrer.sol";
 
-import {ConsiderationInterface} from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import {Call, ReferenceGenericAdapterSidecar} from "./ReferenceGenericAdapterSidecar.sol";
+import { Call, ReferenceGenericAdapterSidecar } from "./ReferenceGenericAdapterSidecar.sol";
 
-import {ReferenceFlashloanOfferer} from "./ReferenceFlashloanOfferer.sol";
+import { ReferenceFlashloanOfferer } from "./ReferenceFlashloanOfferer.sol";
 
-import {AdvancedOrderLib} from "seaport-sol/lib/AdvancedOrderLib.sol";
+import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
 
-import {ConsiderationItemLib} from "seaport-sol/lib/ConsiderationItemLib.sol";
+import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
-import {OrderParametersLib} from "seaport-sol/lib/OrderParametersLib.sol";
+import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
 import "forge-std/console.sol";
 
@@ -199,12 +199,12 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                 if (context[startingIndex] == 0x00) {
                     // Approve the Seaport contract to transfer the maximum
                     // amount of the token.
-                    (success,) = approvalToken.call{value: 0}(
+                    (success,) = approvalToken.call{ value: 0 }(
                         abi.encodeWithSignature("approve(address,uint256)", approvalTarget, uint256(2 ** 256 - 1))
                     );
                 } else {
                     // Approve the Seaport contract to transfer all tokens.
-                    (success,) = approvalToken.call{value: 0}(
+                    (success,) = approvalToken.call{ value: 0 }(
                         abi.encodeWithSignature("setApprovalForAll(address,bool)", approvalTarget, true)
                     );
                 }
@@ -276,7 +276,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                 }
 
                 // Call the sidecar with the supplied payload.
-                (bool success,) = target.call{value: value}(prebuiltPayload);
+                (bool success,) = target.call{ value: value }(prebuiltPayload);
 
                 // Revert if the call failed.
                 if (!success) {
@@ -312,7 +312,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         // Send any available native token balance to the supplied recipient.
         if (address(this).balance > 0) {
             // Declare a variable indicating whether the call was successful.
-            (bool success,) = recipient.call{value: address(this).balance}("");
+            (bool success,) = recipient.call{ value: address(this).balance }("");
 
             // If the call fails, revert.
             if (!success) {
@@ -331,7 +331,7 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
      *      allow for receipt of native tokens from either the sidecar or the
      *      flashloan offerer as an added precaution against accidental loss.
      */
-    receive() external payable {}
+    receive() external payable { }
 
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.

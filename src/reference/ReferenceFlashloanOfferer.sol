@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import {ContractOffererInterface} from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import {ItemType} from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import {ReceivedItem, Schema, SpentItem} from "seaport-types/lib/ConsiderationStructs.sol";
+import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import "forge-std/console.sol";
 
@@ -182,7 +182,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     /**
      * @dev Enable accepting native tokens.
      */
-    receive() external payable {}
+    receive() external payable { }
 
     /**
      * @dev Ratifies an order with the specified offer, consideration, and
@@ -371,7 +371,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             totalValue += value;
 
             // Send the flashloan to the recipient.
-            (bool success,) = recipient.call{value: value}("");
+            (bool success,) = recipient.call{ value: value }("");
 
             // If the call fails, revert.
             if (!success) {

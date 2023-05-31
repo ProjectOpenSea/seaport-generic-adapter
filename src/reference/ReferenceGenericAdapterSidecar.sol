@@ -34,7 +34,7 @@ contract ReferenceGenericAdapterSidecar {
     /**
      * @dev Enable accepting native tokens.
      */
-    receive() external payable {}
+    receive() external payable { }
 
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
@@ -72,7 +72,7 @@ contract ReferenceGenericAdapterSidecar {
             }
 
             // Call the target and get success status.
-            (success,) = calls[i].target.call{value: calls[i].value}(calls[i].callData);
+            (success,) = calls[i].target.call{ value: calls[i].value }(calls[i].callData);
 
             // If the call fails and the call is not allowed to fail, revert.
             if (calls[i].allowFailure == false && success == false) {
@@ -83,7 +83,7 @@ contract ReferenceGenericAdapterSidecar {
         // Return excess native tokens, if any remain, to the caller.
         if (address(this).balance > 0) {
             // Declare a variable indicating whether the call was successful.
-            (success,) = msg.sender.call{value: address(this).balance}("");
+            (success,) = msg.sender.call{ value: address(this).balance }("");
 
             // If the call fails, revert.
             if (!success) {
