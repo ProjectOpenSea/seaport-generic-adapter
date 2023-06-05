@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import { SeaportInterface } from "seaport-types/interfaces/SeaportInterface.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+import {
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
 import { ERC165 } from "./ERC165.sol";
 
@@ -85,7 +90,11 @@ contract WethConverter is ERC165, ContractOffererInterface {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         address seaport = address(_SEAPORT);
         address weth = address(_WETH);
 
@@ -112,7 +121,12 @@ contract WethConverter is ERC165, ContractOffererInterface {
                 invalidMaximumSpentItem :=
                     or(
                         gt(considerationItemType, 1),
-                        and(considerationItemType, iszero(eq(calldataload(add(maximumSpentItem, 0x20)), weth)))
+                        and(
+                            considerationItemType,
+                            iszero(
+                                eq(calldataload(add(maximumSpentItem, 0x20)), weth)
+                            )
+                        )
                     )
 
                 // invalidMaximumSpentItem := eq(calldataload(add(maximumSpentItem, 0x20)), weth)
@@ -146,7 +160,11 @@ contract WethConverter is ERC165, ContractOffererInterface {
             // Supply the native tokens to Seaport and update the error buffer
             // if the call fails.
             assembly {
-                errorBuffer := or(errorBuffer, shl(7, iszero(call(gas(), seaport, amount, 0, 0, 0, 0))))
+                errorBuffer :=
+                    or(
+                        errorBuffer,
+                        shl(7, iszero(call(gas(), seaport, amount, 0, 0, 0, 0)))
+                    )
             }
 
             if (minimumReceived.length > 0) {
@@ -197,7 +215,10 @@ contract WethConverter is ERC165, ContractOffererInterface {
         // Return the native tokens.
         assembly {
             if iszero(call(gas(), caller(), amount, 0, 0, 0, 0)) {
-                if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                if and(
+                    iszero(iszero(returndatasize())),
+                    lt(returndatasize(), 0xffff)
+                ) {
                     returndatacopy(0, 0, returndatasize())
                     revert(0, returndatasize())
                 }
@@ -260,7 +281,12 @@ contract WethConverter is ERC165, ContractOffererInterface {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external view override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        view
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         address seaport = address(_SEAPORT);
         address weth = address(_WETH);
 
@@ -282,7 +308,10 @@ contract WethConverter is ERC165, ContractOffererInterface {
             let invalidMaximumSpentItem :=
                 or(
                     gt(considerationItemType, 1),
-                    and(considerationItemType, eq(calldataload(add(maximumSpentItem, 0x20)), weth))
+                    and(
+                        considerationItemType,
+                        eq(calldataload(add(maximumSpentItem, 0x20)), weth)
+                    )
                 )
 
             errorBuffer := or(errorBuffer, shl(3, invalidMaximumSpentItem))
@@ -353,7 +382,8 @@ contract WethConverter is ERC165, ContractOffererInterface {
         override(ERC165, ContractOffererInterface)
         returns (bool)
     {
-        return interfaceId == type(ContractOffererInterface).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(ContractOffererInterface).interfaceId
+            || super.supportsInterface(interfaceId);
     }
 
     function _wrapIfNecessary(uint256 requiredAmount) internal {
@@ -369,7 +399,9 @@ contract WethConverter is ERC165, ContractOffererInterface {
             }
 
             // Derive the amount to wrap, targeting eventual 50/50 split.
-            uint256 amountToWrap = (currentNativeBalance + currentWrappedBalance + requiredAmount) / 2;
+            uint256 amountToWrap = (
+                currentNativeBalance + currentWrappedBalance + requiredAmount
+            ) / 2;
 
             // Reduce the amount to wrap if it exceeds the native balance.
             if (amountToWrap > currentNativeBalance) {
@@ -401,7 +433,9 @@ contract WethConverter is ERC165, ContractOffererInterface {
             uint256 currentWrappedBalance = _WETH.balanceOf(address(this));
 
             // Derive the amount to unwrap, targeting eventual 50/50 split.
-            uint256 amountToUnwrap = (currentNativeBalance + currentWrappedBalance + requiredAmount) / 2;
+            uint256 amountToUnwrap = (
+                currentNativeBalance + currentWrappedBalance + requiredAmount
+            ) / 2;
 
             // Reduce the amount to unwrap if it exceeds the wrapped balance.
             if (amountToUnwrap > currentWrappedBalance) {
@@ -413,7 +447,11 @@ contract WethConverter is ERC165, ContractOffererInterface {
         }
     }
 
-    function _filterUnavailable(uint256 amount, bytes calldata context) internal view returns (uint256 reducedAmount) {
+    function _filterUnavailable(uint256 amount, bytes calldata context)
+        internal
+        view
+        returns (uint256 reducedAmount)
+    {
         // Skip if no context is supplied and some amount is supplied.
         if ((_cast(context.length == 0) & _cast(amount != 0)) != 0) {
             return amount;
@@ -450,12 +488,14 @@ contract WethConverter is ERC165, ContractOffererInterface {
             uint256 amountToReduce;
             unchecked {
                 amountToReduce = (
-                    _cast(isCancelled) | _cast(block.timestamp < condition.startTime)
+                    _cast(isCancelled)
+                        | _cast(block.timestamp < condition.startTime)
                         | _cast(block.timestamp >= condition.endTime)
                         | (
                             _cast(totalFilled != 0)
                                 & _cast(
-                                    (conditionTotalFilled * totalSize) + (totalFilled * conditionTotalSize)
+                                    (conditionTotalFilled * totalSize)
+                                        + (totalFilled * conditionTotalSize)
                                         > totalSize * conditionTotalSize
                                 )
                         )
@@ -500,11 +540,10 @@ contract WethConverter is ERC165, ContractOffererInterface {
      *
      * @return receivedItem The received item.
      */
-    function _copySpentAsReceivedToSelf(SpentItem calldata spentItem, uint256 amount)
-        internal
-        view
-        returns (ReceivedItem memory receivedItem)
-    {
+    function _copySpentAsReceivedToSelf(
+        SpentItem calldata spentItem,
+        uint256 amount
+    ) internal view returns (ReceivedItem memory receivedItem) {
         assembly {
             calldatacopy(receivedItem, spentItem, 0x60)
             mstore(add(receivedItem, 0x60), amount)

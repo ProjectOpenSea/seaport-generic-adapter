@@ -24,7 +24,12 @@ contract PreapprovedERC721 is CustomERC721 {
         return true;
     }
 
-    function isApprovedForAll(address owner, address operator) public view override returns (bool) {
+    function isApprovedForAll(address owner, address operator)
+        public
+        view
+        override
+        returns (bool)
+    {
         return preapprovals[operator] || super.isApprovedForAll(owner, operator);
     }
 
@@ -33,7 +38,11 @@ contract PreapprovedERC721 is CustomERC721 {
     }
 }
 
-contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recipient {
+contract TestTokenMinter is
+    BaseConsiderationTest,
+    ERC721Recipient,
+    ERC1155Recipient
+{
     uint256 constant MAX_INT = ~uint256(0);
 
     uint256 internal alicePk = 0xa11ce;
@@ -64,13 +73,21 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
 
     modifier only1155Receiver(address recipient) {
         vm.assume(
-            recipient != address(0) && recipient != 0x4c8D290a1B368ac4728d83a9e8321fC3af2b39b1
+            recipient != address(0)
+                && recipient != 0x4c8D290a1B368ac4728d83a9e8321fC3af2b39b1
                 && recipient != 0x4e59b44847b379578588920cA78FbF26c0B4956C
         );
 
         if (recipient.code.length > 0) {
             (bool success, bytes memory returnData) = recipient.call(
-                abi.encodeWithSelector(ERC1155Recipient.onERC1155Received.selector, address(1), address(1), 1, 1, "")
+                abi.encodeWithSelector(
+                    ERC1155Recipient.onERC1155Received.selector,
+                    address(1),
+                    address(1),
+                    1,
+                    1,
+                    ""
+                )
             );
             vm.assume(success);
             try this.decodeBytes4(returnData) returns (bytes4 response) {
@@ -107,7 +124,10 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
         allocateTokensAndApprovals(cal, uint128(MAX_INT));
     }
 
-    function makeAddrWithAllocationsAndApprovals(string memory label) internal returns (address) {
+    function makeAddrWithAllocationsAndApprovals(string memory label)
+        internal
+        returns (address)
+    {
         address addr = makeAddr(label);
         allocateTokensAndApprovals(addr, uint128(MAX_INT));
         return addr;
@@ -117,15 +137,24 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
         mintErc721TokenTo(to, test721_1, id);
     }
 
-    function mintErc721TokenTo(address to, TestERC721 token, uint256 id) internal {
+    function mintErc721TokenTo(address to, TestERC721 token, uint256 id)
+        internal
+    {
         token.mint(to, id);
     }
 
-    function mintTokensTo(address to, ItemType itemType, uint256 amount) internal {
+    function mintTokensTo(address to, ItemType itemType, uint256 amount)
+        internal
+    {
         mintTokensTo(to, itemType, 1, amount);
     }
 
-    function mintTokensTo(address to, ItemType itemType, uint256 id, uint256 amount) internal {
+    function mintTokensTo(
+        address to,
+        ItemType itemType,
+        uint256 id,
+        uint256 amount
+    ) internal {
         if (itemType == ItemType.NATIVE) {
             vm.deal(to, amount);
         } else if (itemType == ItemType.ERC20) {
@@ -137,7 +166,13 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
         }
     }
 
-    function mintTokensTo(address to, ItemType itemType, address token, uint256 id, uint256 amount) internal {
+    function mintTokensTo(
+        address to,
+        ItemType itemType,
+        address token,
+        uint256 id,
+        uint256 amount
+    ) internal {
         if (itemType == ItemType.NATIVE) {
             vm.deal(to, amount);
         } else if (itemType == ItemType.ERC20) {
@@ -149,11 +184,18 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
         }
     }
 
-    function mintErc1155TokensTo(address to, uint256 id, uint256 amount) internal {
+    function mintErc1155TokensTo(address to, uint256 id, uint256 amount)
+        internal
+    {
         mintErc1155TokensTo(to, test1155_1, id, amount);
     }
 
-    function mintErc1155TokensTo(address to, TestERC1155 token, uint256 id, uint256 amount) internal {
+    function mintErc1155TokensTo(
+        address to,
+        TestERC1155 token,
+        uint256 id,
+        uint256 amount
+    ) internal {
         token.mint(to, id, amount);
     }
 
@@ -161,7 +203,9 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
         mintErc20TokensTo(to, token1, amount);
     }
 
-    function mintErc20TokensTo(address to, TestERC20 token, uint256 amount) internal {
+    function mintErc20TokensTo(address to, TestERC20 token, uint256 amount)
+        internal
+    {
         token.mint(to, amount);
     }
 
@@ -189,7 +233,9 @@ contract TestTokenMinter is BaseConsiderationTest, ERC721Recipient, ERC1155Recip
     /**
      * @dev allocate amount of each token, 1 of each 721, and 1, 5, and 10 of respective 1155s
      */
-    function allocateTokensAndApprovals(address _to, uint128 _amount) internal {
+    function allocateTokensAndApprovals(address _to, uint128 _amount)
+        internal
+    {
         vm.deal(_to, _amount);
         for (uint256 i = 0; i < erc20s.length; ++i) {
             erc20s[i].mint(_to, _amount);

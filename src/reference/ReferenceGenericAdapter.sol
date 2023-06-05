@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import {
     AdvancedOrder,
@@ -18,9 +19,13 @@ import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import { TokenTransferrer } from "seaport-core/lib/TokenTransferrer.sol";
 
-import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from
+    "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { Call, ReferenceGenericAdapterSidecar } from "./ReferenceGenericAdapterSidecar.sol";
+import {
+    Call,
+    ReferenceGenericAdapterSidecar
+} from "./ReferenceGenericAdapterSidecar.sol";
 
 import { ReferenceFlashloanOfferer } from "./ReferenceFlashloanOfferer.sol";
 
@@ -39,7 +44,10 @@ import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
  *         encapsulates arbitrary execution within a companion contract, called
  *         the "sidecar."  This is the reference implementation.
  */
-contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
+contract ReferenceGenericAdapter is
+    ContractOffererInterface,
+    TokenTransferrer
+{
     address private immutable _SEAPORT;
     address private immutable _SIDECAR_ADDRESS;
     address private immutable _FLASHLOAN_OFFERER_ADDRESS;
@@ -76,12 +84,18 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         _SIDECAR_ADDRESS = address(_SIDECAR_INSTANCE);
 
         _FLASHLOAN_OFFERER_ADDRESS = flashloanOfferer;
-        _FLASHLOAN_OFFERER_INSTANCE = ReferenceFlashloanOfferer(payable(flashloanOfferer));
+        _FLASHLOAN_OFFERER_INSTANCE =
+            ReferenceFlashloanOfferer(payable(flashloanOfferer));
 
         emit SeaportCompatibleContractDeployed(_SIDECAR_ADDRESS);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
         return interfaceId == type(ContractOffererInterface).interfaceId;
     }
 
@@ -119,7 +133,11 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         // The block below expects to be able to check indexes up to 32 of
         // context. So, if context is empty, revert early with a descriptive
         // error.
@@ -185,25 +203,38 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                 // 54.  The next is 55-75, etc. `startingIndex` and
                 // `endingIndex` define the range of bytes for the current
                 // approval block.
-                startingIndex = approvalDataInitialOffset + i - approvalDataBlockSize;
+                startingIndex =
+                    approvalDataInitialOffset + i - approvalDataBlockSize;
                 endingIndex = approvalDataInitialOffset + i;
 
                 // The first byte of the approval block is the approval type.
                 // The bytes at indexes 1-21 are the address of the token to
                 // approve.
-                approvalToken = address(uint160(bytes20(context[startingIndex + 1:startingIndex + 21])));
+                approvalToken = address(
+                    uint160(
+                        bytes20(context[startingIndex + 1:startingIndex + 21])
+                    )
+                );
 
                 // 0x00 flag for ERC20 and 0x01 flag for ERC721.
                 if (context[startingIndex] == 0x00) {
                     // Approve the Seaport contract to transfer the maximum
                     // amount of the token.
                     (success,) = approvalToken.call{ value: 0 }(
-                        abi.encodeWithSignature("approve(address,uint256)", approvalTarget, uint256(2 ** 256 - 1))
+                        abi.encodeWithSignature(
+                            "approve(address,uint256)",
+                            approvalTarget,
+                            uint256(2 ** 256 - 1)
+                        )
                     );
                 } else {
                     // Approve the Seaport contract to transfer all tokens.
                     (success,) = approvalToken.call{ value: 0 }(
-                        abi.encodeWithSignature("setApprovalForAll(address,bool)", approvalTarget, true)
+                        abi.encodeWithSignature(
+                            "setApprovalForAll(address,bool)",
+                            approvalTarget,
+                            true
+                        )
                     );
                 }
 
@@ -238,11 +269,21 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                         value += item.amount & type(uint224).max;
                     }
                 } else if (itemType == ItemType.ERC20) {
-                    _performERC20Transfer(item.token, _fulfiller, target, item.amount);
+                    _performERC20Transfer(
+                        item.token, _fulfiller, target, item.amount
+                    );
                 } else if (itemType == ItemType.ERC721) {
-                    _performERC721Transfer(item.token, _fulfiller, target, item.identifier);
+                    _performERC721Transfer(
+                        item.token, _fulfiller, target, item.identifier
+                    );
                 } else {
-                    _performERC1155Transfer(item.token, _fulfiller, target, item.identifier, item.amount);
+                    _performERC1155Transfer(
+                        item.token,
+                        _fulfiller,
+                        target,
+                        item.identifier,
+                        item.amount
+                    );
                 }
 
                 unchecked {
@@ -263,7 +304,8 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                 // as calldata to the sidecar.
 
                 // Start by sticking the selector in the first 4 bytes.
-                bytes memory prebuiltPayload = abi.encode(bytes32(uint256(0xb252b6e5) << 224));
+                bytes memory prebuiltPayload =
+                    abi.encode(bytes32(uint256(0xb252b6e5) << 224));
 
                 // Iterate over the payload portion of the context arg.
                 for (uint256 i = approvalDataEnds; i < context.length; i++) {
@@ -273,7 +315,8 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                     if (targetIndex < prebuiltPayload.length) {
                         prebuiltPayload[targetIndex] = context[i];
                     } else {
-                        prebuiltPayload = abi.encodePacked(prebuiltPayload, context[i]);
+                        prebuiltPayload =
+                            abi.encodePacked(prebuiltPayload, context[i]);
                     }
                 }
 
@@ -318,7 +361,9 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
 
             // If the call fails, revert.
             if (!success) {
-                revert NativeTokenTransferGenericFailure(recipient, address(this).balance);
+                revert NativeTokenTransferGenericFailure(
+                    recipient, address(this).balance
+                );
             }
 
             return this.cleanup.selector;
@@ -338,14 +383,24 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         return this.onERC721Received.selector;
     }
 
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
@@ -390,7 +445,13 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
      * @return offer         A tuple containing the offer items.
      * @return consideration A tuple containing the consideration items.
      */
-    function previewOrder(address, address, SpentItem[] calldata, SpentItem[] calldata, bytes calldata)
+    function previewOrder(
+        address,
+        address,
+        SpentItem[] calldata,
+        SpentItem[] calldata,
+        bytes calldata
+    )
         external
         pure
         override

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { FulfillAvailableHelper, MatchFulfillmentHelper } from "seaport-sol/SeaportSol.sol";
+import {
+    FulfillAvailableHelper,
+    MatchFulfillmentHelper
+} from "seaport-sol/SeaportSol.sol";
 
 import {
     AdditionalRecipient,
@@ -12,11 +15,15 @@ import {
     OrderParameters
 } from "seaport-sol/SeaportStructs.sol";
 
-import { ConsiderationInterface } from "seaport-types/interfaces/ConsiderationInterface.sol";
+import { ConsiderationInterface } from
+    "seaport-types/interfaces/ConsiderationInterface.sol";
 
 import { OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { BasicOrder_additionalRecipients_data_cdPtr, TwoWords } from "seaport-types/lib/ConsiderationConstants.sol";
+import {
+    BasicOrder_additionalRecipients_data_cdPtr,
+    TwoWords
+} from "seaport-types/lib/ConsiderationConstants.sol";
 
 import { ArithmeticUtil } from "./ArithmeticUtil.sol";
 
@@ -53,7 +60,13 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
 
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
 
     modifier onlyPayable(address _addr) {
         {
@@ -71,7 +84,10 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
     /**
      * @dev convenience wrapper for makeAddrAndKey
      */
-    function makeAccountWrapper(string memory name) public returns (Account memory) {
+    function makeAccountWrapper(string memory name)
+        public
+        returns (Account memory)
+    {
         return makeAccount(name);
     }
 
@@ -79,7 +95,10 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
      * @dev convenience wrapper for makeAddrAndKey that also allocates tokens,
      *      ether, and approvals
      */
-    function makeAndAllocateAccount(string memory name) internal returns (Account memory) {
+    function makeAndAllocateAccount(string memory name)
+        internal
+        returns (Account memory)
+    {
         Account memory account = makeAccountWrapper(name);
         allocateTokensAndApprovals(account.addr, uint128(MAX_INT));
         return account;
@@ -121,19 +140,29 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         delete considerationComponents;
     }
 
-    function _validateOrder(Order memory order, ConsiderationInterface _consideration) internal returns (bool) {
+    function _validateOrder(
+        Order memory order,
+        ConsiderationInterface _consideration
+    ) internal returns (bool) {
         Order[] memory orders = new Order[](1);
         orders[0] = order;
         return _validateOrders(orders, _consideration);
     }
 
-    function _validateOrders(Order[] memory orders, ConsiderationInterface _consideration) internal returns (bool) {
+    function _validateOrders(
+        Order[] memory orders,
+        ConsiderationInterface _consideration
+    ) internal returns (bool) {
         return _consideration.validate(orders);
     }
 
     function _prepareOrder(uint256 tokenId, uint256 totalConsiderationItems)
         internal
-        returns (Order memory order, OrderParameters memory orderParameters, bytes memory signature)
+        returns (
+            Order memory order,
+            OrderParameters memory orderParameters,
+            bytes memory signature
+        )
     {
         test1155_1.mint(address(this), tokenId, 10);
 
@@ -144,7 +173,8 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         uint256 nonce = consideration.getCounter(address(this));
 
         orderParameters = getOrderParameters(payable(this), OrderType.FULL_OPEN);
-        OrderComponents memory orderComponents = toOrderComponents(orderParameters, nonce);
+        OrderComponents memory orderComponents =
+            toOrderComponents(orderParameters, nonce);
 
         bytes32 orderHash = consideration.getOrderHash(orderComponents);
 
@@ -159,7 +189,9 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         uint256 amtToSubtractFromLength
     ) internal pure {
         bytes32 lengthPtr = _getItemsLengthPointerInOrderCalldata(
-            orderCalldata, relativeOrderParametersOffset, relativeItemsLengthOffset
+            orderCalldata,
+            relativeOrderParametersOffset,
+            relativeItemsLengthOffset
         );
         assembly {
             let length := mload(lengthPtr)
@@ -167,10 +199,16 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         }
     }
 
-    function _dirtyFirstAdditionalRecipient(bytes memory orderCalldata) internal pure {
+    function _dirtyFirstAdditionalRecipient(bytes memory orderCalldata)
+        internal
+        pure
+    {
         assembly {
             let firstAdditionalRecipientOffset :=
-                add(orderCalldata, add(TwoWords, BasicOrder_additionalRecipients_data_cdPtr))
+                add(
+                    orderCalldata,
+                    add(TwoWords, BasicOrder_additionalRecipients_data_cdPtr)
+                )
             // Dirty the top byte of the first additional recipient address.
             mstore8(firstAdditionalRecipientOffset, 1)
         }
@@ -183,11 +221,13 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
     ) internal pure returns (bytes32 lengthPtr) {
         assembly {
             // Points to the order parameters in the order calldata.
-            let orderParamsOffsetPtr := add(orderCalldata, relativeOrderParametersOffset)
+            let orderParamsOffsetPtr :=
+                add(orderCalldata, relativeOrderParametersOffset)
             // Points to the items offset value.
             // Note: itemsOffsetPtr itself is not the offset value;
             // the value stored at itemsOffsetPtr is the offset value.
-            let itemsOffsetPtr := add(orderParamsOffsetPtr, relativeItemsLengthOffset)
+            let itemsOffsetPtr :=
+                add(orderParamsOffsetPtr, relativeItemsLengthOffset)
             // Value of the items offset, which is the offset of the items
             // array relative to the start of order parameters.
             let itemsOffsetValue := mload(itemsOffsetPtr)
@@ -209,7 +249,9 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         uint256 relativeItemsLengthOffset
     ) internal pure returns (uint256 length) {
         bytes32 lengthPtr = _getItemsLengthPointerInOrderCalldata(
-            orderCalldata, relativeOrderParametersOffset, relativeItemsLengthOffset
+            orderCalldata,
+            relativeOrderParametersOffset,
+            relativeItemsLengthOffset
         );
         assembly {
             length := mload(lengthPtr)
@@ -255,9 +297,13 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
             relativeItemsLengthOffset
         );
 
-        assertEq(finalItemsLength, originalItemsLength - amtToSubtractFromItemsLength);
+        assertEq(
+            finalItemsLength, originalItemsLength - amtToSubtractFromItemsLength
+        );
 
-        bool success = _callConsiderationFulfillOrderWithCalldata(address(_consideration), fulfillOrderCalldata);
+        bool success = _callConsiderationFulfillOrderWithCalldata(
+            address(_consideration), fulfillOrderCalldata
+        );
 
         // If overwriteItemsLength is true, the call should
         // have failed (success should be False) and if overwriteItemsLength is
@@ -265,17 +311,18 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         assertEq(success, !overwriteItemsLength);
     }
 
-    function _callConsiderationFulfillOrderWithCalldata(address considerationAddress, bytes memory orderCalldata)
-        internal
-        returns (bool success)
-    {
+    function _callConsiderationFulfillOrderWithCalldata(
+        address considerationAddress,
+        bytes memory orderCalldata
+    ) internal returns (bool success) {
         (success,) = considerationAddress.call(orderCalldata);
     }
 
     function getMaxConsiderationValue() internal view returns (uint256) {
         uint256 value = 0;
         for (uint256 i = 0; i < considerationItems.length; ++i) {
-            uint256 amount = considerationItems[i].startAmount > considerationItems[i].endAmount
+            uint256 amount = considerationItems[i].startAmount
+                > considerationItems[i].endAmount
                 ? considerationItems[i].startAmount
                 : considerationItems[i].endAmount;
             value += amount;
@@ -287,11 +334,10 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
      * @dev return OrderComponents for a given OrderParameters and offerer
      *      counter
      */
-    function getOrderComponents(OrderParameters memory parameters, uint256 counter)
-        internal
-        pure
-        returns (OrderComponents memory)
-    {
+    function getOrderComponents(
+        OrderParameters memory parameters,
+        uint256 counter
+    ) internal pure returns (OrderComponents memory) {
         return OrderComponents(
             parameters.offerer,
             parameters.zone,
@@ -307,7 +353,10 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         );
     }
 
-    function getOrderParameters(address offerer, OrderType orderType) internal returns (OrderParameters memory) {
+    function getOrderParameters(address offerer, OrderType orderType)
+        internal
+        returns (OrderParameters memory)
+    {
         return OrderParameters({
             offerer: offerer,
             zone: address(0),
@@ -347,7 +396,12 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
      * @dev allow signing for this contract since it needs to be recipient of
      *       basic order to reenter on receive
      */
-    function isValidSignature(bytes32, bytes memory) external pure virtual returns (bytes4) {
+    function isValidSignature(bytes32, bytes memory)
+        external
+        pure
+        virtual
+        returns (bytes4)
+    {
         return 0x1626ba7e;
     }
 

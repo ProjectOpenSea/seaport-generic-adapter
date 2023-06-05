@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+import {
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
 import { TokenTransferrer } from "seaport-core/lib/TokenTransferrer.sol";
 
@@ -54,7 +59,12 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         emit SeaportCompatibleContractDeployed(_SIDECAR);
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
         return interfaceId == type(ContractOffererInterface).interfaceId;
     }
 
@@ -92,7 +102,11 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         // The block below expects to be able to check index 0 of context. So,
         // if context is empty, revert early with a descriptive error.
         if (context.length == 0) {
@@ -117,7 +131,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
 
             // Retrieve the target and the number of approvals to perform.
             assembly {
-                totalApprovals := and(0xff, calldataload(add(context.offset, 1)))
+                totalApprovals :=
+                    and(0xff, calldataload(add(context.offset, 1)))
                 approvalDataSize := mul(totalApprovals, 21)
             }
 
@@ -127,7 +142,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
 
             // Next, check for sufficient context length.
             unchecked {
-                errorBuffer |= errorBuffer ^ (_cast(contextLength < (33 + approvalDataSize)) << 2);
+                errorBuffer |= errorBuffer
+                    ^ (_cast(contextLength < (33 + approvalDataSize)) << 2);
             }
 
             // Handle decoding errors.
@@ -169,17 +185,23 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                 approvalDataEnds := add(approvalDataStarts, approvalDataSize)
 
                 // Iterate over each approval.
-                for { let approvalDataOffset := approvalDataStarts } lt(approvalDataOffset, approvalDataEnds) {
-                    approvalDataOffset := add(approvalDataOffset, 21)
-                } {
+                for { let approvalDataOffset := approvalDataStarts } lt(
+                    approvalDataOffset, approvalDataEnds
+                ) { approvalDataOffset := add(approvalDataOffset, 21) } {
                     // Attempt to process each approval. This only needs to be
                     // done once per token. The approval type is even for ERC20
                     // or odd for ERC721 / 1155 and is converted to 0 or 1.
-                    approvalType := and(0x01, calldataload(sub(approvalDataOffset, 31)))
+                    approvalType :=
+                        and(0x01, calldataload(sub(approvalDataOffset, 31)))
                     // 96 = (32 x 8) - (20 x 8)
-                    approvalToken := shr(96, calldataload(add(approvalDataOffset, 1)))
+                    approvalToken :=
+                        shr(96, calldataload(add(approvalDataOffset, 1)))
                     let approvalValue := sub(approvalType, iszero(approvalType))
-                    let selector := add(mul(0x095ea7b3, iszero(approvalType)), mul(0xa22cb465, approvalType))
+                    let selector :=
+                        add(
+                            mul(0x095ea7b3, iszero(approvalType)),
+                            mul(0xa22cb465, approvalType)
+                        )
 
                     // Write selector & approval value to memory.
                     mstore(0, selector)
@@ -191,7 +213,10 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     // Fire off call to token. Revert & bubble up revert data if
                     // present & reasonably-sized or revert with a custom error.
                     if iszero(success) {
-                        if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                        if and(
+                            iszero(iszero(returndatasize())),
+                            lt(returndatasize(), 0xffff)
+                        ) {
                             returndatacopy(0, 0, returndatasize())
                             revert(0, returndatasize())
                         }
@@ -230,11 +255,21 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                         value += item.amount & type(uint224).max;
                     }
                 } else if (itemType == ItemType.ERC20) {
-                    _performERC20Transfer(item.token, _fulfiller, target, item.amount);
+                    _performERC20Transfer(
+                        item.token, _fulfiller, target, item.amount
+                    );
                 } else if (itemType == ItemType.ERC721) {
-                    _performERC721Transfer(item.token, _fulfiller, target, item.identifier);
+                    _performERC721Transfer(
+                        item.token, _fulfiller, target, item.identifier
+                    );
                 } else {
-                    _performERC1155Transfer(item.token, _fulfiller, target, item.identifier, item.amount);
+                    _performERC1155Transfer(
+                        item.token,
+                        _fulfiller,
+                        target,
+                        item.identifier,
+                        item.amount
+                    );
                 }
 
                 unchecked {
@@ -267,14 +302,31 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     mstore(freeMemoryPointer, 0xb252b6e5)
 
                     // Copy payload into memory after selector.
-                    calldatacopy(add(freeMemoryPointer, 0x20), approvalDataEnds, payloadSize)
+                    calldatacopy(
+                        add(freeMemoryPointer, 0x20),
+                        approvalDataEnds,
+                        payloadSize
+                    )
 
                     // Fire off call to target. Revert and bubble up revert data if
                     // present & reasonably-sized, else revert with a custom error.
                     // Note that checking for sufficient native token balance is an
                     // option here if more specific custom reverts are preferred.
-                    if iszero(call(gas(), target, value, add(freeMemoryPointer, 0x1c), add(payloadSize, 0x04), 0, 0)) {
-                        if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                    if iszero(
+                        call(
+                            gas(),
+                            target,
+                            value,
+                            add(freeMemoryPointer, 0x1c),
+                            add(payloadSize, 0x04),
+                            0,
+                            0
+                        )
+                    ) {
+                        if and(
+                            iszero(iszero(returndatasize())),
+                            lt(returndatasize(), 0xffff)
+                        ) {
                             returndatacopy(0, 0, returndatasize())
                             revert(0, returndatasize())
                         }
@@ -314,7 +366,10 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
             if selfbalance() {
                 // Call recipient, supplying balance, and revert on failure.
                 if iszero(call(gas(), recipient, selfbalance(), 0, 0, 0, 0)) {
-                    if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                    if and(
+                        iszero(iszero(returndatasize())),
+                        lt(returndatasize(), 0xffff)
+                    ) {
                         returndatacopy(0, 0, returndatasize())
                         revert(0, returndatasize())
                     }
@@ -342,7 +397,11 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         assembly {
             mstore(0, 0x150b7a02)
             return(0x1c, 0x20)
@@ -352,7 +411,13 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         assembly {
             mstore(0, 0xf23a6e61)
             return(0x1c, 0x20)
@@ -402,7 +467,13 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
      * @return offer         A tuple containing the offer items.
      * @return consideration A tuple containing the consideration items.
      */
-    function previewOrder(address, address, SpentItem[] calldata, SpentItem[] calldata, bytes calldata)
+    function previewOrder(
+        address,
+        address,
+        SpentItem[] calldata,
+        SpentItem[] calldata,
+        bytes calldata
+    )
         external
         pure
         override

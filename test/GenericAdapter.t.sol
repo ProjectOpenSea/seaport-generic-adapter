@@ -34,17 +34,24 @@ import {
 
 import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import { GenericAdapterInterface } from "../src/interfaces/GenericAdapterInterface.sol";
+import { GenericAdapterInterface } from
+    "../src/interfaces/GenericAdapterInterface.sol";
 
-import { FlashloanOffererInterface } from "../src/interfaces/FlashloanOffererInterface.sol";
+import { FlashloanOffererInterface } from
+    "../src/interfaces/FlashloanOffererInterface.sol";
 
 import { GenericAdapter } from "../src/optimized/GenericAdapter.sol";
 
-import { ReferenceGenericAdapter } from "../src/reference/ReferenceGenericAdapter.sol";
+import { ReferenceGenericAdapter } from
+    "../src/reference/ReferenceGenericAdapter.sol";
 
-import { Call, GenericAdapterSidecarInterface } from "../src/interfaces/GenericAdapterSidecarInterface.sol";
+import {
+    Call,
+    GenericAdapterSidecarInterface
+} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import { TestERC20 } from "../src/contracts/test/TestERC20.sol";
 
@@ -60,7 +67,8 @@ import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
 import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
-import { MatchFulfillmentHelper } from "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
+import { MatchFulfillmentHelper } from
+    "seaport-sol/fulfillments/match/MatchFulfillmentHelper.sol";
 
 import "forge-std/console.sol";
 
@@ -83,6 +91,12 @@ contract GenericAdapterTest is BaseOrderTest {
     using OrderParametersLib for OrderParameters;
     using SpentItemLib for SpentItem;
     using SpentItemLib for SpentItem[];
+
+    struct Flashloan {
+        uint88 amount;
+        bool shouldCallback;
+        address recipient;
+    }
 
     struct FuzzInputs {
         uint256 one;
@@ -110,6 +124,8 @@ contract GenericAdapterTest is BaseOrderTest {
     TestERC721 testERC721;
     TestERC1155 testERC1155;
     WETH weth;
+    Context optimizedContext;
+    Context referenceContext;
     bool rejectReceive;
     bool erc20CallExecuted;
     bool erc721CallExecuted;
@@ -129,12 +145,16 @@ contract GenericAdapterTest is BaseOrderTest {
         matchFulfillmentHelper = new MatchFulfillmentHelper();
 
         testFlashloanOfferer = FlashloanOffererInterface(
-            deployCode("out/FlashloanOfferer.sol/FlashloanOfferer.json", abi.encode(address(consideration)))
+            deployCode(
+                "out/FlashloanOfferer.sol/FlashloanOfferer.json",
+                abi.encode(address(consideration))
+            )
         );
 
         testFlashloanOffererReference = FlashloanOffererInterface(
             deployCode(
-                "out/ReferenceFlashloanOfferer.sol/ReferenceFlashloanOfferer.json", abi.encode(address(consideration))
+                "out/ReferenceFlashloanOfferer.sol/ReferenceFlashloanOfferer.json",
+                abi.encode(address(consideration))
             )
         );
 
@@ -143,55 +163,91 @@ contract GenericAdapterTest is BaseOrderTest {
         testAdapter = GenericAdapterInterface(
             deployCode(
                 "out/GenericAdapter.sol/GenericAdapter.json",
-                abi.encode(address(consideration), address(testFlashloanOfferer))
+                abi.encode(
+                    address(consideration), address(testFlashloanOfferer)
+                )
             )
         );
         testAdapterReference = GenericAdapterInterface(
             deployCode(
                 "out/ReferenceGenericAdapter.sol/ReferenceGenericAdapter.json",
-                abi.encode(address(consideration), address(testFlashloanOffererReference))
+                abi.encode(
+                    address(consideration),
+                    address(testFlashloanOffererReference)
+                )
             )
         );
 
         Vm.Log[] memory entries = vm.getRecordedLogs();
 
-        testSidecar = GenericAdapterSidecarInterface(abi.decode(entries[0].data, (address)));
-        testSidecarReference = GenericAdapterSidecarInterface(abi.decode(entries[1].data, (address)));
+        testSidecar = GenericAdapterSidecarInterface(
+            abi.decode(entries[0].data, (address))
+        );
+        testSidecarReference = GenericAdapterSidecarInterface(
+            abi.decode(entries[1].data, (address))
+        );
 
         testERC721 = new TestERC721();
         testERC1155 = new TestERC1155();
         weth = new WETH();
+
+        ConsiderationItemLib.empty().withItemType(ItemType.NATIVE).withToken(
+            address(0)
+        ).withIdentifierOrCriteria(0).withStartAmount(3 ether).withEndAmount(
+            3 ether
+        ).withRecipient(address(0)).saveDefault("considerationItemNative");
+
+        ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
+            address(weth)
+        ).withIdentifierOrCriteria(0).withStartAmount(3 ether).withEndAmount(
+            3 ether
+        ).withRecipient(address(0)).saveDefault("considerationItemWrapped");
+
+        OfferItemLib.empty().withItemType(ItemType.NATIVE).withToken(address(0))
+            .withIdentifierOrCriteria(0).withStartAmount(3 ether).withEndAmount(
+            3 ether
+        ).saveDefault("offerItemNative");
+
+        OrderParametersLib.empty().withOfferer(address(this)).withOrderType(
+            OrderType.FULL_OPEN
+        ).withStartTime(block.timestamp).withEndTime(block.timestamp + 100)
+            .withConsideration(new ConsiderationItem[](0))
+            .withTotalOriginalConsiderationItems(0).saveDefault(
+            "baseOrderParameters"
+        );
+
+        optimizedContext = Context({
+            adapter: testAdapter,
+            flashloanOfferer: testFlashloanOfferer,
+            sidecar: testSidecar,
+            isReference: false,
+            inputs: emptyInputs
+        });
+
+        referenceContext = Context({
+            adapter: testAdapterReference,
+            flashloanOfferer: testFlashloanOffererReference,
+            sidecar: testSidecarReference,
+            isReference: true,
+            inputs: emptyInputs
+        });
     }
 
-    function test(function(Context memory) external fn, Context memory context) internal {
+    function test(function(Context memory) external fn, Context memory context)
+        internal
+    {
         try fn(context) {
-            fail("Stateless test function should have reverted with assertion failure status.");
+            fail(
+                "Stateless test function should have reverted with assertion failure status."
+            );
         } catch (bytes memory reason) {
             assertPass(reason);
         }
     }
 
     function testReceive() public {
-        test(
-            this.execReceive,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execReceive,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execReceive, optimizedContext);
+        test(this.execReceive, referenceContext);
     }
 
     function execReceive(Context memory context) external stateless {
@@ -205,86 +261,45 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testSupportsInterface() public {
-        test(
-            this.execSupportsInterface,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execSupportsInterface,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execSupportsInterface, optimizedContext);
+        test(this.execSupportsInterface, referenceContext);
     }
 
     function execSupportsInterface(Context memory context) external stateless {
-        assertEq(context.adapter.supportsInterface(type(ContractOffererInterface).interfaceId), true);
+        assertEq(
+            context.adapter.supportsInterface(
+                type(ContractOffererInterface).interfaceId
+            ),
+            true
+        );
     }
 
     function testGetSeaportMetadata() public {
-        test(
-            this.execGetSeaportMetadata,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execGetSeaportMetadata,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execGetSeaportMetadata, optimizedContext);
+        test(this.execGetSeaportMetadata, referenceContext);
     }
 
-    function execGetSeaportMetadata(Context memory context) external stateless {
-        (string memory name, Schema[] memory schemas) = context.adapter.getSeaportMetadata();
+    function execGetSeaportMetadata(Context memory context)
+        external
+        stateless
+    {
+        (string memory name, Schema[] memory schemas) =
+            context.adapter.getSeaportMetadata();
         assertEq(name, "GenericAdapter");
         assertEq(schemas.length, 0);
     }
 
     function testCleanup() public {
-        test(
-            this.execCleanup,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execCleanup,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execCleanup, optimizedContext);
+        test(this.execCleanup, referenceContext);
     }
 
     function execCleanup(Context memory context) external stateless {
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidCaller.selector, address(this)));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidCaller.selector, address(this)
+            )
+        );
         context.adapter.cleanup(address(this));
 
         // This is a no-op, but should not revert.
@@ -308,55 +323,71 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testGenerateOrderThresholdReverts() public {
-        test(
-            this.execGenerateOrderThresholdReverts,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execGenerateOrderThresholdReverts,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execGenerateOrderThresholdReverts, optimizedContext);
+        test(this.execGenerateOrderThresholdReverts, referenceContext);
     }
 
-    function execGenerateOrderThresholdReverts(Context memory context) external stateless {
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
-        context.adapter.generateOrder(address(this), new SpentItem[](0), new SpentItem[](0), "");
-
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidCaller.selector, address(this)));
+    function execGenerateOrderThresholdReverts(Context memory context)
+        external
+        stateless
+    {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0
+            )
+        );
         context.adapter.generateOrder(
-            address(this), new SpentItem[](0), new SpentItem[](0), abi.encodePacked(bytes32(0), bytes32(0))
+            address(this), new SpentItem[](0), new SpentItem[](0), ""
         );
 
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.UnsupportedExtraDataVersion.selector, 0xff));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidCaller.selector, address(this)
+            )
+        );
+        context.adapter.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(0), bytes32(0))
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.UnsupportedExtraDataVersion.selector,
+                0xff
+            )
+        );
         vm.prank(address(consideration));
         context.adapter.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](0),
-            abi.encodePacked(bytes32(0xff00000000000000000000000000000000000000000000000000000000000000), bytes32(0))
+            abi.encodePacked(
+                bytes32(
+                    0xff00000000000000000000000000000000000000000000000000000000000000
+                ),
+                bytes32(0)
+            )
         );
 
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.InvalidExtraDataEncoding.selector, 0
+            )
+        );
         vm.prank(address(consideration));
         context.adapter.generateOrder(
-            address(this), new SpentItem[](0), new SpentItem[](0), abi.encodePacked(bytes32(0), bytes32(0))
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](0),
+            abi.encodePacked(bytes32(0), bytes32(0))
         );
 
         TestERC20Revert testERC20Revert = new TestERC20Revert();
 
-        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000036;
+        uint256 firstWord =
+            0x0011111111111111111111111111111111111111111111111111111100000036;
         address erc20Address = address(testERC20Revert);
         uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
         uint256 secondWord;
@@ -371,7 +402,12 @@ contract GenericAdapterTest is BaseOrderTest {
         // (0 for erc20), next 20 are addy, finalbytes are not used.
 
         if (context.isReference) {
-            vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    GenericAdapterInterface.ApprovalFailed.selector,
+                    erc20Address
+                )
+            );
         } else {
             vm.expectRevert(abi.encodeWithSignature("AlwaysRevert()"));
         }
@@ -390,12 +426,17 @@ contract GenericAdapterTest is BaseOrderTest {
             )
         );
 
-        (bool avoidWarning, bytes memory data) =
-            address(testERC20Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
+        (bool avoidWarning, bytes memory data) = address(testERC20Revert).call(
+            abi.encodeWithSignature("setRevertSpectacularly(bool)", true)
+        );
         if (!avoidWarning || data.length != 0) {
             revert("Just trying to make the compiler happy");
         }
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc20Address));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.ApprovalFailed.selector, erc20Address
+            )
+        );
 
         vm.prank(address(consideration));
         context.adapter.generateOrder(
@@ -418,7 +459,12 @@ contract GenericAdapterTest is BaseOrderTest {
         }
 
         if (context.isReference) {
-            vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc721Address));
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    GenericAdapterInterface.ApprovalFailed.selector,
+                    erc721Address
+                )
+            );
         } else {
             vm.expectRevert(abi.encodeWithSignature("AlwaysRevert()"));
         }
@@ -430,10 +476,15 @@ contract GenericAdapterTest is BaseOrderTest {
             abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
         );
 
-        (avoidWarning, data) =
-            address(testERC721Revert).call(abi.encodeWithSignature("setRevertSpectacularly(bool)", true));
+        (avoidWarning, data) = address(testERC721Revert).call(
+            abi.encodeWithSignature("setRevertSpectacularly(bool)", true)
+        );
 
-        vm.expectRevert(abi.encodeWithSelector(GenericAdapterInterface.ApprovalFailed.selector, erc721Address));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                GenericAdapterInterface.ApprovalFailed.selector, erc721Address
+            )
+        );
         vm.prank(address(consideration));
         context.adapter.generateOrder(
             address(this),
@@ -444,32 +495,15 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testApprovals() public {
-        test(
-            this.execApprovals,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execApprovals,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execApprovals, optimizedContext);
+        test(this.execApprovals, referenceContext);
     }
 
     function execApprovals(Context memory context) external stateless {
         TestERC20 testERC20 = new TestERC20();
 
-        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000036;
+        uint256 firstWord =
+            0x0011111111111111111111111111111111111111111111111111111100000036;
         address erc20Address = address(testERC20);
         uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
         uint256 secondWord;
@@ -486,7 +520,12 @@ contract GenericAdapterTest is BaseOrderTest {
             abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
         );
 
-        assertEq(testERC20.allowance(address(context.adapter), address(consideration)), type(uint256).max);
+        assertEq(
+            testERC20.allowance(
+                address(context.adapter), address(consideration)
+            ),
+            type(uint256).max
+        );
 
         address erc721Address = address(testERC721);
         secondWord = uint256(uint160(erc721Address)) << 80;
@@ -504,49 +543,42 @@ contract GenericAdapterTest is BaseOrderTest {
             abi.encodePacked(bytes32(firstWord), bytes32(secondWord))
         );
 
-        assertTrue(testERC721.isApprovedForAll(address(context.adapter), address(consideration)));
+        assertTrue(
+            testERC721.isApprovedForAll(
+                address(context.adapter), address(consideration)
+            )
+        );
     }
 
     function testTransfersToSidecarAndExecute() public {
-        test(
-            this.execTransfersToSidecarAndExecute,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execTransfersToSidecarAndExecute,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execTransfersToSidecarAndExecute, optimizedContext);
+        test(this.execTransfersToSidecarAndExecute, referenceContext);
     }
 
-    function execTransfersToSidecarAndExecute(Context memory context) external stateless {
+    function execTransfersToSidecarAndExecute(Context memory context)
+        external
+        stateless
+    {
         // TODO: add native.
         TestERC20 testERC20 = new TestERC20();
 
         SpentItem[] memory spentItems = new SpentItem[](3);
 
         {
-            SpentItem memory spentItemERC20 = SpentItem(ItemType.ERC20, address(testERC20), 0, 1);
-            SpentItem memory spentItemERC721 = SpentItem(ItemType.ERC721, address(testERC721), 1, 1);
-            SpentItem memory spentItemERC1155 = SpentItem(ItemType.ERC1155, address(testERC1155), 1, 1);
+            SpentItem memory spentItemERC20 =
+                SpentItem(ItemType.ERC20, address(testERC20), 0, 1);
+            SpentItem memory spentItemERC721 =
+                SpentItem(ItemType.ERC721, address(testERC721), 1, 1);
+            SpentItem memory spentItemERC1155 =
+                SpentItem(ItemType.ERC1155, address(testERC1155), 1, 1);
 
             spentItems[0] = spentItemERC20;
             spentItems[1] = spentItemERC721;
             spentItems[2] = spentItemERC1155;
         }
 
-        uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000003B6; // ...060 before
+        uint256 firstWord =
+            0x00111111111111111111111111111111111111111111111111111111000003B6; // ...060 before
         uint256 secondWord;
         uint256 thirdWord;
 
@@ -627,28 +659,53 @@ contract GenericAdapterTest is BaseOrderTest {
         bytes memory contextArg;
 
         {
-            bytes memory contextArgApprovalPortion =
-                abi.encode(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+            bytes memory contextArgApprovalPortion = abi.encode(
+                bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord)
+            );
 
             bytes memory contextArgCalldataPortion = abi.encode(calls);
 
-            contextArg = abi.encodePacked(contextArgApprovalPortion, contextArgCalldataPortion);
+            contextArg = abi.encodePacked(
+                contextArgApprovalPortion, contextArgCalldataPortion
+            );
         }
 
-        assertEq(testERC20.balanceOf(address(context.sidecar)), 0, "sidecar should have no ERC20");
+        assertEq(
+            testERC20.balanceOf(address(context.sidecar)),
+            0,
+            "sidecar should have no ERC20"
+        );
         assertEq(testERC721.ownerOf(1), address(this), "this should own ERC721");
-        assertEq(testERC1155.balanceOf(address(this), 1), 1, "this should own ERC1155");
+        assertEq(
+            testERC1155.balanceOf(address(this), 1),
+            1,
+            "this should own ERC1155"
+        );
 
         assertFalse(erc20CallExecuted, "erc20CallExecuted should be false");
         assertFalse(erc721CallExecuted, "erc721CallExecuted should be false");
         assertFalse(erc1155CallExecuted, "erc1155CallExecuted should be false");
 
         vm.prank(address(consideration));
-        context.adapter.generateOrder(address(this), new SpentItem[](0), spentItems, contextArg);
+        context.adapter.generateOrder(
+            address(this), new SpentItem[](0), spentItems, contextArg
+        );
 
-        assertEq(testERC20.balanceOf(address(context.sidecar)), 1, "sidecar should have ERC20");
-        assertEq(testERC721.ownerOf(1), address(context.sidecar), "sidecar should own ERC721");
-        assertEq(testERC1155.balanceOf(address(context.sidecar), 1), 1, "sidecar should own ERC1155");
+        assertEq(
+            testERC20.balanceOf(address(context.sidecar)),
+            1,
+            "sidecar should have ERC20"
+        );
+        assertEq(
+            testERC721.ownerOf(1),
+            address(context.sidecar),
+            "sidecar should own ERC721"
+        );
+        assertEq(
+            testERC1155.balanceOf(address(context.sidecar), 1),
+            1,
+            "sidecar should own ERC1155"
+        );
 
         assertTrue(erc20CallExecuted, "erc20CallExecuted should be true");
         assertTrue(erc721CallExecuted, "erc721CallExecuted should be true");
@@ -672,33 +729,19 @@ contract GenericAdapterTest is BaseOrderTest {
     }
 
     function testNativeCallAndExecute() public {
-        test(
-            this.execNativeCallAndExecute,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execNativeCallAndExecute,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execNativeCallAndExecute, optimizedContext);
+        test(this.execNativeCallAndExecute, referenceContext);
     }
 
-    function execNativeCallAndExecute(Context memory context) external stateless {
+    function execNativeCallAndExecute(Context memory context)
+        external
+        stateless
+    {
         SpentItem[] memory spentItems = new SpentItem[](3);
 
         {
-            SpentItem memory spentItemNativeOne = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+            SpentItem memory spentItemNativeOne =
+                SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
 
             spentItems[0] = spentItemNativeOne;
             spentItems[1] = spentItemNativeOne;
@@ -706,13 +749,19 @@ contract GenericAdapterTest is BaseOrderTest {
         }
 
         // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
-        uint256 firstWord = 0x0022222222222222222222222222222222222222222222222222222200000340;
+        uint256 firstWord =
+            0x0022222222222222222222222222222222222222222222222222222200000340;
 
         Call[] memory calls = new Call[](3);
 
         {
             Call memory callNative = Call(
-                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+                address(this),
+                false,
+                1 ether,
+                abi.encodeWithSelector(
+                    this.incrementNativeAction.selector, 1 ether
+                )
             );
 
             calls[0] = callNative;
@@ -722,7 +771,8 @@ contract GenericAdapterTest is BaseOrderTest {
 
         bytes memory contextArgCalldataPortion = abi.encode(calls);
 
-        bytes memory contextArg = abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
+        bytes memory contextArg =
+            abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
@@ -735,35 +785,22 @@ contract GenericAdapterTest is BaseOrderTest {
         vm.deal(address(context.adapter), 3 ether);
 
         vm.prank(address(consideration));
-        context.adapter.generateOrder(address(this), new SpentItem[](0), spentItems, contextArg);
+        context.adapter.generateOrder(
+            address(this), new SpentItem[](0), spentItems, contextArg
+        );
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
     }
 
     function testSeaportWrappedCallAndExecute() public {
-        test(
-            this.execSeaportWrappedCallAndExecute,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execSeaportWrappedCallAndExecute,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execSeaportWrappedCallAndExecute, optimizedContext);
+        test(this.execSeaportWrappedCallAndExecute, referenceContext);
     }
 
-    function execSeaportWrappedCallAndExecute(Context memory context) external stateless {
+    function execSeaportWrappedCallAndExecute(Context memory context)
+        external
+        stateless
+    {
         // SET UP THE FLASHLOAN ORDER HERE.
 
         // To request a flashloan from the flashloan offerer, its
@@ -781,32 +818,25 @@ contract GenericAdapterTest is BaseOrderTest {
         // requested.
 
         // Create an order.
-        AdvancedOrder memory flashloanOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+        AdvancedOrder memory flashloanOrder =
+            AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
         // Create the consideration array.
-        ConsiderationItem[] memory considerationArray = new ConsiderationItem[](1);
-        {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
-            considerationItem = considerationItem.withToken(address(0));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(3 ether);
-            considerationItem = considerationItem.withEndAmount(3 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
-            considerationArray[0] = considerationItem;
-        }
+        ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](1);
+        considerationArray[0] =
+            ConsiderationItemLib.fromDefault("considerationItemNative");
 
         // Create the parameters for the order.
         OrderParameters memory orderParameters;
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
-            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
-            orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.flashloanOfferer)).withOrderType(
+                OrderType.CONTRACT
+            ).withOffer(new OfferItem[](0)).withConsideration(
+                considerationArray
+            ).withTotalOriginalConsiderationItems(1);
 
             flashloanOrder.withParameters(orderParameters);
         }
@@ -820,7 +850,8 @@ contract GenericAdapterTest is BaseOrderTest {
         // placeholders. They're ignored by the flashloan offerer.
         // The 4 bytes of 0s at the end will eventually contain the
         // size of the extraData field.
-        uint256 firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
+        uint256 firstWord =
+            0x0011111111111111111111111111111111111111111111111111111100000000;
         // Set the cleanup recipient in the first 20 bytes of the
         // second word.
         uint256 secondWord = uint256(uint160(address(this))) << 96;
@@ -836,7 +867,8 @@ contract GenericAdapterTest is BaseOrderTest {
         // word.
         uint256 thirdWord = 1 << 248;
         // Add the recipient to the third word.
-        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
+        thirdWord =
+            thirdWord | (uint256(uint160(address(context.adapter))) << 88);
 
         // Now, the three words that will make up the extradata
         // field are ready. Here's what they look like:
@@ -871,7 +903,9 @@ contract GenericAdapterTest is BaseOrderTest {
         firstWord = firstWord | 85;
         // 0x0011111111111111111111111111111111111111111111111111111100000055
 
-        bytes memory extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+        bytes memory extraData = abi.encodePacked(
+            bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord)
+        );
 
         {
             // Add it all to the order.
@@ -891,13 +925,8 @@ contract GenericAdapterTest is BaseOrderTest {
         considerationArray = new ConsiderationItem[](3);
 
         {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
-            considerationItem = considerationItem.withToken(address(0));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(1 ether);
-            considerationItem = considerationItem.withEndAmount(1 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
+            ConsiderationItem memory considerationItem = ConsiderationItemLib
+                .fromDefault("considerationItemNative").withAmount(1 ether);
             considerationArray[0] = considerationItem;
             considerationArray[1] = considerationItem;
             considerationArray[2] = considerationItem;
@@ -905,27 +934,34 @@ contract GenericAdapterTest is BaseOrderTest {
 
         // Create the parameters for the order.
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.adapter));
-            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-            orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(3);
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.adapter)).withOrderType(
+                OrderType.CONTRACT
+            ).withOffer(new OfferItem[](0));
+            orderParameters =
+                orderParameters.withConsideration(considerationArray);
+            orderParameters =
+                orderParameters.withTotalOriginalConsiderationItems(3);
 
             order = order.withParameters(orderParameters);
         }
 
         // Create the context.
         // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
-        firstWord = 0x0022222222222222222222222222222222222222222222222222222200000340;
+        firstWord =
+            0x0022222222222222222222222222222222222222222222222222222200000340;
 
         Call[] memory calls = new Call[](3);
 
         {
             Call memory callNative = Call(
-                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+                address(this),
+                false,
+                1 ether,
+                abi.encodeWithSelector(
+                    this.incrementNativeAction.selector, 1 ether
+                )
             );
 
             calls[0] = callNative;
@@ -940,31 +976,19 @@ contract GenericAdapterTest is BaseOrderTest {
         // SET UP THE MIRROR ORDER HERE.
         // This is just a dummy order to make the flashloan offerer's
         // consideration requirement happy.
-        AdvancedOrder memory mirrorOrder;
         {
-            mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
             // Create the parameters for the order.
             {
                 OfferItem[] memory offerItems = new OfferItem[](1);
-                OfferItem memory offerItem = OfferItemLib.empty();
-                offerItem = offerItem.withItemType(ItemType.NATIVE);
-                offerItem = offerItem.withToken(address(0));
-                offerItem = offerItem.withIdentifierOrCriteria(0);
-                offerItem = offerItem.withStartAmount(3 ether);
-                offerItem = offerItem.withEndAmount(3 ether);
-                offerItems[0] = offerItem;
+                offerItems[0] = OfferItemLib.fromDefault("offerItemNative");
 
-                orderParameters = OrderParametersLib.empty();
-                orderParameters = orderParameters.withOfferer(address(this));
-                orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
-                orderParameters = orderParameters.withStartTime(block.timestamp);
-                orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-                orderParameters = orderParameters.withOffer(offerItems);
-                orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
-                orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+                orderParameters = OrderParametersLib.fromDefault(
+                    "baseOrderParameters"
+                ).withOffer(offerItems);
 
-                mirrorOrder = mirrorOrder.withParameters(orderParameters);
-                orders[2] = mirrorOrder;
+                order = order.withParameters(orderParameters);
+                orders[2] = order;
             }
         }
 
@@ -976,10 +1000,14 @@ contract GenericAdapterTest is BaseOrderTest {
 
         Fulfillment[] memory fulfillments = new Fulfillment[](2);
         {
-            FulfillmentComponent[] memory offerComponentsFlashloan = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsFlashloan = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory offerComponentsMirror = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsMirror = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsFlashloan =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsFlashloan =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsMirror =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsMirror =
+                new FulfillmentComponent[](1);
 
             // Flashloan order, native consideration.
             offerComponentsFlashloan[0] = FulfillmentComponent(0, 0);
@@ -990,44 +1018,35 @@ contract GenericAdapterTest is BaseOrderTest {
             // Mirror order, native consideration.
             considerationComponentsMirror[0] = FulfillmentComponent(0, 0);
 
-            fulfillments[0] = Fulfillment(offerComponentsFlashloan, considerationComponentsFlashloan);
-            fulfillments[1] = Fulfillment(offerComponentsMirror, considerationComponentsMirror);
+            fulfillments[0] = Fulfillment(
+                offerComponentsFlashloan, considerationComponentsFlashloan
+            );
+            fulfillments[1] = Fulfillment(
+                offerComponentsMirror, considerationComponentsMirror
+            );
         }
 
-        consideration.matchAdvancedOrders{ value: 3 ether }(orders, new CriteriaResolver[](0), fulfillments, address(0));
+        consideration.matchAdvancedOrders{ value: 3 ether }(
+            orders, new CriteriaResolver[](0), fulfillments, address(0)
+        );
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
     }
 
     function testSeaportWrappedWethManipulation() public {
-        test(
-            this.execSeaportWrappedWethManipulation,
-            Context({
-                adapter: testAdapter,
-                flashloanOfferer: testFlashloanOfferer,
-                sidecar: testSidecar,
-                isReference: false,
-                inputs: emptyInputs
-            })
-        );
-        test(
-            this.execSeaportWrappedWethManipulation,
-            Context({
-                adapter: testAdapterReference,
-                flashloanOfferer: testFlashloanOffererReference,
-                sidecar: testSidecarReference,
-                isReference: true,
-                inputs: emptyInputs
-            })
-        );
+        test(this.execSeaportWrappedWethManipulation, optimizedContext);
+        test(this.execSeaportWrappedWethManipulation, referenceContext);
     }
 
-    function execSeaportWrappedWethManipulation(Context memory context) external stateless {
-        ConsiderationItem[] memory considerationArray = new ConsiderationItem[](1);
+    function execSeaportWrappedWethManipulation(Context memory context)
+        external
+        stateless
+    {
+        ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](1);
         OrderParameters memory orderParameters;
         AdvancedOrder memory order;
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
-        bytes memory extraData;
 
         uint256 firstWord;
 
@@ -1036,87 +1055,87 @@ contract GenericAdapterTest is BaseOrderTest {
 
         order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-        {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
-            considerationItem = considerationItem.withToken(address(0));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(3 ether);
-            considerationItem = considerationItem.withEndAmount(3 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
-
-            considerationArray[0] = considerationItem;
-        }
+        considerationArray[0] =
+            ConsiderationItemLib.fromDefault("considerationItemNative");
 
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
-            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
-            orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.flashloanOfferer)).withOrderType(
+                OrderType.CONTRACT
+            ).withOffer(new OfferItem[](0)).withConsideration(
+                considerationArray
+            ).withTotalOriginalConsiderationItems(1);
 
             order.withParameters(orderParameters);
         }
 
-        firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
-        uint256 secondWord = uint256(uint160(address(this))) << 96;
-        secondWord = secondWord | (1 << 88);
-        secondWord = secondWord | 3 ether;
-        uint256 thirdWord = 1 << 248;
-        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
-        firstWord = firstWord | 85;
-        extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+        Flashloan memory flashloan =
+            Flashloan(3 ether, true, address(context.adapter));
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
 
-        // Add it all to the order.
+        bytes memory extraData =
+            createFlashloanContext(address(this), flashloans);
+
+        // Add it to the order.
         order.withExtraData(extraData);
         orders[0] = order;
 
         order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-        {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
-            considerationItem = considerationItem.withToken(address(0));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(3 ether);
-            considerationItem = considerationItem.withEndAmount(3 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
+        considerationArray[0] =
+            ConsiderationItemLib.fromDefault("considerationItemNative");
 
-            considerationArray[0] = considerationItem;
-        }
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.adapter));
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.adapter));
             orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-            orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0))
+                .withConsideration(considerationArray)
+                .withTotalOriginalConsiderationItems(1);
 
             order = order.withParameters(orderParameters);
         }
 
-        firstWord = 0x0022222222222222222222222222222222222222222222222222222200000000;
+        firstWord =
+            0x0022222222222222222222222222222222222222222222222222222200000000;
 
         Call[] memory calls = new Call[](6);
 
         {
-            Call memory callDepositWETH =
-                Call(address(weth), false, 1 ether, abi.encodeWithSelector(IWETH.deposit.selector));
-
-            Call memory callWrappedAction =
-                Call(address(this), false, 0, abi.encodeWithSelector(this.incrementWrappedAction.selector, 1 ether));
-
-            Call memory callNativeAction = Call(
-                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+            Call memory callDepositWETH = Call(
+                address(weth),
+                false,
+                1 ether,
+                abi.encodeWithSelector(IWETH.deposit.selector)
             );
 
-            Call memory callWithdrawWETH =
-                Call(address(weth), false, 0, abi.encodeWithSelector(IWETH.withdraw.selector, 1 ether));
+            Call memory callWrappedAction = Call(
+                address(this),
+                false,
+                0,
+                abi.encodeWithSelector(
+                    this.incrementWrappedAction.selector, 1 ether
+                )
+            );
+
+            Call memory callNativeAction = Call(
+                address(this),
+                false,
+                1 ether,
+                abi.encodeWithSelector(
+                    this.incrementNativeAction.selector, 1 ether
+                )
+            );
+
+            Call memory callWithdrawWETH = Call(
+                address(weth),
+                false,
+                0,
+                abi.encodeWithSelector(IWETH.withdraw.selector, 1 ether)
+            );
 
             calls[0] = callDepositWETH;
             calls[1] = callWrappedAction;
@@ -1134,25 +1153,18 @@ contract GenericAdapterTest is BaseOrderTest {
         orders[1] = order;
 
         {
-            AdvancedOrder memory mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            AdvancedOrder memory mirrorOrder =
+                AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
             OfferItem[] memory offerItems = new OfferItem[](1);
-            OfferItem memory offerItem = OfferItemLib.empty();
-            offerItem = offerItem.withItemType(ItemType.NATIVE);
-            offerItem = offerItem.withToken(address(0));
-            offerItem = offerItem.withIdentifierOrCriteria(0);
-            offerItem = offerItem.withStartAmount(3 ether);
-            offerItem = offerItem.withEndAmount(3 ether);
-            offerItems[0] = offerItem;
+            offerItems[0] = OfferItemLib.fromDefault("offerItemNative");
 
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(this));
-            orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-            orderParameters = orderParameters.withOffer(offerItems);
-            orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+            orderParameters = OrderParametersLib.empty().withOfferer(
+                address(this)
+            ).withOrderType(OrderType.FULL_OPEN).withStartTime(block.timestamp)
+                .withEndTime(block.timestamp + 100).withOffer(offerItems)
+                .withConsideration(new ConsiderationItem[](0))
+                .withTotalOriginalConsiderationItems(0);
 
             mirrorOrder = mirrorOrder.withParameters(orderParameters);
             orders[2] = mirrorOrder;
@@ -1163,21 +1175,31 @@ contract GenericAdapterTest is BaseOrderTest {
 
         Fulfillment[] memory fulfillments = new Fulfillment[](2);
         {
-            FulfillmentComponent[] memory offerComponentsFlashloan = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsFlashloan = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory offerComponentsMirror = new FulfillmentComponent[](1);
-            FulfillmentComponent[] memory considerationComponentsMirror = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsFlashloan =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsFlashloan =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsMirror =
+                new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsMirror =
+                new FulfillmentComponent[](1);
 
             offerComponentsFlashloan[0] = FulfillmentComponent(0, 0);
             considerationComponentsFlashloan[0] = FulfillmentComponent(2, 0);
             offerComponentsMirror[0] = FulfillmentComponent(2, 0);
             considerationComponentsMirror[0] = FulfillmentComponent(0, 0);
 
-            fulfillments[0] = Fulfillment(offerComponentsFlashloan, considerationComponentsFlashloan);
-            fulfillments[1] = Fulfillment(offerComponentsMirror, considerationComponentsMirror);
+            fulfillments[0] = Fulfillment(
+                offerComponentsFlashloan, considerationComponentsFlashloan
+            );
+            fulfillments[1] = Fulfillment(
+                offerComponentsMirror, considerationComponentsMirror
+            );
         }
 
-        consideration.matchAdvancedOrders{ value: 3 ether }(orders, new CriteriaResolver[](0), fulfillments, address(0));
+        consideration.matchAdvancedOrders{ value: 3 ether }(
+            orders, new CriteriaResolver[](0), fulfillments, address(0)
+        );
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
 
@@ -1189,39 +1211,28 @@ contract GenericAdapterTest is BaseOrderTest {
 
         order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-        {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.ERC20);
-            considerationItem = considerationItem.withToken(address(weth));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(3 ether);
-            considerationItem = considerationItem.withEndAmount(3 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
-
-            considerationArray[0] = considerationItem;
-        }
+        considerationArray[0] =
+            ConsiderationItemLib.fromDefault("considerationItemWrapped");
 
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.flashloanOfferer));
             orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
             orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters =
+                orderParameters.withConsideration(considerationArray);
+            orderParameters =
+                orderParameters.withTotalOriginalConsiderationItems(1);
 
             order.withParameters(orderParameters);
         }
 
-        firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
-        secondWord = uint256(uint160(address(this))) << 96;
-        secondWord = secondWord | (1 << 88);
-        secondWord = secondWord | 3 ether;
-        thirdWord = 1 << 248;
-        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
-        firstWord = firstWord | 85;
-        extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+        flashloan = Flashloan(3 ether, true, address(context.adapter));
+        flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
+
+        extraData = createFlashloanContext(address(this), flashloans);
 
         // Add it all to the order.
         order.withExtraData(extraData);
@@ -1229,71 +1240,132 @@ contract GenericAdapterTest is BaseOrderTest {
 
         order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-        {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
-            considerationItem = considerationItem.withItemType(ItemType.ERC20);
-            considerationItem = considerationItem.withToken(address(weth));
-            considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(3 ether);
-            considerationItem = considerationItem.withEndAmount(3 ether);
-            considerationItem = considerationItem.withRecipient(address(0));
+        considerationArray[0] =
+            ConsiderationItemLib.fromDefault("considerationItemWrapped");
 
-            considerationArray[0] = considerationItem;
-        }
         {
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.adapter));
-            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-            orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters = OrderParametersLib.fromDefault(
+                "baseOrderParameters"
+            ).withOfferer(address(context.adapter)).withOrderType(
+                OrderType.CONTRACT
+            );
+            orderParameters = orderParameters.withOffer(new OfferItem[](0))
+                .withConsideration(considerationArray)
+                .withTotalOriginalConsiderationItems(1);
 
             order = order.withParameters(orderParameters);
         }
 
-        // The second order is the same.
+        // The second order is the same. Skipped here.
 
         {
-            AdvancedOrder memory mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
             OfferItem[] memory offerItems = new OfferItem[](1);
-            OfferItem memory offerItem = OfferItemLib.empty();
+            OfferItem memory offerItem =
+                OfferItemLib.fromDefault("offerItemNative");
             offerItem = offerItem.withItemType(ItemType.ERC20);
             offerItem = offerItem.withToken(address(weth));
-            offerItem = offerItem.withIdentifierOrCriteria(0);
-            offerItem = offerItem.withStartAmount(3 ether);
-            offerItem = offerItem.withEndAmount(3 ether);
             offerItems[0] = offerItem;
 
-            orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(this));
-            orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
-            orderParameters = orderParameters.withStartTime(block.timestamp);
-            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
-            orderParameters = orderParameters.withOffer(offerItems);
-            orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+            orderParameters = OrderParametersLib.empty().withOfferer(
+                address(this)
+            ).withOrderType(OrderType.FULL_OPEN).withStartTime(block.timestamp)
+                .withEndTime(block.timestamp + 100).withOffer(offerItems)
+                .withConsideration(new ConsiderationItem[](0))
+                .withTotalOriginalConsiderationItems(0);
 
-            mirrorOrder = mirrorOrder.withParameters(orderParameters);
-            orders[2] = mirrorOrder;
+            order = order.withParameters(orderParameters);
+            orders[2] = order;
         }
 
-        consideration.matchAdvancedOrders(orders, new CriteriaResolver[](0), fulfillments, address(0));
+        consideration.matchAdvancedOrders(
+            orders, new CriteriaResolver[](0), fulfillments, address(0)
+        );
 
         assertEq(nativeAction, 6 ether, "nativeAction should be 6 ether");
     }
 
     function incrementNativeAction(uint256 amount) external payable {
-        assertGt(msg.value, amount - 0.001 ether, "msg.value should be roughly equal to amount");
-        assertLt(msg.value, amount + 0.001 ether, "msg.value should be roughly equal to amount");
+        assertGt(
+            msg.value,
+            amount - 0.001 ether,
+            "msg.value should be roughly equal to amount"
+        );
+        assertLt(
+            msg.value,
+            amount + 0.001 ether,
+            "msg.value should be roughly equal to amount"
+        );
         nativeAction += msg.value;
     }
 
     function incrementWrappedAction(uint256 amount) external {
         assertEq(weth.balanceOf(msg.sender), amount);
         wrappedAction += amount;
+    }
+
+    function createFlashloanContext(
+        address cleanupRecipient,
+        Flashloan[] memory flashloans
+    ) public pure returns (bytes memory extraData) {
+        // Create the value that will populate the extraData field.
+        // When the flashloan offerer receives the call to
+        // generateOrder, it will decode the extraData field into
+        // instructions for handling the flashloan.
+
+        // A word for the encoding, a byte for the number of flashloans, 20
+        // bytes for the cleanup recipient, and 32 bytes for each flashloan.
+        uint256 flashloanContextArgSize = 32 + 1 + 20 + (32 * flashloans.length);
+
+        extraData = new bytes(flashloanContextArgSize);
+
+        // The first byte is the SIP encoding (0). The 1s are just
+        // placeholders. They're ignored by the flashloan offerer.
+        // The 4 bytes of 0s at the end will eventually contain the
+        // size of the extraData field.
+        uint256 firstWord =
+            0x0011111111111111111111111111111111111111111111111111111100000000;
+        firstWord = firstWord | flashloanContextArgSize;
+
+        // Set the cleanup recipient in the first 20 bytes of the
+        // second word.
+        uint256 secondWord = uint256(uint160(cleanupRecipient)) << 96;
+        // Set the flashloan length.
+        secondWord = secondWord | ((flashloans.length) << 88);
+
+        // Pack the first two words into the extraData field.
+        extraData = abi.encodePacked(firstWord, secondWord);
+
+        uint256 amount;
+        uint256 shouldCallback;
+        uint256 recipient;
+        uint256 packedFlashloan;
+
+        // Iterate over each flashloan and stick the values where they belong.
+        for (uint256 i; i < flashloans.length; i++) {
+            // Pack each Flashloan into a word of memory.
+            Flashloan memory flashloan = flashloans[i];
+            amount = flashloan.amount;
+            shouldCallback = flashloan.shouldCallback ? 1 : 0;
+            recipient = uint256(uint160(flashloan.recipient));
+
+            assembly {
+                packedFlashloan :=
+                    or(shl(168, amount), or(shl(160, shouldCallback), recipient))
+            }
+
+            // Make Space for the next flashloan.
+            extraData = abi.encodePacked(extraData, bytes32(0));
+
+            // Iterate over each byte of the packed flashloan and stick it
+            // in the extraData field.
+            for (uint256 j = 0; j < 32; j++) {
+                extraData[53 + (i * 32) + j] = bytes32(packedFlashloan)[j];
+            }
+        }
+
+        return extraData;
     }
 }
 
