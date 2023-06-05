@@ -7,8 +7,6 @@ import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title FlashloanOfferer
  * @author 0age
@@ -311,7 +309,6 @@ contract FlashloanOfferer is ContractOffererInterface {
                     let flashloanData := calldataload(flashloanDataOffset)
                     let shouldCall := byte(12, flashloanData)
                     let flashloanRecipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
-                    let value := shr(168, flashloanData)
 
                     // Fire off call to flashloanRecipient. Revert & bubble up revert
                     // data if present & reasonably-sized, else revert with a
@@ -319,7 +316,7 @@ contract FlashloanOfferer is ContractOffererInterface {
                     // token balance is an option here if more specific custom
                     // reverts are preferred.
                     if shouldCall {
-                        let success := call(gas(), flashloanRecipient, value, 0x1c, 0x24, 0, 4)
+                        let success := call(gas(), flashloanRecipient, 0, 0x1c, 0x24, 0, 4)
 
                         if or(
                             or(iszero(success), iszero(shouldCall)),

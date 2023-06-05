@@ -7,8 +7,6 @@ import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import "forge-std/console.sol";
-
 // Right now this is just here to allow `cleanup.selector` to be used
 // below. Think about inheriting an interface or something.
 interface Cleanup {

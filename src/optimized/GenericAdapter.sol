@@ -243,8 +243,9 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
         }
 
-        if (value > 0) {
-            // Get native tokens from the flashloan offerer.
+        // TODO: Come back and remove or do better.
+        if (value > address(this).balance) {
+            revert("Please ensure this contract has sufficient balance first.");
         }
 
         // Call sidecar, performing generic execution consuming supplied items.

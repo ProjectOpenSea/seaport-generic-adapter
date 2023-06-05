@@ -29,8 +29,6 @@ import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
 import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import "forge-std/console.sol";
-
 contract FlashloanOffererTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
     using ConsiderationItemLib for ConsiderationItem;

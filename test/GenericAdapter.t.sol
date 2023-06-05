@@ -3,6 +3,10 @@ pragma solidity ^0.8.17;
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { StdCheats } from "forge-std/StdCheats.sol";
+
+import { WETH } from "solady/src/tokens/WETH.sol";
+
 import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
 
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
@@ -60,6 +64,16 @@ import { MatchFulfillmentHelper } from "seaport-sol/fulfillments/match/MatchFulf
 
 import "forge-std/console.sol";
 
+interface IWETH {
+    function deposit() external payable;
+
+    function withdraw(uint256) external;
+
+    function balanceOf(address) external view returns (uint256);
+
+    function approve(address, uint256) external returns (bool);
+}
+
 contract GenericAdapterTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
     using ConsiderationItemLib for ConsiderationItem;
@@ -70,12 +84,21 @@ contract GenericAdapterTest is BaseOrderTest {
     using SpentItemLib for SpentItem;
     using SpentItemLib for SpentItem[];
 
+    struct FuzzInputs {
+        uint256 one;
+        uint256 two;
+        uint256 three;
+    }
+
     struct Context {
         GenericAdapterInterface adapter;
         FlashloanOffererInterface flashloanOfferer;
         GenericAdapterSidecarInterface sidecar;
         bool isReference;
+        FuzzInputs inputs;
     }
+
+    FuzzInputs emptyInputs;
 
     MatchFulfillmentHelper matchFulfillmentHelper;
     GenericAdapterInterface testAdapter;
@@ -86,11 +109,13 @@ contract GenericAdapterTest is BaseOrderTest {
     GenericAdapterSidecarInterface testSidecarReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
+    WETH weth;
     bool rejectReceive;
     bool erc20CallExecuted;
     bool erc721CallExecuted;
     bool erc1155CallExecuted;
     uint256 nativeAction;
+    uint256 wrappedAction;
 
     receive() external payable override {
         if (rejectReceive) {
@@ -135,6 +160,7 @@ contract GenericAdapterTest is BaseOrderTest {
 
         testERC721 = new TestERC721();
         testERC1155 = new TestERC1155();
+        weth = new WETH();
     }
 
     function test(function(Context memory) external fn, Context memory context) internal {
@@ -152,7 +178,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -161,7 +188,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -183,7 +211,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -192,7 +221,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -208,7 +238,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -217,7 +248,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -235,7 +267,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -244,7 +277,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -280,7 +314,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -289,7 +324,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -414,7 +450,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -423,7 +460,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -476,7 +514,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -485,7 +524,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -638,7 +678,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -647,7 +688,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -705,7 +747,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapter,
                 flashloanOfferer: testFlashloanOfferer,
                 sidecar: testSidecar,
-                isReference: false
+                isReference: false,
+                inputs: emptyInputs
             })
         );
         test(
@@ -714,7 +757,8 @@ contract GenericAdapterTest is BaseOrderTest {
                 adapter: testAdapterReference,
                 flashloanOfferer: testFlashloanOffererReference,
                 sidecar: testSidecarReference,
-                isReference: true
+                isReference: true,
+                inputs: emptyInputs
             })
         );
     }
@@ -955,10 +999,301 @@ contract GenericAdapterTest is BaseOrderTest {
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
     }
 
+    function testSeaportWrappedWethManipulation() public {
+        test(
+            this.execSeaportWrappedWethManipulation,
+            Context({
+                adapter: testAdapter,
+                flashloanOfferer: testFlashloanOfferer,
+                sidecar: testSidecar,
+                isReference: false,
+                inputs: emptyInputs
+            })
+        );
+        test(
+            this.execSeaportWrappedWethManipulation,
+            Context({
+                adapter: testAdapterReference,
+                flashloanOfferer: testFlashloanOffererReference,
+                sidecar: testSidecarReference,
+                isReference: true,
+                inputs: emptyInputs
+            })
+        );
+    }
+
+    function execSeaportWrappedWethManipulation(Context memory context) external stateless {
+        ConsiderationItem[] memory considerationArray = new ConsiderationItem[](1);
+        OrderParameters memory orderParameters;
+        AdvancedOrder memory order;
+        AdvancedOrder[] memory orders = new AdvancedOrder[](3);
+        bytes memory extraData;
+
+        uint256 firstWord;
+
+        // This tests flashloaning starting with native tokens and then playing
+        // with WETH in the Calls.
+
+        order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
+            considerationItem = considerationItem.withToken(address(0));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(3 ether);
+            considerationItem = considerationItem.withEndAmount(3 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+
+            considerationArray[0] = considerationItem;
+        }
+
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+
+            order.withParameters(orderParameters);
+        }
+
+        firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
+        uint256 secondWord = uint256(uint160(address(this))) << 96;
+        secondWord = secondWord | (1 << 88);
+        secondWord = secondWord | 3 ether;
+        uint256 thirdWord = 1 << 248;
+        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
+        firstWord = firstWord | 85;
+        extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+
+        // Add it all to the order.
+        order.withExtraData(extraData);
+        orders[0] = order;
+
+        order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
+            considerationItem = considerationItem.withToken(address(0));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(3 ether);
+            considerationItem = considerationItem.withEndAmount(3 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+
+            considerationArray[0] = considerationItem;
+        }
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.adapter));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+
+            order = order.withParameters(orderParameters);
+        }
+
+        firstWord = 0x0022222222222222222222222222222222222222222222222222222200000000;
+
+        Call[] memory calls = new Call[](6);
+
+        {
+            Call memory callDepositWETH =
+                Call(address(weth), false, 1 ether, abi.encodeWithSelector(IWETH.deposit.selector));
+
+            Call memory callWrappedAction =
+                Call(address(this), false, 0, abi.encodeWithSelector(this.incrementWrappedAction.selector, 1 ether));
+
+            Call memory callNativeAction = Call(
+                address(this), false, 1 ether, abi.encodeWithSelector(this.incrementNativeAction.selector, 1 ether)
+            );
+
+            Call memory callWithdrawWETH =
+                Call(address(weth), false, 0, abi.encodeWithSelector(IWETH.withdraw.selector, 1 ether));
+
+            calls[0] = callDepositWETH;
+            calls[1] = callWrappedAction;
+            calls[2] = callNativeAction;
+            calls[3] = callNativeAction;
+            calls[4] = callWithdrawWETH;
+            calls[5] = callNativeAction;
+        }
+
+        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
+        uint256 sizeValue = extraData.length * 2;
+        firstWord = firstWord | sizeValue;
+        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
+        order = order.withExtraData(extraData);
+        orders[1] = order;
+
+        {
+            AdvancedOrder memory mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+            OfferItem[] memory offerItems = new OfferItem[](1);
+            OfferItem memory offerItem = OfferItemLib.empty();
+            offerItem = offerItem.withItemType(ItemType.NATIVE);
+            offerItem = offerItem.withToken(address(0));
+            offerItem = offerItem.withIdentifierOrCriteria(0);
+            offerItem = offerItem.withStartAmount(3 ether);
+            offerItem = offerItem.withEndAmount(3 ether);
+            offerItems[0] = offerItem;
+
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(this));
+            orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(offerItems);
+            orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+
+            mirrorOrder = mirrorOrder.withParameters(orderParameters);
+            orders[2] = mirrorOrder;
+        }
+
+        assertEq(nativeAction, 0, "nativeAction should be 0");
+        vm.deal(address(context.flashloanOfferer), 4 ether);
+
+        Fulfillment[] memory fulfillments = new Fulfillment[](2);
+        {
+            FulfillmentComponent[] memory offerComponentsFlashloan = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsFlashloan = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory offerComponentsMirror = new FulfillmentComponent[](1);
+            FulfillmentComponent[] memory considerationComponentsMirror = new FulfillmentComponent[](1);
+
+            offerComponentsFlashloan[0] = FulfillmentComponent(0, 0);
+            considerationComponentsFlashloan[0] = FulfillmentComponent(2, 0);
+            offerComponentsMirror[0] = FulfillmentComponent(2, 0);
+            considerationComponentsMirror[0] = FulfillmentComponent(0, 0);
+
+            fulfillments[0] = Fulfillment(offerComponentsFlashloan, considerationComponentsFlashloan);
+            fulfillments[1] = Fulfillment(offerComponentsMirror, considerationComponentsMirror);
+        }
+
+        consideration.matchAdvancedOrders{ value: 3 ether }(orders, new CriteriaResolver[](0), fulfillments, address(0));
+
+        assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
+
+        // This tests flashloaning starting with wrapped tokens and then playing
+        // with WETH in the Calls.
+
+        StdCheats.deal(address(weth), address(this), 4 ether);
+        weth.approve(address(consideration), 4 ether);
+
+        order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.ERC20);
+            considerationItem = considerationItem.withToken(address(weth));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(3 ether);
+            considerationItem = considerationItem.withEndAmount(3 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+
+            considerationArray[0] = considerationItem;
+        }
+
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 1);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+
+            order.withParameters(orderParameters);
+        }
+
+        firstWord = 0x0011111111111111111111111111111111111111111111111111111100000000;
+        secondWord = uint256(uint160(address(this))) << 96;
+        secondWord = secondWord | (1 << 88);
+        secondWord = secondWord | 3 ether;
+        thirdWord = 1 << 248;
+        thirdWord = thirdWord | (uint256(uint160(address(context.adapter))) << 88);
+        firstWord = firstWord | 85;
+        extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+
+        // Add it all to the order.
+        order.withExtraData(extraData);
+        orders[0] = order;
+
+        order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        {
+            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.ERC20);
+            considerationItem = considerationItem.withToken(address(weth));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem = considerationItem.withStartAmount(3 ether);
+            considerationItem = considerationItem.withEndAmount(3 ether);
+            considerationItem = considerationItem.withRecipient(address(0));
+
+            considerationArray[0] = considerationItem;
+        }
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(context.adapter));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters = orderParameters.withConsideration(considerationArray);
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+
+            order = order.withParameters(orderParameters);
+        }
+
+        // The second order is the same.
+
+        {
+            AdvancedOrder memory mirrorOrder = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+            OfferItem[] memory offerItems = new OfferItem[](1);
+            OfferItem memory offerItem = OfferItemLib.empty();
+            offerItem = offerItem.withItemType(ItemType.ERC20);
+            offerItem = offerItem.withToken(address(weth));
+            offerItem = offerItem.withIdentifierOrCriteria(0);
+            offerItem = offerItem.withStartAmount(3 ether);
+            offerItem = offerItem.withEndAmount(3 ether);
+            offerItems[0] = offerItem;
+
+            orderParameters = OrderParametersLib.empty();
+            orderParameters = orderParameters.withOfferer(address(this));
+            orderParameters = orderParameters.withOrderType(OrderType.FULL_OPEN);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(offerItems);
+            orderParameters = orderParameters.withConsideration(new ConsiderationItem[](0));
+            orderParameters = orderParameters.withTotalOriginalConsiderationItems(0);
+
+            mirrorOrder = mirrorOrder.withParameters(orderParameters);
+            orders[2] = mirrorOrder;
+        }
+
+        consideration.matchAdvancedOrders(orders, new CriteriaResolver[](0), fulfillments, address(0));
+
+        assertEq(nativeAction, 6 ether, "nativeAction should be 6 ether");
+    }
+
     function incrementNativeAction(uint256 amount) external payable {
         assertGt(msg.value, amount - 0.001 ether, "msg.value should be roughly equal to amount");
         assertLt(msg.value, amount + 0.001 ether, "msg.value should be roughly equal to amount");
         nativeAction += msg.value;
+    }
+
+    function incrementWrappedAction(uint256 amount) external {
+        assertEq(weth.balanceOf(msg.sender), amount);
+        wrappedAction += amount;
     }
 }
 

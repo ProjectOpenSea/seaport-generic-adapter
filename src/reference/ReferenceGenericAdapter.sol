@@ -30,8 +30,6 @@ import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
 import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
-import "forge-std/console.sol";
-
 /**
  * @title ReferenceGenericAdapter
  * @author 0age
@@ -251,6 +249,10 @@ contract ReferenceGenericAdapter is ContractOffererInterface, TokenTransferrer {
                     ++i;
                 }
             }
+        }
+
+        if (value > address(this).balance) {
+            revert("Please ensure this contract has sufficient balance first.");
         }
 
         // Call sidecar, performing generic execution consuming supplied items.
