@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
-
-import "forge-std/console.sol";
+import {
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
 // Right now this is just here to allow `cleanup.selector` to be used
 // below. Think about inheriting an interface or something.
@@ -60,14 +63,24 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         return this.onERC721Received.selector;
     }
 
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
@@ -106,7 +119,11 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         address _fulfiller = fulfiller;
 
         // Revert if the maximumSpent array is not exactly 1 item long.
@@ -144,29 +161,42 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // These are silly, just an experiment in more closely modeling
             // the behavior of the optimized contracts.
 
-            address typeNeutralizedAddressMin =
-                minimumReceivedItem.itemType == ItemType.ERC20 ? minimumReceivedItem.token : address(0);
-            address typeNeutralizedAddressMax =
-                maximumSpentItem.itemType == ItemType.ERC20 ? maximumSpentItem.token : address(0);
-            address xorAddress = address(uint160(typeNeutralizedAddressMin) ^ uint160(typeNeutralizedAddressMax));
+            address typeNeutralizedAddressMin = minimumReceivedItem.itemType
+                == ItemType.ERC20 ? minimumReceivedItem.token : address(0);
+            address typeNeutralizedAddressMax = maximumSpentItem.itemType
+                == ItemType.ERC20 ? maximumSpentItem.token : address(0);
+            address xorAddress = address(
+                uint160(typeNeutralizedAddressMin)
+                    ^ uint160(typeNeutralizedAddressMax)
+            );
 
             if (xorAddress != address(this)) {
                 revert UnacceptableTokenPairing();
             }
 
             bool isOneButNotBoth = (
-                minimumReceivedItem.token == address(this) || maximumSpentItem.token == address(this)
-            ) && !(minimumReceivedItem.token == address(this) && maximumSpentItem.token == address(this));
+                minimumReceivedItem.token == address(this)
+                    || maximumSpentItem.token == address(this)
+            )
+                && !(
+                    minimumReceivedItem.token == address(this)
+                        && maximumSpentItem.token == address(this)
+                );
 
             if (
                 !(isOneButNotBoth)
-                    || !(minimumReceivedItem.itemType == ItemType.NATIVE || maximumSpentItem.itemType == ItemType.NATIVE)
+                    || !(
+                        minimumReceivedItem.itemType == ItemType.NATIVE
+                            || maximumSpentItem.itemType == ItemType.NATIVE
+                    )
             ) {
                 revert MismatchedAddresses();
             }
 
             // Process the deposit or withdrawal.
-            _processDepositOrWithdrawal(_fulfiller, minimumReceivedItem, context);
+            _processDepositOrWithdrawal(
+                _fulfiller, minimumReceivedItem, context
+            );
         } else {
             // Revert if the minimumReceived array is not 0 or 1 items long.
             revert InvalidTotalMinimumReceivedItems();
@@ -245,14 +275,23 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
                 shouldCall = context[startingIndex + 11] == 0x01;
 
                 // Extract the recipient address from the flashloan data.
-                address recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
+                address recipient = address(
+                    uint160(bytes20(context[endingIndex - 20:endingIndex]))
+                );
 
                 if (shouldCall == true) {
                     // Call the generic adapter's cleanup function.
-                    (bool success, bytes memory returnData) =
-                        recipient.call(abi.encodeWithSignature("cleanup(address)", cleanupRecipient));
+                    (bool success, bytes memory returnData) = recipient.call(
+                        abi.encodeWithSignature(
+                            "cleanup(address)", cleanupRecipient
+                        )
+                    );
 
-                    if (success == false || bytes4(returnData) != cleanupInterface.cleanup.selector) {
+                    if (
+                        success == false
+                            || bytes4(returnData)
+                                != cleanupInterface.cleanup.selector
+                    ) {
                         revert CallFailed();
                     }
                 }
@@ -279,7 +318,13 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
      * @return offer         A tuple containing the offer items.
      * @return consideration A tuple containing the consideration items.
      */
-    function previewOrder(address, address, SpentItem[] calldata, SpentItem[] calldata, bytes calldata)
+    function previewOrder(
+        address,
+        address,
+        SpentItem[] calldata,
+        SpentItem[] calldata,
+        bytes calldata
+    )
         external
         pure
         override
@@ -307,7 +352,10 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         return ("FlashloanOfferer", schemas);
     }
 
-    function _processFlashloan(bytes calldata context) internal returns (uint256 totalSpent) {
+    function _processFlashloan(bytes calldata context)
+        internal
+        returns (uint256 totalSpent)
+    {
         // Get the length of the context array from calldata.
         uint256 contextLength = uint256(bytes32(context[31:32])) >> 248;
 
@@ -350,7 +398,6 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // Increment i by 32 bytes (1 word) to get the next word.
             i += 32;
 
-            // TODO: Switch all ranges in comments to use indexes.
             // The first 32 bytes of the context are the SIP encoding and the
             // context length with some ignored bytes in between. The next 21
             // bytes of the context are the cleanup recipient address, the sum
@@ -363,8 +410,10 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
 
             // Bytes at indexes 0-10 are the value, at index 11 is the flag, and
             // at indexes 12-31 are the recipient address.
-            value = uint256(bytes32(context[startingIndex:startingIndex + 11])) >> 168;
-            recipient = address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
+            value = uint256(bytes32(context[startingIndex:startingIndex + 11]))
+                >> 168;
+            recipient =
+                address(uint160(bytes20(context[endingIndex - 20:endingIndex])));
 
             // Track the total value of all flashloans for a subsequent check in
             // `generateOrder`.
@@ -383,9 +432,11 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         return totalValue;
     }
 
-    function _processDepositOrWithdrawal(address fulfiller, SpentItem calldata spentItem, bytes calldata context)
-        internal
-    {
+    function _processDepositOrWithdrawal(
+        address fulfiller,
+        SpentItem calldata spentItem,
+        bytes calldata context
+    ) internal {
         // Get the length of the context array from calldata (unmasked).
         uint256 contextLength = uint256(bytes32(context));
 

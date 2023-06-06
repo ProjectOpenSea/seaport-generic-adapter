@@ -12,17 +12,29 @@ interface GenericAdapterSidecarInterface {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4);
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4);
 
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4);
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4);
 
-    function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata)
-        external
-        payable
-        returns (bytes4);
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external payable returns (bytes4);
 
     /**
      * @dev Execute an arbitrary sequence of calls. Only callable from the

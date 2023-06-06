@@ -15,11 +15,13 @@ import {
     OrderParameters
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { FlashloanOffererInterface } from "../src/interfaces/FlashloanOffererInterface.sol";
+import { FlashloanOffererInterface } from
+    "../src/interfaces/FlashloanOffererInterface.sol";
 
 import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
@@ -27,9 +29,12 @@ import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
 import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+import { Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import "forge-std/console.sol";
+import {
+    AdapterEncodingHelperLib,
+    Flashloan
+} from "../src/lib/AdapterEncodingHelperLib.sol";
 
 contract FlashloanOffererTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
@@ -52,12 +57,16 @@ contract FlashloanOffererTest is BaseOrderTest {
         super.setUp();
 
         testFlashloanOfferer = FlashloanOffererInterface(
-            deployCode("out/FlashloanOfferer.sol/FlashloanOfferer.json", abi.encode(address(consideration)))
+            deployCode(
+                "out/FlashloanOfferer.sol/FlashloanOfferer.json",
+                abi.encode(address(consideration))
+            )
         );
 
         testFlashloanOffererReference = FlashloanOffererInterface(
             deployCode(
-                "out/ReferenceFlashloanOfferer.sol/ReferenceFlashloanOfferer.json", abi.encode(address(consideration))
+                "out/ReferenceFlashloanOfferer.sol/ReferenceFlashloanOfferer.json",
+                abi.encode(address(consideration))
             )
         );
 
@@ -65,49 +74,97 @@ contract FlashloanOffererTest is BaseOrderTest {
         testERC1155 = new TestERC1155();
     }
 
-    function test(function(Context memory) external fn, Context memory context) internal {
+    function test(function(Context memory) external fn, Context memory context)
+        internal
+    {
         try fn(context) {
-            fail("Stateless test function should have reverted with assertion failure status.");
+            fail(
+                "Stateless test function should have reverted with assertion failure status."
+            );
         } catch (bytes memory reason) {
             assertPass(reason);
         }
     }
 
     function testFlashloanOffererReceive() public {
-        test(this.execReceive, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
-        test(this.execReceive, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true }));
+        test(
+            this.execReceive,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
+        );
+        test(
+            this.execReceive,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
+        );
     }
 
     function execReceive(Context memory context) external stateless {
-        (bool success,) = address(context.flashloanOfferer).call{ value: 1 ether }("");
+        (bool success,) =
+            address(context.flashloanOfferer).call{ value: 1 ether }("");
         require(success);
         assertEq(address(context.flashloanOfferer).balance, 1 ether);
 
         testERC1155.mint(address(context.flashloanOfferer), 1, 1);
         testERC721.mint(address(this), 2);
-        testERC721.safeTransferFrom(address(this), address(context.flashloanOfferer), 2);
+        testERC721.safeTransferFrom(
+            address(this), address(context.flashloanOfferer), 2
+        );
     }
 
     function testSupportsInterface() public {
-        test(this.execSupportsInterface, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
         test(
-            this.execSupportsInterface, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+            this.execSupportsInterface,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
+        );
+        test(
+            this.execSupportsInterface,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
         );
     }
 
     function execSupportsInterface(Context memory context) external stateless {
-        assertEq(context.flashloanOfferer.supportsInterface(type(ContractOffererInterface).interfaceId), true);
-    }
-
-    function testGetSeaportMetadata() public {
-        test(this.execGetSeaportMetadata, Context({ flashloanOfferer: testFlashloanOfferer, isReference: false }));
-        test(
-            this.execGetSeaportMetadata, Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+        assertEq(
+            context.flashloanOfferer.supportsInterface(
+                type(ContractOffererInterface).interfaceId
+            ),
+            true
         );
     }
 
-    function execGetSeaportMetadata(Context memory context) external stateless {
-        (string memory name, Schema[] memory schemas) = context.flashloanOfferer.getSeaportMetadata();
+    function testGetSeaportMetadata() public {
+        test(
+            this.execGetSeaportMetadata,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
+        );
+        test(
+            this.execGetSeaportMetadata,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execGetSeaportMetadata(Context memory context)
+        external
+        stateless
+    {
+        (string memory name, Schema[] memory schemas) =
+            context.flashloanOfferer.getSeaportMetadata();
         assertEq(name, "FlashloanOfferer");
         assertEq(schemas.length, 0);
     }
@@ -115,67 +172,129 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testGenerateOrderThresholdReverts() public {
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
         );
         test(
             this.execGenerateOrderThresholdReverts,
-            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
         );
     }
 
-    function execGenerateOrderThresholdReverts(Context memory context) external stateless {
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidTotalMaximumSpentItems.selector));
-        context.flashloanOfferer.generateOrder(address(this), new SpentItem[](0), new SpentItem[](0), "");
-
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidTotalMaximumSpentItems.selector));
-        context.flashloanOfferer.generateOrder(address(this), new SpentItem[](0), new SpentItem[](2), "");
-
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidTotalMinimumReceivedItems.selector));
-        context.flashloanOfferer.generateOrder(address(this), new SpentItem[](2), new SpentItem[](1), "");
-
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidCaller.selector, address(this)));
+    function execGenerateOrderThresholdReverts(Context memory context)
+        external
+        stateless
+    {
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidTotalMaximumSpentItems.selector
+            )
+        );
         context.flashloanOfferer.generateOrder(
-            address(this),
-            new SpentItem[](0),
-            new SpentItem[](1),
-            abi.encodePacked(bytes32(0x0011111111111111111111111111111111111111111111111111111100000036))
+            address(this), new SpentItem[](0), new SpentItem[](0), ""
         );
 
-        vm.prank(address(consideration));
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnsupportedExtraDataVersion.selector, 255));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidTotalMaximumSpentItems.selector
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this), new SpentItem[](0), new SpentItem[](2), ""
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface
+                    .InvalidTotalMinimumReceivedItems
+                    .selector
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this), new SpentItem[](2), new SpentItem[](1), ""
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidCaller.selector, address(this)
+            )
+        );
         context.flashloanOfferer.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](1),
             abi.encodePacked(
-                bytes32(0xff11111111111111111111111111111111111111111111111111111100000001),
-                bytes32(0x2222222222222222222222222222222222222222330000000000000000000000)
+                bytes32(
+                    0x0011111111111111111111111111111111111111111111111111111100000036
+                )
+            )
+        );
+
+        vm.prank(address(consideration));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.UnsupportedExtraDataVersion.selector,
+                255
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this),
+            new SpentItem[](0),
+            new SpentItem[](1),
+            abi.encodePacked(
+                bytes32(
+                    0xff11111111111111111111111111111111111111111111111111111100000001
+                ),
+                bytes32(
+                    0x2222222222222222222222222222222222222222330000000000000000000000
+                )
             )
         );
 
         // Triggered by contextLength == 0.
         vm.prank(address(consideration));
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0
+            )
+        );
         context.flashloanOfferer.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](1),
             abi.encodePacked(
-                bytes32(0x0011111111111111111111111111111111111111111111111111111100000000),
-                bytes32(0x2222222222222222222222222222222222222222330000000000000000000000)
+                bytes32(
+                    0x0011111111111111111111111111111111111111111111111111111100000000
+                ),
+                bytes32(
+                    0x2222222222222222222222222222222222222222330000000000000000000000
+                )
             )
         );
 
         // Triggered by contextLength < 22 + flashloanDataLength.
         vm.prank(address(consideration));
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0
+            )
+        );
         context.flashloanOfferer.generateOrder(
             address(this),
             new SpentItem[](0),
             new SpentItem[](1),
             abi.encodePacked(
-                bytes32(0x00111111111111111111111111111111111111111111111111111111000000ff),
-                bytes32(0x2222222222222222222222222222222222222222ff0000000000000000000000)
+                bytes32(
+                    0x00111111111111111111111111111111111111111111111111111111000000ff
+                ),
+                bytes32(
+                    0x2222222222222222222222222222222222222222ff0000000000000000000000
+                )
             )
         );
 
@@ -193,7 +312,9 @@ contract FlashloanOffererTest is BaseOrderTest {
         SpentItem memory spentItemMinReceived;
         SpentItem memory spentItemMaxSpent;
 
-        spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether);
+        spentItemMinReceived = SpentItem(
+            ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether
+        );
         spentItemMaxSpent = SpentItem(ItemType.NATIVE, address(0), 0, 2 ether);
 
         minimumReceived[0] = spentItemMinReceived;
@@ -201,74 +322,136 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         // Make one that sneaks through to confirm that the tests are valid.
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Test the InvalidCaller that lies on the process deposit or withdrawal path.
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidCaller.selector, address(this)));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidCaller.selector, address(this)
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Test the InvalidExtraDataEncoding that lies on the process deposit or withdrawal path.
         vm.prank(address(consideration));
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidExtraDataEncoding.selector, 0
+            )
+        );
         context.flashloanOfferer.generateOrder(
-            address(this), minimumReceived, maximumSpent, abi.encodePacked(bytes32(0))
+            address(this),
+            minimumReceived,
+            maximumSpent,
+            abi.encodePacked(bytes32(0))
         );
 
         // Mess up the amount.
-        spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 3 ether);
+        spentItemMinReceived = SpentItem(
+            ItemType.ERC20, address(context.flashloanOfferer), 0, 3 ether
+        );
         minimumReceived[0] = spentItemMinReceived;
 
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MinGreaterThanMax.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.MinGreaterThanMax.selector
+            )
+        );
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Put back the amount but mess up the type.
-        spentItemMinReceived = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+        spentItemMinReceived =
+            SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
         minimumReceived[0] = spentItemMinReceived;
 
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.SharedItemTypes.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.SharedItemTypes.selector
+            )
+        );
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Put back the type but mess up the token.
-        spentItemMinReceived = SpentItem(ItemType.ERC20, address(token1), 0, 1 ether);
+        spentItemMinReceived =
+            SpentItem(ItemType.ERC20, address(token1), 0, 1 ether);
         minimumReceived[0] = spentItemMinReceived;
 
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.UnacceptableTokenPairing.selector
+            )
+        );
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Mess up the token a different way.
         spentItemMinReceived = SpentItem(ItemType.ERC20, address(0), 0, 1 ether);
         minimumReceived[0] = spentItemMinReceived;
 
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.UnacceptableTokenPairing.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.UnacceptableTokenPairing.selector
+            )
+        );
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         // Put the token back but jumble up types and addresses.
-        spentItemMinReceived = SpentItem(ItemType.NATIVE, address(context.flashloanOfferer), 0, 1 ether);
+        spentItemMinReceived = SpentItem(
+            ItemType.NATIVE, address(context.flashloanOfferer), 0, 1 ether
+        );
         minimumReceived[0] = spentItemMinReceived;
-        spentItemMaxSpent = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 2 ether);
+        spentItemMaxSpent = SpentItem(
+            ItemType.ERC20, address(context.flashloanOfferer), 0, 2 ether
+        );
         maximumSpent[0] = spentItemMaxSpent;
 
-        vm.expectRevert(abi.encodeWithSelector(FlashloanOffererInterface.MismatchedAddresses.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.MismatchedAddresses.selector
+            )
+        );
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
     }
 
     function testDepositAndWithdrawFunctionality() public {
         test(
             this.execDepositAndWithdrawFunctionality,
-            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
         );
         test(
             this.execDepositAndWithdrawFunctionality,
-            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
         );
     }
 
-    function execDepositAndWithdrawFunctionality(Context memory context) external stateless {
+    function execDepositAndWithdrawFunctionality(Context memory context)
+        external
+        stateless
+    {
         // maximumSpent length must always be one.
         // One minimumReceived item indicates a deposit or withdrawal.
         // If the item has this contract as its token, process as a deposit.
@@ -280,7 +463,9 @@ contract FlashloanOffererTest is BaseOrderTest {
         SpentItem memory spentItemMaxSpent;
 
         // This says, "I'm depositing 1 ether"
-        spentItemMinReceived = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether);
+        spentItemMinReceived = SpentItem(
+            ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether
+        );
         // This needs to be higher than or equal to the deposit.
         spentItemMaxSpent = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
 
@@ -288,20 +473,27 @@ contract FlashloanOffererTest is BaseOrderTest {
         maximumSpent[0] = spentItemMaxSpent;
 
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         assertEq(context.flashloanOfferer.getBalance(address(this)), 1 ether);
 
         // This says, "I'm withdrawing 1 ether"
-        spentItemMinReceived = SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
+        spentItemMinReceived =
+            SpentItem(ItemType.NATIVE, address(0), 0, 1 ether);
         // This needs to be higher than or equal to the deposit.
-        spentItemMaxSpent = SpentItem(ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether);
+        spentItemMaxSpent = SpentItem(
+            ItemType.ERC20, address(context.flashloanOfferer), 0, 1 ether
+        );
 
         minimumReceived[0] = spentItemMinReceived;
         maximumSpent[0] = spentItemMaxSpent;
 
         vm.prank(address(consideration));
-        context.flashloanOfferer.generateOrder(address(this), minimumReceived, maximumSpent, bytes(""));
+        context.flashloanOfferer.generateOrder(
+            address(this), minimumReceived, maximumSpent, bytes("")
+        );
 
         assertEq(context.flashloanOfferer.getBalance(address(this)), 0 ether);
     }
@@ -309,15 +501,24 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testProvideFlashloanFunctionality() public {
         test(
             this.execProvideFlashloanFunctionality,
-            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
         );
         test(
             this.execProvideFlashloanFunctionality,
-            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
         );
     }
 
-    function execProvideFlashloanFunctionality(Context memory context) external stateless {
+    function execProvideFlashloanFunctionality(Context memory context)
+        external
+        stateless
+    {
         // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
         // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
         //
@@ -329,23 +530,18 @@ contract FlashloanOffererTest is BaseOrderTest {
         uint256 flashloanValueRequested = 0x3333333333333333333333;
 
         SpentItem[] memory maximumSpent = new SpentItem[](1);
-        SpentItem memory spentItemMaxSpent = SpentItem(ItemType.NATIVE, address(0), 0, flashloanValueRequested);
+        SpentItem memory spentItemMaxSpent =
+            SpentItem(ItemType.NATIVE, address(0), 0, flashloanValueRequested);
         maximumSpent[0] = spentItemMaxSpent;
 
-        uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000000ff;
-        uint256 secondWord = uint256(uint160(address(this))) << 96;
-        uint256 thirdWord;
+        Flashloan memory flashloan =
+            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
 
-        assembly {
-            // Add a 0x01 byte to the second word to indicate one flashloan.
-            secondWord := or(shl(88, 0x01), secondWord)
-            // Add the amount for the flashloan to the second word.
-            secondWord := or(flashloanValueRequested, secondWord)
-            // Add the shouldCallback flag to the start of the third word.
-            thirdWord := shl(248, 0x01)
-            // Add the recipient to the third word.
-            thirdWord := or(thirdWord, shl(88, address()))
-        }
+        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
+            address(this), flashloans
+        );
 
         // For now, just assume that the flashloan offerer is sufficiently
         // funded.
@@ -356,20 +552,23 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this),
-            new SpentItem[](0),
-            maximumSpent,
-            abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord))
+            address(this), new SpentItem[](0), maximumSpent, extraData
         );
 
         uint256 receipientBalanceAfter = address(this).balance;
         uint256 senderBalanceAfter = address(context.flashloanOfferer).balance;
 
         assertEq(
-            receipientBalanceAfter, receipientBalanceBefore + flashloanValueRequested, "recipient balance incorrect"
+            receipientBalanceAfter,
+            receipientBalanceBefore + flashloanValueRequested,
+            "recipient balance incorrect"
         );
 
-        assertEq(senderBalanceAfter, senderBalanceBefore - flashloanValueRequested, "sender balance incorrect");
+        assertEq(
+            senderBalanceAfter,
+            senderBalanceBefore - flashloanValueRequested,
+            "sender balance incorrect"
+        );
 
         assertEq(flashloanValueRequested, flashloanValueReceived);
     }
@@ -377,15 +576,24 @@ contract FlashloanOffererTest is BaseOrderTest {
     function testSeaportWrappedFlashloanFunctionality() public {
         test(
             this.execSeaportWrappedFlashloanFunctionality,
-            Context({ flashloanOfferer: testFlashloanOfferer, isReference: false })
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
         );
         test(
             this.execSeaportWrappedFlashloanFunctionality,
-            Context({ flashloanOfferer: testFlashloanOffererReference, isReference: true })
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
         );
     }
 
-    function execSeaportWrappedFlashloanFunctionality(Context memory context) external stateless {
+    function execSeaportWrappedFlashloanFunctionality(Context memory context)
+        external
+        stateless
+    {
         // Create an order.
         AdvancedOrder memory order;
         {
@@ -395,14 +603,18 @@ contract FlashloanOffererTest is BaseOrderTest {
         // Create the offer and consideration.
         uint256 flashloanValueRequested = 0x3333333333333333333333;
 
-        ConsiderationItem[] memory considerationArray = new ConsiderationItem[](1);
+        ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](1);
         {
-            ConsiderationItem memory considerationItem = ConsiderationItemLib.empty();
+            ConsiderationItem memory considerationItem =
+                ConsiderationItemLib.empty();
             considerationItem = considerationItem.withItemType(ItemType.NATIVE);
             considerationItem = considerationItem.withToken(address(0));
             considerationItem = considerationItem.withIdentifierOrCriteria(0);
-            considerationItem = considerationItem.withStartAmount(flashloanValueRequested);
-            considerationItem = considerationItem.withEndAmount(flashloanValueRequested);
+            considerationItem =
+                considerationItem.withStartAmount(flashloanValueRequested);
+            considerationItem =
+                considerationItem.withEndAmount(flashloanValueRequested);
             considerationItem = considerationItem.withRecipient(address(0));
             considerationArray[0] = considerationItem;
         }
@@ -411,32 +623,26 @@ contract FlashloanOffererTest is BaseOrderTest {
         OrderParameters memory orderParameters;
         {
             orderParameters = OrderParametersLib.empty();
-            orderParameters = orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters =
+                orderParameters.withOfferer(address(context.flashloanOfferer));
             orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
             orderParameters = orderParameters.withStartTime(block.timestamp);
             orderParameters = orderParameters.withEndTime(block.timestamp + 100);
             orderParameters = orderParameters.withOffer(new OfferItem[](0));
-            orderParameters = orderParameters.withConsideration(considerationArray);
-            orderParameters = orderParameters.withTotalOriginalConsiderationItems(1);
+            orderParameters =
+                orderParameters.withConsideration(considerationArray);
+            orderParameters =
+                orderParameters.withTotalOriginalConsiderationItems(1);
         }
 
-        // Create the extraData.
-        uint256 firstWord = 0x00111111111111111111111111111111111111111111111111111111000000ff;
-        uint256 secondWord = uint256(uint160(address(this))) << 96;
-        uint256 thirdWord;
+        Flashloan memory flashloan =
+            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
 
-        assembly {
-            // Add a 0x01 byte to the second word to indicate one flashloan.
-            secondWord := or(shl(88, 0x01), secondWord)
-            // Add the amount for the flashloan to the second word.
-            secondWord := or(flashloanValueRequested, secondWord)
-            // Add the shouldCallback flag to the start of the third word.
-            thirdWord := shl(248, 0x01)
-            // Add the recipient to the third word.
-            thirdWord := or(thirdWord, shl(88, address()))
-        }
-
-        bytes memory extraData = abi.encodePacked(bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord));
+        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
+            address(this), flashloans
+        );
 
         {
             // Add it all to the order.
@@ -472,7 +678,11 @@ contract FlashloanOffererTest is BaseOrderTest {
      *            the full flashloan lifcycle.  The comment above is left for
      *            reference.
      */
-    function cleanup(address /* recipient */ ) external payable returns (bytes4) {
+    function cleanup(address /* recipient */ )
+        external
+        payable
+        returns (bytes4)
+    {
         return this.cleanup.selector;
     }
 }

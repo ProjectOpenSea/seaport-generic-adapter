@@ -38,7 +38,11 @@ contract GenericAdapterSidecar {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         assembly {
             mstore(0, 0x150b7a02)
             return(0x1c, 0x20)
@@ -48,18 +52,26 @@ contract GenericAdapterSidecar {
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         assembly {
             mstore(0, 0xf23a6e61)
             return(0x1c, 0x20)
         }
     }
 
-    function onERC1155BatchReceived(address, address, uint256[] calldata, uint256[] calldata, bytes calldata)
-        external
-        payable
-        returns (bytes4)
-    {
+    function onERC1155BatchReceived(
+        address,
+        address,
+        uint256[] calldata,
+        uint256[] calldata,
+        bytes calldata
+    ) external payable returns (bytes4) {
         assembly {
             mstore(0, 0xbc197c81)
             return(0x1c, 0x20)
@@ -76,7 +88,9 @@ contract GenericAdapterSidecar {
 
         assembly {
             // Revert if standard encoding is not utilized or caller is invalid.
-            if or(xor(caller(), designatedCaller), xor(calldataload(0x04), 0x20)) {
+            if or(
+                xor(caller(), designatedCaller), xor(calldataload(0x04), 0x20)
+            ) {
                 mstore(0, 0x8f183575)
                 revert(0x1c, 0x04)
             }
@@ -89,16 +103,24 @@ contract GenericAdapterSidecar {
             let finalCallOffset := add(0x44, shl(0x05, totalCalls))
 
             // Iterate over each call.
-            for { let callOffset := 0x44 } lt(callOffset, finalCallOffset) { callOffset := add(callOffset, 0x20) } {
+            for { let callOffset := 0x44 } lt(callOffset, finalCallOffset) {
+                callOffset := add(callOffset, 0x20)
+            } {
                 let callPtr := add(calldataload(callOffset), 0x44)
 
                 // TODO: assert that callPtr is not OOR
 
-                let callDataOffset := and(calldataload(add(callPtr, 0x60)), 0xffffffff)
+                let callDataOffset :=
+                    and(calldataload(add(callPtr, 0x60)), 0xffffffff)
 
-                let callDataLength := and(calldataload(add(callPtr, callDataOffset)), 0xffffffff)
+                let callDataLength :=
+                    and(calldataload(add(callPtr, callDataOffset)), 0xffffffff)
 
-                calldatacopy(freeMemoryPtr, add(add(callPtr, 0x20), callDataOffset), callDataLength)
+                calldatacopy(
+                    freeMemoryPtr,
+                    add(add(callPtr, 0x20), callDataOffset),
+                    callDataLength
+                )
 
                 // Perform the call to the target, supplying value and calldata.
                 let success :=
@@ -114,7 +136,10 @@ contract GenericAdapterSidecar {
 
                 // Revert if the call fails and failure is not allowed.
                 if iszero(or(calldataload(add(callPtr, 0x20)), success)) {
-                    if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                    if and(
+                        iszero(iszero(returndatasize())),
+                        lt(returndatasize(), 0xffff)
+                    ) {
                         returndatacopy(0, 0, returndatasize())
                         revert(0, returndatasize())
                     }

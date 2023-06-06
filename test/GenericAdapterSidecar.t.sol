@@ -1,13 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import { Call, GenericAdapterSidecarInterface } from "../src/interfaces/GenericAdapterSidecarInterface.sol";
+import {
+    Call,
+    GenericAdapterSidecarInterface
+} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
-import { GenericAdapterSidecar } from "../src/optimized/GenericAdapterSidecar.sol";
+import { GenericAdapterSidecar } from
+    "../src/optimized/GenericAdapterSidecar.sol";
 
-import { ReferenceGenericAdapterSidecar } from "../src/reference/ReferenceGenericAdapterSidecar.sol";
+import { ReferenceGenericAdapterSidecar } from
+    "../src/reference/ReferenceGenericAdapterSidecar.sol";
 
 import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
@@ -29,26 +35,41 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
 
     function setUp() public override {
         super.setUp();
-        testSidecar =
-            GenericAdapterSidecarInterface(deployCode("out/GenericAdapterSidecar.sol/GenericAdapterSidecar.json"));
+        testSidecar = GenericAdapterSidecarInterface(
+            deployCode(
+                "out/GenericAdapterSidecar.sol/GenericAdapterSidecar.json"
+            )
+        );
         testSidecarReference = GenericAdapterSidecarInterface(
-            deployCode("out/ReferenceGenericAdapterSidecar.sol/ReferenceGenericAdapterSidecar.json")
+            deployCode(
+                "out/ReferenceGenericAdapterSidecar.sol/ReferenceGenericAdapterSidecar.json"
+            )
         );
         testERC721 = new TestERC721();
         testERC1155 = new TestERC1155();
     }
 
-    function test(function(Context memory) external fn, Context memory context) internal {
+    function test(function(Context memory) external fn, Context memory context)
+        internal
+    {
         try fn(context) {
-            fail("Stateless test function should have reverted with assertion failure status.");
+            fail(
+                "Stateless test function should have reverted with assertion failure status."
+            );
         } catch (bytes memory reason) {
             assertPass(reason);
         }
     }
 
     function testReceive() public {
-        test(this.execReceive, Context({ sidecar: testSidecar, isReference: false }));
-        test(this.execReceive, Context({ sidecar: testSidecarReference, isReference: true }));
+        test(
+            this.execReceive,
+            Context({ sidecar: testSidecar, isReference: false })
+        );
+        test(
+            this.execReceive,
+            Context({ sidecar: testSidecarReference, isReference: true })
+        );
     }
 
     function execReceive(Context memory context) external stateless {
@@ -62,11 +83,20 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteReturnsNativeBalance() public {
-        test(this.execExecuteReturnsNativeBalance, Context({ sidecar: testSidecar, isReference: false }));
-        test(this.execExecuteReturnsNativeBalance, Context({ sidecar: testSidecarReference, isReference: true }));
+        test(
+            this.execExecuteReturnsNativeBalance,
+            Context({ sidecar: testSidecar, isReference: false })
+        );
+        test(
+            this.execExecuteReturnsNativeBalance,
+            Context({ sidecar: testSidecarReference, isReference: true })
+        );
     }
 
-    function execExecuteReturnsNativeBalance(Context memory context) external stateless {
+    function execExecuteReturnsNativeBalance(Context memory context)
+        external
+        stateless
+    {
         Call[] memory calls;
         context.sidecar.execute(calls);
 
@@ -82,11 +112,18 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
 
         if (context.isReference) {
             vm.expectRevert(
-                abi.encodeWithSelector(ReferenceGenericAdapterSidecar.NativeTokenTransferGenericFailure.selector)
+                abi.encodeWithSelector(
+                    ReferenceGenericAdapterSidecar
+                        .NativeTokenTransferGenericFailure
+                        .selector
+                )
             );
         } else {
             vm.expectRevert(
-                abi.encodeWithSelector(GenericAdapterSidecar.ExcessNativeTokenReturnFailed.selector, 1 ether)
+                abi.encodeWithSelector(
+                    GenericAdapterSidecar.ExcessNativeTokenReturnFailed.selector,
+                    1 ether
+                )
             );
         }
 
@@ -94,11 +131,20 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteNotDesignatedCaller() public {
-        test(this.execExecuteNotDesignatedCaller, Context({ sidecar: testSidecar, isReference: false }));
-        test(this.execExecuteNotDesignatedCaller, Context({ sidecar: testSidecarReference, isReference: true }));
+        test(
+            this.execExecuteNotDesignatedCaller,
+            Context({ sidecar: testSidecar, isReference: false })
+        );
+        test(
+            this.execExecuteNotDesignatedCaller,
+            Context({ sidecar: testSidecarReference, isReference: true })
+        );
     }
 
-    function execExecuteNotDesignatedCaller(Context memory context) external stateless {
+    function execExecuteNotDesignatedCaller(Context memory context)
+        external
+        stateless
+    {
         vm.prank(makeAddr("not designated caller"));
         vm.expectRevert(GenericAdapterSidecar.InvalidEncodingOrCaller.selector);
         Call[] memory calls;
@@ -172,11 +218,20 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
     }
 
     function testExecuteToggleFailureAllowed() public {
-        test(this.execExecuteToggleFailureAllowed, Context({ sidecar: testSidecar, isReference: false }));
-        test(this.execExecuteToggleFailureAllowed, Context({ sidecar: testSidecarReference, isReference: true }));
+        test(
+            this.execExecuteToggleFailureAllowed,
+            Context({ sidecar: testSidecar, isReference: false })
+        );
+        test(
+            this.execExecuteToggleFailureAllowed,
+            Context({ sidecar: testSidecarReference, isReference: true })
+        );
     }
 
-    function execExecuteToggleFailureAllowed(Context memory context) external stateless {
+    function execExecuteToggleFailureAllowed(Context memory context)
+        external
+        stateless
+    {
         Call[] memory calls = new Call[](1);
         Call memory passingCallFailureAllowed;
         Call memory passingCallFailureDisallowed;
@@ -303,11 +358,18 @@ contract GenericAdapterSidecarTest is BaseOrderTest {
 
         if (context.isReference) {
             vm.expectRevert(
-                abi.encodeWithSelector(ReferenceGenericAdapterSidecar.NativeTokenTransferGenericFailure.selector)
+                abi.encodeWithSelector(
+                    ReferenceGenericAdapterSidecar
+                        .NativeTokenTransferGenericFailure
+                        .selector
+                )
             );
         } else {
             vm.expectRevert(
-                abi.encodeWithSelector(GenericAdapterSidecar.ExcessNativeTokenReturnFailed.selector, 1 ether)
+                abi.encodeWithSelector(
+                    GenericAdapterSidecar.ExcessNativeTokenReturnFailed.selector,
+                    1 ether
+                )
             );
         }
 

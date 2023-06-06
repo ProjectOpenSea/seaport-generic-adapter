@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+import {
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
 interface FlashloanOffererInterface is ContractOffererInterface {
     error InvalidCaller(address caller);
@@ -26,7 +31,9 @@ interface FlashloanOffererInterface is ContractOffererInterface {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external returns (SpentItem[] memory offer, ReceivedItem[] memory consideration);
+    )
+        external
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration);
 
     function ratifyOrder(
         SpentItem[] calldata, /* offer */
@@ -36,12 +43,18 @@ interface FlashloanOffererInterface is ContractOffererInterface {
         uint256 /* contractNonce */
     ) external returns (bytes4);
 
-    function previewOrder(address, address, SpentItem[] calldata, SpentItem[] calldata, bytes calldata)
+    function previewOrder(
+        address,
+        address,
+        SpentItem[] calldata,
+        SpentItem[] calldata,
+        bytes calldata
+    ) external pure returns (SpentItem[] memory, ReceivedItem[] memory);
+
+    function getSeaportMetadata()
         external
         pure
-        returns (SpentItem[] memory, ReceivedItem[] memory);
-
-    function getSeaportMetadata() external pure returns (string memory name, Schema[] memory schemas); // map to Seaport Improvement Proposal IDs
+        returns (string memory name, Schema[] memory schemas); // map to Seaport Improvement Proposal IDs
 
     function getBalance(address account) external view returns (uint256);
 }

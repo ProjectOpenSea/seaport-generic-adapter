@@ -39,14 +39,24 @@ contract ReferenceGenericAdapterSidecar {
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         return this.onERC721Received.selector;
     }
 
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
@@ -72,7 +82,8 @@ contract ReferenceGenericAdapterSidecar {
             }
 
             // Call the target and get success status.
-            (success,) = calls[i].target.call{ value: calls[i].value }(calls[i].callData);
+            (success,) =
+                calls[i].target.call{ value: calls[i].value }(calls[i].callData);
 
             // If the call fails and the call is not allowed to fail, revert.
             if (calls[i].allowFailure == false && success == false) {

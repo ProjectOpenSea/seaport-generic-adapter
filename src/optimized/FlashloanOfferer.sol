@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { ContractOffererInterface } from "seaport-types/interfaces/ContractOffererInterface.sol";
+import { ContractOffererInterface } from
+    "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { ReceivedItem, Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
-
-import "forge-std/console.sol";
+import {
+    ReceivedItem,
+    Schema,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
 
 /**
  * @title FlashloanOfferer
@@ -44,14 +47,23 @@ contract FlashloanOfferer is ContractOffererInterface {
         _SEAPORT = seaport;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        returns (bool)
+    {
         return interfaceId == type(ContractOffererInterface).interfaceId;
     }
 
     /**
      * @dev Enable accepting ERC721 tokens via safeTransfer.
      */
-    function onERC721Received(address, address, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        payable
+        returns (bytes4)
+    {
         assembly {
             mstore(0, 0x150b7a02)
             return(0x1c, 0x20)
@@ -61,7 +73,13 @@ contract FlashloanOfferer is ContractOffererInterface {
     /**
      * @dev Enable accepting ERC1155 tokens via safeTransfer.
      */
-    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external payable returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external payable returns (bytes4) {
         assembly {
             mstore(0, 0xf23a6e61)
             return(0x1c, 0x20)
@@ -107,7 +125,11 @@ contract FlashloanOfferer is ContractOffererInterface {
         SpentItem[] calldata minimumReceived,
         SpentItem[] calldata maximumSpent,
         bytes calldata context // encoded based on the schemaID
-    ) external override returns (SpentItem[] memory offer, ReceivedItem[] memory consideration) {
+    )
+        external
+        override
+        returns (SpentItem[] memory offer, ReceivedItem[] memory consideration)
+    {
         if (maximumSpent.length != 1) {
             revert InvalidTotalMaximumSpentItems();
         }
@@ -144,7 +166,11 @@ contract FlashloanOfferer is ContractOffererInterface {
 
                 // Ensure that minimumReceived item amount is less than or equal
                 // to maximumSpent.
-                let errorBuffer := gt(calldataload(add(minimumReceivedItem, 0x60)), maximumSpentAmount)
+                let errorBuffer :=
+                    gt(
+                        calldataload(add(minimumReceivedItem, 0x60)),
+                        maximumSpentAmount
+                    )
 
                 // Ensure that the items don't share a type.
                 errorBuffer :=
@@ -183,9 +209,19 @@ contract FlashloanOfferer is ContractOffererInterface {
                                     // returns the non-null address token.
                                     add(
                                         // Token value if ERC20, 0 otherwise.
-                                        mul(calldataload(minimumReceivedItem), calldataload(add(minimumReceivedItem, 0x20))),
+                                        mul(
+                                            calldataload(minimumReceivedItem),
+                                            calldataload(
+                                                add(minimumReceivedItem, 0x20)
+                                            )
+                                        ),
                                         // Token value if ERC20, 0 otherwise.
-                                        mul(calldataload(maximumSpentItem), calldataload(add(maximumSpentItem, 0x20)))
+                                        mul(
+                                            calldataload(maximumSpentItem),
+                                            calldataload(
+                                                add(maximumSpentItem, 0x20)
+                                            )
+                                        )
                                     ),
                                     address()
                                 )
@@ -206,8 +242,12 @@ contract FlashloanOfferer is ContractOffererInterface {
                                     iszero(
                                         // 0 if either is native.
                                         mul(
-                                            calldataload(add(minimumReceivedItem, 0x20)),
-                                            calldataload(add(maximumSpentItem, 0x20))
+                                            calldataload(
+                                                add(minimumReceivedItem, 0x20)
+                                            ),
+                                            calldataload(
+                                                add(maximumSpentItem, 0x20)
+                                            )
                                         )
                                     ),
                                     // 1 if the lone non-null address is this contract.
@@ -218,8 +258,12 @@ contract FlashloanOfferer is ContractOffererInterface {
                                         xor(
                                             // Just returns the non-null address token.
                                             add(
-                                                calldataload(add(minimumReceivedItem, 0x20)),
-                                                calldataload(add(maximumSpentItem, 0x20))
+                                                calldataload(
+                                                    add(minimumReceivedItem, 0x20)
+                                                ),
+                                                calldataload(
+                                                    add(maximumSpentItem, 0x20)
+                                                )
                                             ),
                                             address()
                                         )
@@ -296,22 +340,29 @@ contract FlashloanOfferer is ContractOffererInterface {
         assembly {
             // If context is present, look for flashloans with callback flags.
             if and(calldataload(context.offset), 0xfffffff) {
-                let cleanupRecipient := shr(96, calldataload(add(32, context.offset)))
+                let cleanupRecipient :=
+                    shr(96, calldataload(add(32, context.offset)))
                 let flashloanDataStarts := add(context.offset, 53)
                 let flashloanDataEnds :=
-                    add(flashloanDataStarts, shl(0x05, and(0xff, calldataload(add(context.offset, 52)))))
+                    add(
+                        flashloanDataStarts,
+                        shl(0x05, and(0xff, calldataload(add(context.offset, 52))))
+                    )
 
                 mstore(0, 0xfbacefce) // cleanup(address) selector
                 mstore(0x20, cleanupRecipient)
 
                 // Iterate over each flashloan.
-                for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
-                    flashloanDataOffset := add(flashloanDataOffset, 32)
-                } {
+                for { let flashloanDataOffset := flashloanDataStarts } lt(
+                    flashloanDataOffset, flashloanDataEnds
+                ) { flashloanDataOffset := add(flashloanDataOffset, 32) } {
                     let flashloanData := calldataload(flashloanDataOffset)
                     let shouldCall := byte(12, flashloanData)
-                    let flashloanRecipient := and(0xffffffffffffffffffffffffffffffffffffffff, flashloanData)
-                    let value := shr(168, flashloanData)
+                    let flashloanRecipient :=
+                        and(
+                            0xffffffffffffffffffffffffffffffffffffffff,
+                            flashloanData
+                        )
 
                     // Fire off call to flashloanRecipient. Revert & bubble up revert
                     // data if present & reasonably-sized, else revert with a
@@ -319,15 +370,24 @@ contract FlashloanOfferer is ContractOffererInterface {
                     // token balance is an option here if more specific custom
                     // reverts are preferred.
                     if shouldCall {
-                        let success := call(gas(), flashloanRecipient, value, 0x1c, 0x24, 0, 4)
+                        let success :=
+                            call(gas(), flashloanRecipient, 0, 0x1c, 0x24, 0, 4)
 
                         if or(
                             or(iszero(success), iszero(shouldCall)),
                             // magic cleanup(address) selector
-                            xor(mload(0), 0xfbacefce000000000000000000000000000000000000000000000000fbacefce)
+                            xor(
+                                mload(0),
+                                0xfbacefce000000000000000000000000000000000000000000000000fbacefce
+                            )
                         ) {
-                            if and(and(iszero(success), iszero(iszero(returndatasize()))), lt(returndatasize(), 0xffff))
-                            {
+                            if and(
+                                and(
+                                    iszero(success),
+                                    iszero(iszero(returndatasize()))
+                                ),
+                                lt(returndatasize(), 0xffff)
+                            ) {
                                 returndatacopy(0, 0, returndatasize())
                                 revert(0, returndatasize())
                             }
@@ -362,7 +422,13 @@ contract FlashloanOfferer is ContractOffererInterface {
      * @return offer         A tuple containing the offer items.
      * @return consideration A tuple containing the consideration items.
      */
-    function previewOrder(address, address, SpentItem[] calldata, SpentItem[] calldata, bytes calldata)
+    function previewOrder(
+        address,
+        address,
+        SpentItem[] calldata,
+        SpentItem[] calldata,
+        bytes calldata
+    )
         external
         pure
         override
@@ -390,7 +456,10 @@ contract FlashloanOfferer is ContractOffererInterface {
         return ("FlashloanOfferer", schemas);
     }
 
-    function _processFlashloan(bytes calldata context) internal returns (uint256 totalSpent) {
+    function _processFlashloan(bytes calldata context)
+        internal
+        returns (uint256 totalSpent)
+    {
         // Get the length of the context array from calldata (masked).
         uint256 contextLength;
         assembly {
@@ -422,7 +491,8 @@ contract FlashloanOfferer is ContractOffererInterface {
 
             // Retrieve the number of flashloans.
             assembly {
-                totalFlashloans := and(0xff, calldataload(add(context.offset, 21)))
+                totalFlashloans :=
+                    and(0xff, calldataload(add(context.offset, 21)))
 
                 // Include one word of flashloan data for each flashloan.
                 flashloanDataSize := shl(0x05, totalFlashloans)
@@ -432,7 +502,8 @@ contract FlashloanOfferer is ContractOffererInterface {
             // is less than 22 + flashloanDataSize, revert with an
             // InvalidExtraDataEncoding error.
             unchecked {
-                errorBuffer |= errorBuffer ^ (_cast(contextLength < 22 + flashloanDataSize) << 2);
+                errorBuffer |= errorBuffer
+                    ^ (_cast(contextLength < 22 + flashloanDataSize) << 2);
             }
 
             // Handle decoding errors.
@@ -458,15 +529,19 @@ contract FlashloanOfferer is ContractOffererInterface {
             let flashloanDataStarts := add(context.offset, 53)
             let flashloanDataEnds := add(flashloanDataStarts, flashloanDataSize)
             // Iterate over each flashloan.
-            for { let flashloanDataOffset := flashloanDataStarts } lt(flashloanDataOffset, flashloanDataEnds) {
-                flashloanDataOffset := add(flashloanDataOffset, 0x20)
-            } {
+            for { let flashloanDataOffset := flashloanDataStarts } lt(
+                flashloanDataOffset, flashloanDataEnds
+            ) { flashloanDataOffset := add(flashloanDataOffset, 0x20) } {
                 // Load the entire flashloan data word. Shift right 21 bytes to
                 // get the value, and mask the recipient address.
                 let value := shr(168, calldataload(flashloanDataOffset))
                 // Load the entire flashloan data word. Mask it to get the
                 // recipient address.
-                let recipient := and(0xffffffffffffffffffffffffffffffffffffffff, calldataload(flashloanDataOffset))
+                let recipient :=
+                    and(
+                        0xffffffffffffffffffffffffffffffffffffffff,
+                        calldataload(flashloanDataOffset)
+                    )
 
                 totalValue := add(totalValue, value)
 
@@ -475,7 +550,10 @@ contract FlashloanOfferer is ContractOffererInterface {
                 // Note that checking for sufficient native token balance is an
                 // option here if more specific custom reverts are preferred.
                 if iszero(call(gas(), recipient, value, 0, 0, 0, 0)) {
-                    if and(iszero(iszero(returndatasize())), lt(returndatasize(), 0xffff)) {
+                    if and(
+                        iszero(iszero(returndatasize())),
+                        lt(returndatasize(), 0xffff)
+                    ) {
                         returndatacopy(0, 0, returndatasize())
                         revert(0, returndatasize())
                     }
@@ -490,9 +568,11 @@ contract FlashloanOfferer is ContractOffererInterface {
         return totalValue;
     }
 
-    function _processDepositOrWithdrawal(address fulfiller, SpentItem calldata spentItem, bytes calldata context)
-        internal
-    {
+    function _processDepositOrWithdrawal(
+        address fulfiller,
+        SpentItem calldata spentItem,
+        bytes calldata context
+    ) internal {
         {
             // Get the length of the context array from calldata (unmasked).
             uint256 contextLength;
@@ -504,7 +584,8 @@ contract FlashloanOfferer is ContractOffererInterface {
             uint256 errorBuffer = _cast(msg.sender != _SEAPORT);
 
             // Next, check that context is empty.
-            errorBuffer |= errorBuffer ^ (_cast(contextLength != 0 || context.length != 0) << 1);
+            errorBuffer |= errorBuffer
+                ^ (_cast(contextLength != 0 || context.length != 0) << 1);
 
             // Handle decoding errors.
             if (errorBuffer != 0) {
