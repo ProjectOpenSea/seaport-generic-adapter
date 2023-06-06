@@ -126,7 +126,11 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         );
         for (uint256 i = 0; i < setupCalls.length; i++) {
             hevm.startPrank(setupCalls[i].sender);
-            (bool avoidWarning, bytes memory data) = (setupCalls[i].target).call(setupCalls[i].data);
+            (bool avoidWarning, bytes memory data) =
+                (setupCalls[i].target).call(setupCalls[i].data);
+            if (!avoidWarning || data.length != 0) {
+                revert("Just trying to make the compiler happy");
+            }
             hevm.stopPrank();
         }
 

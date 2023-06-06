@@ -35,7 +35,7 @@ contract FoundationConfig is BaseMarketConfig {
         TestOrderContext calldata context,
         TestItem721 calldata nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
@@ -68,8 +68,8 @@ contract FoundationConfig is BaseMarketConfig {
         TestItem721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
-        uint256 feeEthAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+        uint256
+    ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
@@ -99,13 +99,13 @@ contract FoundationConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        uint256 priceEthAmount,
-        address feeRecipient1,
-        uint256 feeEthAmount1,
-        address feeRecipient2,
-        uint256 feeEthAmount2
-    ) external view override returns (TestOrderPayload memory execution) {
+        TestItem721 memory,
+        uint256,
+        address,
+        uint256,
+        address,
+        uint256
+    ) external pure override returns (TestOrderPayload memory) {
         if (!context.listOnChain) {
             _notImplemented();
         }
