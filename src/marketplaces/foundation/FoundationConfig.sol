@@ -3,6 +3,8 @@ pragma solidity >=0.8.7;
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import { IFoundation } from "./interfaces/IFoundation.sol";
+import { ConsiderationInterface as ISeaport } from
+    "seaport-types/interfaces/ConsiderationInterface.sol";
 import {
     TestCallParameters,
     TestOrderContext,
@@ -11,6 +13,8 @@ import {
     TestItem1155,
     TestItem20
 } from "../../../test/utils/Types.sol";
+import { AdapterEncodingHelperLib } from
+    "../../lib/AdapterEncodingHelperLib.sol";
 
 contract FoundationConfig is BaseMarketConfig {
     function name() external pure override returns (string memory) {
@@ -23,6 +27,9 @@ contract FoundationConfig is BaseMarketConfig {
 
     IFoundation internal constant foundation =
         IFoundation(0xcDA72070E455bb31C7690a170224Ce43623d0B6f);
+
+    ISeaport internal constant seaport =
+        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
     function beforeAllPrepareMarketplace(address, address) external override {
         // ERC-20 n/a but currently required by the test suite
@@ -61,6 +68,28 @@ contract FoundationConfig is BaseMarketConfig {
                 address(0)
             )
         );
+
+        if (context.routeThroughAdapter) {
+            // Call needed to actually execute the order
+            TestCallParameters memory baseExecuteOrder = execution.executeOrder;
+
+            // TestCallParameters memory testCallParameters,
+            // address seaport,
+            // address flashloanOfferer,
+            // address adapter,
+            // address weth,
+            // address nftAddress
+
+            execution.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                baseExecuteOrder,
+                address(seaport),
+                address(flashloanOfferer), // TODO
+                address(adapter), // TODO
+                address(weth), // TODO
+                address(nft.token)
+            );
+        }
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
