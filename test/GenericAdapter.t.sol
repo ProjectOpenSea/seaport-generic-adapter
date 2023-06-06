@@ -98,6 +98,11 @@ contract GenericAdapterTest is BaseOrderTest {
         address recipient;
     }
 
+    struct Approval {
+        address token;
+        ItemType itemType;
+    }
+
     struct FuzzInputs {
         uint256 one;
         uint256 two;
@@ -559,9 +564,7 @@ contract GenericAdapterTest is BaseOrderTest {
         external
         stateless
     {
-        // TODO: add native.
         TestERC20 testERC20 = new TestERC20();
-
         SpentItem[] memory spentItems = new SpentItem[](3);
 
         {
@@ -577,45 +580,45 @@ contract GenericAdapterTest is BaseOrderTest {
             spentItems[2] = spentItemERC1155;
         }
 
-        uint256 firstWord =
-            0x00111111111111111111111111111111111111111111111111111111000003B6; // ...060 before
-        uint256 secondWord;
-        uint256 thirdWord;
-
         // Add the ERC20 address to the second word.
         address erc20Address = address(testERC20);
-        uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
-
         address erc721Address = address(testERC721);
         address erc1155Address = address(testERC1155);
 
-        assembly {
-            // Insert the number of approvals into the second word. Becomes
-            // something like:
-            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
-            secondWord := or(shl(248, 0x03), erc20AddressShifted)
-            // Insert the approval type for the second item into the second word
-            // Becomes something like:
-            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
-            secondWord := or(shl(72, 0x01), secondWord)
-            // Insert the first 9 bytes of the ERC721 address into the second
-            // word.  Becomes something like:
-            // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
-            secondWord := or(shr(88, erc721Address), secondWord)
+        // Left for reference of what it looks like to build manually.
+        // uint256 firstWord =
+        //     0x00111111111111111111111111111111111111111111111111111111000003B6;
+        // uint256 secondWord;
+        // uint256 thirdWord;
+        // uint256 erc20AddressShifted = uint256(uint160(erc20Address)) << 80;
+        //
+        // assembly {
+        //     // Insert the number of approvals into the second word. Becomes
+        //     // something like:
+        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
+        //     secondWord := or(shl(248, 0x03), erc20AddressShifted)
+        //     // Insert the approval type for the second item into the second word
+        //     // Becomes something like:
+        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
+        //     secondWord := or(shl(72, 0x01), secondWord)
+        //     // Insert the first 9 bytes of the ERC721 address into the second
+        //     // word.  Becomes something like:
+        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
+        //     secondWord := or(shr(88, erc721Address), secondWord)
 
-            // Insert the remaining 11 bytes of the ERC721 address into the third
-            // word. Becomes something like:
-            // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
-            thirdWord := shl(168, erc721Address)
-            // Insert the approval type for the third item into the third word.
-            // Becomes something like:
-            // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
-            thirdWord := or(shl(160, 0x01), thirdWord)
-            // Insert the ERC1155 address into the third word. Becomes something
-            // like:
-            // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
-            thirdWord := or(erc1155Address, thirdWord)
-        }
+        //     // Insert the remaining 11 bytes of the ERC721 address into the third
+        //     // word. Becomes something like:
+        //     // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
+        //     thirdWord := shl(168, erc721Address)
+        //     // Insert the approval type for the third item into the third word.
+        //     // Becomes something like:
+        //     // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
+        //     thirdWord := or(shl(160, 0x01), thirdWord)
+        //     // Insert the ERC1155 address into the third word. Becomes something
+        //     // like:
+        //     // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
+        //     thirdWord := or(erc1155Address, thirdWord)
+        // }
 
         testERC20.approve(address(context.adapter), type(uint256).max);
         testERC20.mint(address(this), 1);
@@ -631,23 +634,23 @@ contract GenericAdapterTest is BaseOrderTest {
 
         {
             Call memory callERC20 = Call(
-                address(this), // TODO: put in some marketplace addy here.
+                address(this),
                 false,
-                0, // TODO: Native and flashloan offerer stuff.
+                0,
                 abi.encodeWithSelector(this.toggleERC20Call.selector, true)
             );
 
             Call memory callERC721 = Call(
-                address(this), // TODO: put in some marketplace addy here.
+                address(this),
                 false,
-                0, // TODO: Native and flashloan offerer stuff.
+                0,
                 abi.encodeWithSelector(this.toggleERC721Call.selector, true)
             );
 
             Call memory callERC1155 = Call(
-                address(this), // TODO: put in some marketplace addy here.
+                address(this),
                 false,
-                0, // TODO: Native and flashloan offerer stuff.
+                0,
                 abi.encodeWithSelector(this.toggleERC1155Call.selector, true)
             );
 
@@ -656,19 +659,12 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[2] = callERC1155;
         }
 
-        bytes memory contextArg;
+        Approval[] memory approvals = new Approval[](3);
+        approvals[0] = Approval(erc20Address, ItemType.ERC20);
+        approvals[1] = Approval(erc721Address, ItemType.ERC721);
+        approvals[2] = Approval(erc1155Address, ItemType.ERC1155);
 
-        {
-            bytes memory contextArgApprovalPortion = abi.encode(
-                bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord)
-            );
-
-            bytes memory contextArgCalldataPortion = abi.encode(calls);
-
-            contextArg = abi.encodePacked(
-                contextArgApprovalPortion, contextArgCalldataPortion
-            );
-        }
+        bytes memory extraData = createGenericAdapterContext(approvals, calls);
 
         assertEq(
             testERC20.balanceOf(address(context.sidecar)),
@@ -688,7 +684,7 @@ contract GenericAdapterTest is BaseOrderTest {
 
         vm.prank(address(consideration));
         context.adapter.generateOrder(
-            address(this), new SpentItem[](0), spentItems, contextArg
+            address(this), new SpentItem[](0), spentItems, extraData
         );
 
         assertEq(
@@ -710,10 +706,6 @@ contract GenericAdapterTest is BaseOrderTest {
         assertTrue(erc20CallExecuted, "erc20CallExecuted should be true");
         assertTrue(erc721CallExecuted, "erc721CallExecuted should be true");
         assertTrue(erc1155CallExecuted, "erc1155CallExecuted should be true");
-
-        // TODO: test that the sidecar can actually transfer the items.
-        // TODO: test that the sidecar doesn't need another approval after the
-        //       approval is done the first time.
     }
 
     function toggleERC20Call(bool called) external {
@@ -748,10 +740,6 @@ contract GenericAdapterTest is BaseOrderTest {
             spentItems[2] = spentItemNativeOne;
         }
 
-        // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
-        uint256 firstWord =
-            0x0022222222222222222222222222222222222222222222222222222200000340;
-
         Call[] memory calls = new Call[](3);
 
         {
@@ -769,10 +757,8 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[2] = callNative;
         }
 
-        bytes memory contextArgCalldataPortion = abi.encode(calls);
-
-        bytes memory contextArg =
-            abi.encodePacked(firstWord, bytes1(0), contextArgCalldataPortion);
+        bytes memory extraData =
+            createGenericAdapterContext(new Approval[](0), calls);
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
@@ -786,7 +772,7 @@ contract GenericAdapterTest is BaseOrderTest {
 
         vm.prank(address(consideration));
         context.adapter.generateOrder(
-            address(this), new SpentItem[](0), spentItems, contextArg
+            address(this), new SpentItem[](0), spentItems, extraData
         );
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
@@ -840,6 +826,10 @@ contract GenericAdapterTest is BaseOrderTest {
 
             flashloanOrder.withParameters(orderParameters);
         }
+
+        // This is just an example of manually constructing the extraData for a
+        // flashloan. In practice, the extraData should be constructed by the
+        // helper function.
 
         // Create the value that will populate the extraData field.
         // When the flashloan offerer receives the call to
@@ -917,10 +907,8 @@ contract GenericAdapterTest is BaseOrderTest {
 
         // SET UP THE GENERIC ADAPTER ORDER HERE.
         // Create an order.
-        AdvancedOrder memory order;
-        {
-            order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
-        }
+        AdvancedOrder memory order =
+            AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
         considerationArray = new ConsiderationItem[](3);
 
@@ -947,14 +935,8 @@ contract GenericAdapterTest is BaseOrderTest {
             order = order.withParameters(orderParameters);
         }
 
-        // Create the context.
-        // One bytes of SIP encoding, a bunch of empty space, 4 bytes of context length.
-        firstWord =
-            0x0022222222222222222222222222222222222222222222222222222200000340;
-
-        Call[] memory calls = new Call[](3);
-
         {
+            Call[] memory calls = new Call[](3);
             Call memory callNative = Call(
                 address(this),
                 false,
@@ -967,9 +949,10 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[0] = callNative;
             calls[1] = callNative;
             calls[2] = callNative;
+
+            extraData = createGenericAdapterContext(new Approval[](0), calls);
         }
 
-        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
         order = order.withExtraData(extraData);
         orders[1] = order;
 
@@ -1048,8 +1031,6 @@ contract GenericAdapterTest is BaseOrderTest {
         AdvancedOrder memory order;
         AdvancedOrder[] memory orders = new AdvancedOrder[](3);
 
-        uint256 firstWord;
-
         // This tests flashloaning starting with native tokens and then playing
         // with WETH in the Calls.
 
@@ -1099,12 +1080,9 @@ contract GenericAdapterTest is BaseOrderTest {
             order = order.withParameters(orderParameters);
         }
 
-        firstWord =
-            0x0022222222222222222222222222222222222222222222222222222200000000;
-
-        Call[] memory calls = new Call[](6);
-
         {
+            Call[] memory calls = new Call[](6);
+
             Call memory callDepositWETH = Call(
                 address(weth),
                 false,
@@ -1143,12 +1121,10 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[3] = callNativeAction;
             calls[4] = callWithdrawWETH;
             calls[5] = callNativeAction;
+
+            extraData = createGenericAdapterContext(new Approval[](0), calls);
         }
 
-        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
-        uint256 sizeValue = extraData.length * 2;
-        firstWord = firstWord | sizeValue;
-        extraData = abi.encodePacked(firstWord, bytes1(0), abi.encode(calls));
         order = order.withExtraData(extraData);
         orders[1] = order;
 
@@ -1256,7 +1232,7 @@ contract GenericAdapterTest is BaseOrderTest {
             order = order.withParameters(orderParameters);
         }
 
-        // The second order is the same. Skipped here.
+        // The second order is the same as in the call above. Skipped here.
 
         {
             order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
@@ -1367,6 +1343,73 @@ contract GenericAdapterTest is BaseOrderTest {
 
         return extraData;
     }
-}
 
-// TODO: Stub out some marketplace contracts and start making calls to them.
+    function createGenericAdapterContext(
+        Approval[] memory approvals,
+        Call[] memory calls
+    ) public pure returns (bytes memory extraData) {
+        // Create the value that will populate the extraData field on a generic
+        // adapter call. When the generic adapter receives the call to
+        // generateOrder, it will decode the extraData field into instructions
+        // for handling both approvals and calls to be made by the sidecar.
+
+        uint256 secondWord = 0 | ((approvals.length) << 248);
+
+        // The first word can be all zeros for now. The size will be added to
+        // the last four bytes later.
+        extraData = abi.encodePacked(bytes32(0), secondWord);
+
+        // Iterate over approvals and stick them in the extraData field.
+        for (uint256 i; i < approvals.length; ++i) {
+            Approval memory approval = approvals[i];
+            // The approval type is even for ERC20 or odd for ERC721 / 1155 and
+            // is converted to 0 or 1.
+            uint256 approvalType;
+
+            assembly {
+                approvalType := gt(mload(add(0x20, approval)), 1)
+            }
+
+            uint256 approvalToken = uint256(uint160(approval.token));
+
+            // Pack the approval into a word of memory.
+            uint256 packedApproval =
+                (approvalType << 248) | (approvalToken << 88);
+
+            // Make Space for the next approval (this is overkill but should be
+            // harmless because it's cleaned up later).
+            extraData = abi.encodePacked(extraData, bytes32(0));
+
+            // Iterate over each byte of the packed approval and stick it
+            // in the extraData field.
+            for (uint256 j = 0; j < 21; j++) {
+                // One word for encoding, one word for total approvals, 21 bytes
+                // per approval.
+                extraData[33 + (i * 21) + j] = bytes32(packedApproval)[j];
+            }
+        }
+
+        {
+            // Trim down the trailing zeros on the extraData field.
+            uint256 encodingAndApprovalSize = (32 + 1 + (21 * approvals.length));
+            bytes memory trimmedExtraData = new bytes(encodingAndApprovalSize);
+
+            for (uint256 j = 0; j < encodingAndApprovalSize; j++) {
+                trimmedExtraData[j] = extraData[j];
+            }
+
+            extraData = trimmedExtraData;
+        }
+
+        // Add the calls to the extraData field.
+        bytes memory contextArgCalldataPortion = abi.encode(calls);
+        extraData = abi.encodePacked(extraData, contextArgCalldataPortion);
+
+        // Add the size of the extraData field to the first word.
+        uint256 extraDataSize = extraData.length;
+
+        for (uint256 i; i < 32; i++) {
+            extraData[i] = bytes32(extraDataSize)[i];
+        }
+    }
+}
