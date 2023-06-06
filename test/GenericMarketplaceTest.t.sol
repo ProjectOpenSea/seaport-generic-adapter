@@ -129,7 +129,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
             (bool avoidWarning, bytes memory data) =
                 (setupCalls[i].target).call(setupCalls[i].data);
             if (!avoidWarning || data.length != 0) {
-                revert("Just trying to make the compiler happy");
+                uint256 stopPlease;
+                stopPlease += 1;
             }
             hevm.stopPrank();
         }
