@@ -46,6 +46,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
+    // 0x03eb8b54
+    error InsufficientFunds(uint256 requiredAmount, uint256 availableAmount);
     // 0xd6234725
     error NotImplemented();
 
@@ -276,11 +278,20 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     ++i;
                 }
             }
-        }
 
-        // TODO: Come back and remove or do better.
-        if (value > address(this).balance) {
-            revert("Please ensure this contract has sufficient balance first.");
+            // if (value > address(this).balance) {
+            //     revert("Please ensure this contract has sufficient balance first.");
+            // }
+
+            assembly {
+                if gt(value, selfbalance()) {
+                    // InsufficientFunds(value, selfbalance())
+                    mstore(0, 0x03eb8b54)
+                    mstore(0x20, value)
+                    mstore(0x40, selfbalance())
+                    revert(0x1c, 0x44)
+                }
+            }
         }
 
         // Call sidecar, performing generic execution consuming supplied items.

@@ -29,11 +29,12 @@ import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
 import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
+import { Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+
 import {
-    ReceivedItem,
-    Schema,
-    SpentItem
-} from "seaport-types/lib/ConsiderationStructs.sol";
+    AdapterEncodingHelperLib,
+    Flashloan
+} from "../src/lib/AdapterEncodingHelperLib.sol";
 
 contract FlashloanOffererTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
@@ -533,21 +534,14 @@ contract FlashloanOffererTest is BaseOrderTest {
             SpentItem(ItemType.NATIVE, address(0), 0, flashloanValueRequested);
         maximumSpent[0] = spentItemMaxSpent;
 
-        uint256 firstWord =
-            0x00111111111111111111111111111111111111111111111111111111000000ff;
-        uint256 secondWord = uint256(uint160(address(this))) << 96;
-        uint256 thirdWord;
+        Flashloan memory flashloan =
+            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
 
-        assembly {
-            // Add a 0x01 byte to the second word to indicate one flashloan.
-            secondWord := or(shl(88, 0x01), secondWord)
-            // Add the amount for the flashloan to the second word.
-            secondWord := or(flashloanValueRequested, secondWord)
-            // Add the shouldCallback flag to the start of the third word.
-            thirdWord := shl(248, 0x01)
-            // Add the recipient to the third word.
-            thirdWord := or(thirdWord, shl(88, address()))
-        }
+        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
+            address(this), flashloans
+        );
 
         // For now, just assume that the flashloan offerer is sufficiently
         // funded.
@@ -558,12 +552,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.prank(address(consideration));
         context.flashloanOfferer.generateOrder(
-            address(this),
-            new SpentItem[](0),
-            maximumSpent,
-            abi.encodePacked(
-                bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord)
-            )
+            address(this), new SpentItem[](0), maximumSpent, extraData
         );
 
         uint256 receipientBalanceAfter = address(this).balance;
@@ -646,25 +635,13 @@ contract FlashloanOffererTest is BaseOrderTest {
                 orderParameters.withTotalOriginalConsiderationItems(1);
         }
 
-        // Create the extraData.
-        uint256 firstWord =
-            0x00111111111111111111111111111111111111111111111111111111000000ff;
-        uint256 secondWord = uint256(uint160(address(this))) << 96;
-        uint256 thirdWord;
+        Flashloan memory flashloan =
+            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
 
-        assembly {
-            // Add a 0x01 byte to the second word to indicate one flashloan.
-            secondWord := or(shl(88, 0x01), secondWord)
-            // Add the amount for the flashloan to the second word.
-            secondWord := or(flashloanValueRequested, secondWord)
-            // Add the shouldCallback flag to the start of the third word.
-            thirdWord := shl(248, 0x01)
-            // Add the recipient to the third word.
-            thirdWord := or(thirdWord, shl(88, address()))
-        }
-
-        bytes memory extraData = abi.encodePacked(
-            bytes32(firstWord), bytes32(secondWord), bytes32(thirdWord)
+        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
+            address(this), flashloans
         );
 
         {

@@ -23,6 +23,8 @@ interface GenericAdapterInterface is ContractOffererInterface {
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
+    // 0x03eb8b54
+    error InsufficientFunds(uint256 requiredAmount, uint256 availableAmount);
     error NotImplemented();
 
     event SeaportCompatibleContractDeployed(address);

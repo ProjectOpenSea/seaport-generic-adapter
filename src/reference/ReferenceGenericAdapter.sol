@@ -68,6 +68,8 @@ contract ReferenceGenericAdapter is
     error CallFailed();
     // 0xbc806b96
     error NativeTokenTransferGenericFailure(address recipient, uint256 amount);
+    // 0x03eb8b54
+    error InsufficientFunds(uint256 requiredAmount, uint256 availableAmount);
     error NotImplemented();
 
     event SeaportCompatibleContractDeployed(address);
@@ -196,9 +198,6 @@ contract ReferenceGenericAdapter is
             for (uint256 i = 0; i < approvalDataSize;) {
                 i += approvalDataBlockSize;
 
-                // TODO: Check all these contracts for off by one errors, etc.
-                // TODO: Convert all comments to use indexes.
-
                 // The first approval block starts at byte 33 and goes to byte
                 // 54.  The next is 55-75, etc. `startingIndex` and
                 // `endingIndex` define the range of bytes for the current
@@ -293,7 +292,7 @@ contract ReferenceGenericAdapter is
         }
 
         if (value > address(this).balance) {
-            revert("Please ensure this contract has sufficient balance first.");
+            revert InsufficientFunds(value, address(this).balance);
         }
 
         // Call sidecar, performing generic execution consuming supplied items.

@@ -398,7 +398,6 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // Increment i by 32 bytes (1 word) to get the next word.
             i += 32;
 
-            // TODO: Switch all ranges in comments to use indexes.
             // The first 32 bytes of the context are the SIP encoding and the
             // context length with some ignored bytes in between. The next 21
             // bytes of the context are the cleanup recipient address, the sum
