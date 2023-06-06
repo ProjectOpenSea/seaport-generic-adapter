@@ -52,10 +52,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         benchmarkMarket(seaportOnePointFourConfig);
     }
 
-    // function testWyvern() external {
-    //     benchmarkMarket(wyvernConfig);
-    // }
-
     function testFoundation() external {
         benchmarkMarket(foundationConfig);
     }
@@ -82,36 +78,36 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
 
     function benchmarkMarket(BaseMarketConfig config) public {
         beforeAllPrepareMarketplaceTest(config);
-        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEther(config);
-        benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithEther(config);
-        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithWETH(config);
-        benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC20(config);
         benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
         benchmark_BuyOfferedERC1155WithERC20(config);
-        benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC721(config);
-        benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
-        benchmark_BuyOfferedWETHWithERC721(config);
-        benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC1155(config);
-        benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC1155(config);
         benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
         benchmark_BuyOfferedERC1155WithERC721(config);
+        benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithEther(config);
+        benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC1155(config);
+        benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC721(config);
+        benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithERC1155(config);
+        benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithERC20(config);
+        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEther(config);
         benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
         benchmark_BuyOfferedERC721WithEtherFee(config);
         benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
         benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
+        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithWETH(config);
+        benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
+        benchmark_BuyOfferedWETHWithERC721(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
         benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithEther(config);
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
         benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
         benchmark_MatchOrders_ABCA(config);
@@ -149,7 +145,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC721 -> ETH List-On-Chain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem721(address(test721_1), 1),
             100
         ) returns (TestOrderPayload memory payload) {
@@ -186,7 +182,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC721 -> ETH)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem721(address(test721_1), 1),
             100
         ) returns (TestOrderPayload memory payload) {
@@ -211,7 +207,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC1155 -> ETH List-On-Chain)";
         test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem1155(address(test1155_1), 1, 1),
             100
         ) returns (TestOrderPayload memory payload) {
@@ -246,7 +242,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC1155 -> ETH)";
         test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem1155(address(test1155_1), 1, 1),
             100
         ) returns (TestOrderPayload memory payload) {
@@ -272,7 +268,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         test721_1.mint(alice, 1);
         token1.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem721(address(test721_1), 1),
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -314,7 +310,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         test721_1.mint(alice, 1);
         token1.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem721(address(test721_1), 1),
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -346,7 +342,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem721(address(test721_1), 1),
             TestItem20(address(weth), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -391,7 +387,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         weth.deposit{ value: 100 }();
 
         try config.getPayload_BuyOfferedERC721WithWETH(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem721(address(test721_1), 1),
             TestItem20(address(weth), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -421,7 +417,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         test1155_1.mint(alice, 1, 1);
         token1.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem1155(address(test1155_1), 1, 1),
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -459,7 +455,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         test1155_1.mint(alice, 1, 1);
         token1.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem1155(address(test1155_1), 1, 1),
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
@@ -489,7 +485,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         token1.mint(alice, 100);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem20(address(token1), 100),
             TestItem721(address(test721_1), 1)
         ) returns (TestOrderPayload memory payload) {
@@ -531,7 +527,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         token1.mint(alice, 100);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem20(address(token1), 100),
             TestItem721(address(test721_1), 1)
         ) returns (TestOrderPayload memory payload) {
@@ -563,7 +559,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem20(address(weth), 100),
             TestItem721(address(test721_1), 1)
         ) returns (TestOrderPayload memory payload) {
@@ -607,7 +603,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem20(address(weth), 100),
             TestItem721(address(test721_1), 1)
         ) returns (TestOrderPayload memory payload) {
@@ -634,7 +630,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC20 -> ERC1155 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(true, false, alice, bob);
         token1.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -673,7 +670,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         prepareTest(config)
     {
         string memory testLabel = "(ERC20 -> ERC1155)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(false, false, alice, bob);
         token1.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -704,7 +702,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721 -> ERC1155 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(true, false, alice, bob);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
@@ -741,7 +740,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         prepareTest(config)
     {
         string memory testLabel = "(ERC721 -> ERC1155)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(false, false, alice, bob);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
@@ -770,7 +770,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC1155 -> ERC721 List-On-Chain)";
-        TestOrderContext memory context = TestOrderContext(true, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(true, false, alice, bob);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
@@ -807,7 +808,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         prepareTest(config)
     {
         string memory testLabel = "(ERC1155 -> ERC721)";
-        TestOrderContext memory context = TestOrderContext(false, alice, bob);
+        TestOrderContext memory context =
+            TestOrderContext(false, false, alice, bob);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
@@ -839,7 +841,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
             "(ERC721 -> ETH One-Fee-Recipient List-On-Chain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem721(address(test721_1), 1),
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
@@ -880,7 +882,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC721 -> ETH One-Fee-Recipient)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem721(address(test721_1), 1),
             100,
             feeReciever1,
@@ -910,7 +912,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
             "(ERC721 -> ETH Two-Fee-Recipient List-On-Chain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(true, alice, bob),
+            TestOrderContext(true, false, alice, bob),
             TestItem721(address(test721_1), 1),
             100,
             feeReciever1,
@@ -954,7 +956,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         string memory testLabel = "(ERC721 -> ETH Two-Fee-Recipient)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(false, alice, bob),
+            TestOrderContext(false, false, alice, bob),
             TestItem721(address(test721_1), 1),
             100,
             feeReciever1,
@@ -993,7 +995,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(true, alice, bob), nfts, 100
+            TestOrderContext(true, false, alice, bob), nfts, 100
         ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
@@ -1038,7 +1040,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(false, alice, bob), nfts, 100
+            TestOrderContext(false, false, alice, bob), nfts, 100
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
@@ -1071,7 +1073,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(false, alice, bob);
+            contexts[i] = TestOrderContext(false, false, alice, bob);
             ethAmounts[i] = 100 + i;
         }
 
@@ -1110,7 +1112,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(true, alice, bob);
+            contexts[i] = TestOrderContext(true, false, alice, bob);
             ethAmounts[i] = 100 + i;
         }
 
@@ -1154,7 +1156,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(false, alice, bob);
+            contexts[i] = TestOrderContext(false, false, alice, bob);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -1195,7 +1197,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(true, alice, bob);
+            contexts[i] = TestOrderContext(true, false, alice, bob);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -1239,7 +1241,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(false, alice, bob);
+            contexts[i] = TestOrderContext(false, false, alice, bob);
             wethAmounts[i] = 100 + i;
         }
 
@@ -1282,7 +1284,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(true, alice, bob);
+            contexts[i] = TestOrderContext(true, false, alice, bob);
             wethAmounts[i] = 100 + i;
         }
 
@@ -1324,9 +1326,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest {
         TestOrderContext[] memory contexts = new TestOrderContext[](3);
         TestItem721[] memory nfts = new TestItem721[](3);
 
-        contexts[0] = TestOrderContext(false, alice, address(0));
-        contexts[1] = TestOrderContext(false, cal, address(0));
-        contexts[2] = TestOrderContext(false, bob, address(0));
+        contexts[0] = TestOrderContext(false, false, alice, address(0));
+        contexts[1] = TestOrderContext(false, false, cal, address(0));
+        contexts[2] = TestOrderContext(false, false, bob, address(0));
 
         nfts[0] = TestItem721(address(test721_1), 1);
         nfts[1] = TestItem721(address(test721_1), 2);

@@ -31,6 +31,7 @@ struct SetupCall {
 
 struct TestOrderContext {
     bool listOnChain;
+    bool routeThroughAdapter;
     address offerer;
     address fulfiller;
 }
