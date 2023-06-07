@@ -11,7 +11,26 @@ import {
     TestItem1155
 } from "./utils/Types.sol";
 
+import { ConsiderationInterface as ISeaport } from
+    "seaport-types/interfaces/ConsiderationInterface.sol";
+
+import { AdapterEncodingHelperLib } from
+    "../src/lib/AdapterEncodingHelperLib.sol";
+
+import { FlashloanOffererInterface } from
+    "../src/interfaces/FlashloanOffererInterface.sol";
+
+import { GenericAdapterInterface } from
+    "../src/interfaces/GenericAdapterInterface.sol";
+
+import { GenericAdapterSidecarInterface } from
+    "../src/interfaces/GenericAdapterSidecarInterface.sol";
+
 abstract contract BaseMarketConfig {
+    FlashloanOffererInterface testFlashloanOfferer;
+    GenericAdapterInterface testAdapter;
+    GenericAdapterSidecarInterface testSidecar;
+
     /**
      * @dev Market name used in results
      */
@@ -40,11 +59,10 @@ abstract contract BaseMarketConfig {
     address public sellerErc20ApprovalTarget;
     address public buyerErc20ApprovalTarget;
 
-    address public flashloanOfferer;
-    address public adapter;
-    address public sidecar;
+    ISeaport internal constant seaport =
+        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
-    // address public baseWeth;
+    address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     /**
      * @dev Get calldata to call from test prior to starting tests

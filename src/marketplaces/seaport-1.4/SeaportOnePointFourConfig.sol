@@ -28,8 +28,8 @@ contract SeaportOnePointFourConfig is
         return address(seaport);
     }
 
-    ISeaport internal constant seaport =
-        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
+    // ISeaport internal constant seaport =
+    //     ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
     function buildBasicOrder(
         BasicOrderRouteType routeType,

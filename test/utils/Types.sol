@@ -34,6 +34,9 @@ struct TestOrderContext {
     bool routeThroughAdapter;
     address offerer;
     address fulfiller;
+    address flashloanOfferer;
+    address adapter;
+    address sidecar;
 }
 
 struct TestOrderPayload {

@@ -201,7 +201,7 @@ library AdapterEncodingHelperLib {
         }
     }
 
-    struct AdapterWrapInfra {
+    struct AdapterWrapperInfra {
         ConsiderationItem[] considerationArray;
         OrderParameters orderParameters;
         AdvancedOrder order;
@@ -233,11 +233,7 @@ library AdapterEncodingHelperLib {
             wrappedTestCallParameter.value = testCallParameters.value;
         }
 
-        console.log("IN MY FUNCTION");
-
-        // TODO: Straighten this out. And then use it throughout to fix stack
-        // pressure issues.
-        AdapterWrapInfra memory infra = AdapterWrapInfra(
+        AdapterWrapperInfra memory infra = AdapterWrapperInfra(
             new ConsiderationItem[](1),
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
@@ -451,8 +447,6 @@ library AdapterEncodingHelperLib {
             // Create the fulfillments?
             infra.fulfillments = new Fulfillment[](0);
         }
-
-        console.log("infra.fulfillments.length", infra.fulfillments.length);
 
         wrappedTestCallParameter.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,

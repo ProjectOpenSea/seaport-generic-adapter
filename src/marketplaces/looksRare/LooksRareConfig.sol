@@ -25,7 +25,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         return address(looksRare);
     }
 
-    address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    // address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     ILooksRareExchange internal constant looksRare =
         ILooksRareExchange(0x59728544B08AB483533076417FbBB2fD0B17CE3a);
