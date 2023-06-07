@@ -56,7 +56,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
@@ -114,7 +114,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
@@ -175,7 +175,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -233,7 +233,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -291,7 +291,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -352,7 +352,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -417,7 +417,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -482,7 +482,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: erc20.token,
@@ -559,7 +559,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
@@ -634,7 +634,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
             maker: context.offerer,
-            taker: context.fulfiller,
+            taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
             erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
@@ -710,7 +710,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
                 maker: contexts[i].offerer,
-                taker: contexts[i].fulfiller,
+                taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
                 erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
@@ -771,7 +771,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
                 maker: contexts[i].offerer,
-                taker: contexts[i].fulfiller,
+                taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
                 erc20Token: erc20Address,
@@ -832,7 +832,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
                 maker: contexts[i].offerer,
-                taker: contexts[i].fulfiller,
+                taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
                 erc20Token: erc20Address,

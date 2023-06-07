@@ -40,7 +40,7 @@ contract FoundationConfig is BaseMarketConfig {
         TestOrderContext calldata context,
         TestItem721 calldata nft,
         uint256 ethAmount
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
@@ -74,7 +74,7 @@ contract FoundationConfig is BaseMarketConfig {
         uint256 priceEthAmount,
         address feeRecipient,
         uint256
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
