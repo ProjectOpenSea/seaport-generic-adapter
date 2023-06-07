@@ -40,6 +40,12 @@ abstract contract BaseMarketConfig {
     address public sellerErc20ApprovalTarget;
     address public buyerErc20ApprovalTarget;
 
+    address public flashloanOfferer;
+    address public adapter;
+    address public sidecar;
+
+    // address public baseWeth;
+
     /**
      * @dev Get calldata to call from test prior to starting tests
      *   (used by wyvern to create proxies)
@@ -257,7 +263,7 @@ abstract contract BaseMarketConfig {
         uint256,
         address,
         uint256
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
 
