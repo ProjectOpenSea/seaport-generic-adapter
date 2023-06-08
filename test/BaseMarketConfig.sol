@@ -14,8 +14,7 @@ import {
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { AdapterEncodingHelperLib } from
-    "../src/lib/AdapterEncodingHelperLib.sol";
+import { AdapterHelperLib } from "../src/lib/AdapterHelperLib.sol";
 
 import { FlashloanOffererInterface } from
     "../src/interfaces/FlashloanOffererInterface.sol";

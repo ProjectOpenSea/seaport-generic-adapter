@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { ERC20 } from "solady/src/tokens/ERC20.sol";
+
 import { ERC721 } from "solady/src/tokens/ERC721.sol";
 
 import { ERC1155 } from "solady/src/tokens/ERC1155.sol";
@@ -62,12 +64,12 @@ struct Approval {
 }
 
 /**
- * @title AdapterEncodingHelperLib
+ * @title AdapterHelperLib
  * @author snotrocket.eth
- * @notice AdapterEncodingHelperLib is a library for generating the context
+ * @notice AdapterHelperLib is a library for generating the context
  *         arguments expected by the Flashloan Offerer and the Generic Adapter.
  */
-library AdapterEncodingHelperLib {
+library AdapterHelperLib {
     using AdvancedOrderLib for AdvancedOrder;
     using ConsiderationItemLib for ConsiderationItem;
     using ConsiderationItemLib for ConsiderationItem[];
@@ -220,6 +222,9 @@ library AdapterEncodingHelperLib {
         Fulfillment[] fulfillments;
     }
 
+    // TODO: think about whether the sidecar should be transferring these
+    // directly or waiting for Seaport to do its optimized executions.
+
     // TODO: refactor.
 
     function createSeaportWrappedTestCallParameters(
@@ -229,7 +234,6 @@ library AdapterEncodingHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
-        address weth,
         TestItem721 memory nft
     )
         public
@@ -296,32 +300,26 @@ library AdapterEncodingHelperLib {
 
                 infra.calls[0] = infra.call;
 
-                infra.call = Call(
-                    address(nft.token),
-                    false,
-                    0,
-                    abi.encodeWithSelector(
-                        ERC721.transferFrom.selector,
-                        address(sidecar),
-                        address(fulfiller),
-                        nft.identifier
-                    )
+                TestItem721[] memory nfts = new TestItem721[](1);
+                nfts[0] = nft;
+
+                Call[] memory nftCalls = _createNftTransferCalls(
+                    address(sidecar),
+                    address(fulfiller),
+                    nfts,
+                    new TestItem1155[](0)
                 );
 
-                infra.calls[1] = infra.call;
+                // Populate the calls array with the NFT transfer calls from the
+                // helper.
+                for (uint256 i = 0; i < nfts.length; i++) {
+                    infra.calls[i + 1] = nftCalls[i];
+                }
             }
 
             {
-                // Include approvals for the NFT and the WETH.
-                Approval[] memory approvals = new Approval[](2);
-                Approval memory approvalNFT =
-                    Approval(nft.token, ItemType.ERC721);
-                Approval memory approvalWETH = Approval(weth, ItemType.ERC20);
-                approvals[0] = approvalNFT;
-                approvals[1] = approvalWETH;
-
                 infra.extraData =
-                    createGenericAdapterContext(approvals, infra.calls);
+                    createGenericAdapterContext(new Approval[](0), infra.calls);
             }
 
             infra.order = infra.order.withExtraData(infra.extraData);
@@ -478,7 +476,6 @@ library AdapterEncodingHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
-        address weth,
         TestItem1155 memory nft
     )
         public
@@ -545,34 +542,26 @@ library AdapterEncodingHelperLib {
 
                 infra.calls[0] = infra.call;
 
-                infra.call = Call(
-                    address(nft.token),
-                    false,
-                    0,
-                    abi.encodeWithSelector(
-                        ERC1155.safeTransferFrom.selector,
-                        address(sidecar),
-                        address(fulfiller),
-                        nft.identifier,
-                        nft.amount,
-                        bytes("")
-                    )
+                TestItem1155[] memory nfts = new TestItem1155[](1);
+                nfts[0] = nft;
+
+                Call[] memory nftCalls = _createNftTransferCalls(
+                    address(sidecar),
+                    address(fulfiller),
+                    new TestItem721[](0),
+                    nfts
                 );
 
-                infra.calls[1] = infra.call;
+                // Populate the calls array with the NFT transfer calls from the
+                // helper.
+                for (uint256 i = 0; i < nfts.length; i++) {
+                    infra.calls[i + 1] = nftCalls[i];
+                }
             }
 
             {
-                // Include approvals for the NFT and the WETH.
-                Approval[] memory approvals = new Approval[](2);
-                Approval memory approvalNFT =
-                    Approval(nft.token, ItemType.ERC721);
-                Approval memory approvalWETH = Approval(weth, ItemType.ERC20);
-                approvals[0] = approvalNFT;
-                approvals[1] = approvalWETH;
-
                 infra.extraData =
-                    createGenericAdapterContext(approvals, infra.calls);
+                    createGenericAdapterContext(new Approval[](0), infra.calls);
             }
 
             infra.order = infra.order.withExtraData(infra.extraData);
@@ -729,7 +718,6 @@ library AdapterEncodingHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
-        address weth,
         TestItem721[] memory nfts
     )
         public
@@ -796,34 +784,23 @@ library AdapterEncodingHelperLib {
 
                 infra.calls[0] = infra.call;
 
-                for (uint256 i = 0; i < nfts.length; i++) {
-                    infra.call = Call(
-                        address(nfts[i].token),
-                        false,
-                        0,
-                        abi.encodeWithSelector(
-                            ERC721.transferFrom.selector,
-                            address(sidecar),
-                            address(fulfiller),
-                            nfts[i].identifier
-                        )
-                    );
+                Call[] memory nftCalls = _createNftTransferCalls(
+                    address(sidecar),
+                    address(fulfiller),
+                    nfts,
+                    new TestItem1155[](0)
+                );
 
-                    infra.calls[i + 1] = infra.call;
+                // Populate the calls array with the NFT transfer calls from the
+                // helper.
+                for (uint256 i = 0; i < nfts.length; i++) {
+                    infra.calls[i + 1] = nftCalls[i];
                 }
             }
 
             {
-                // Include approvals for the NFT and the WETH.
-                Approval[] memory approvals = new Approval[](2);
-                Approval memory approvalNFT =
-                    Approval(nfts[0].token, ItemType.ERC721);
-                Approval memory approvalWETH = Approval(weth, ItemType.ERC20);
-                approvals[0] = approvalNFT;
-                approvals[1] = approvalWETH;
-
                 infra.extraData =
-                    createGenericAdapterContext(approvals, infra.calls);
+                    createGenericAdapterContext(new Approval[](0), infra.calls);
             }
 
             infra.order = infra.order.withExtraData(infra.extraData);
@@ -970,5 +947,49 @@ library AdapterEncodingHelperLib {
             infra.fulfillments,
             address(0)
         );
+    }
+
+    function _createNftTransferCalls(
+        address from,
+        address to,
+        TestItem721[] memory test721s,
+        TestItem1155[] memory test1155s
+    ) public pure returns (Call[] memory calls) {
+        Call memory call;
+        calls = new Call[](test721s.length + test1155s.length);
+
+        for (uint256 i; i < test721s.length; ++i) {
+            call = Call(
+                address(test721s[i].token),
+                false,
+                0,
+                abi.encodeWithSelector(
+                    ERC721.transferFrom.selector,
+                    address(from),
+                    address(to),
+                    test721s[i].identifier
+                )
+            );
+
+            calls[i] = call;
+        }
+
+        for (uint256 i; i < test1155s.length; ++i) {
+            call = Call(
+                address(test1155s[i].token),
+                false,
+                0,
+                abi.encodeWithSelector(
+                    ERC1155.safeTransferFrom.selector,
+                    address(from),
+                    address(to),
+                    test1155s[i].identifier,
+                    test1155s[i].amount,
+                    bytes("")
+                )
+            );
+
+            calls[i + test721s.length] = call;
+        }
     }
 }

@@ -5,8 +5,11 @@ import { StdCheats } from "forge-std/StdCheats.sol";
 
 import { Vm } from "forge-std/Vm.sol";
 
-import { AdapterEncodingHelperLib } from
-    "../src/lib/AdapterEncodingHelperLib.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
+
+import { SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+
+import { AdapterHelperLib, Approval } from "../src/lib/AdapterHelperLib.sol";
 
 import { FlashloanOffererInterface } from
     "../src/interfaces/FlashloanOffererInterface.sol";
@@ -14,8 +17,10 @@ import { FlashloanOffererInterface } from
 import { GenericAdapterInterface } from
     "../src/interfaces/GenericAdapterInterface.sol";
 
-import { GenericAdapterSidecarInterface } from
-    "../src/interfaces/GenericAdapterSidecarInterface.sol";
+import {
+    GenericAdapterSidecarInterface,
+    Call
+} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
@@ -47,6 +52,8 @@ import "../src/contracts/test/TestERC721.sol";
 import "../src/contracts/test/TestERC1155.sol";
 import "./utils/BaseMarketplaceTest.sol";
 
+import "forge-std/console.sol";
+
 address constant VM_ADDRESS =
     address(uint160(uint256(keccak256("hevm cheat code"))));
 Vm constant vm = Vm(VM_ADDRESS);
@@ -73,9 +80,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ISeaport internal constant seaport =
         ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
-    address internal constant WETH_ADDRESS =
-        0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
     constructor() {
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
@@ -86,6 +90,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
     }
+
+    // TODO: think about globally or at least in some cases changing the payload
+    // to make the taker the sidecar to get around the taker == msg.sender
+    // requirements.
 
     // function testSeaportOnePointFour() external {
     //     benchmarkMarket(seaportOnePointFourConfig);
@@ -238,6 +246,70 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         standardERC721 = TestItem721(address(test721_1), 1);
 
+        // This is where the users of the adapter approve the adapter to
+        // transfer their tokens.
+        address[] memory adapterUsers = new address[](3);
+        adapterUsers[0] = address(alice);
+        adapterUsers[1] = address(bob);
+        adapterUsers[2] = address(cal);
+
+        Approval[] memory approvalsOfTheAdapter = new Approval[](4);
+        approvalsOfTheAdapter[0] = Approval(address(token1), ItemType.ERC20);
+        approvalsOfTheAdapter[1] = Approval(address(test721_1), ItemType.ERC721);
+        approvalsOfTheAdapter[2] =
+            Approval(address(test1155_1), ItemType.ERC1155);
+        approvalsOfTheAdapter[3] = Approval(address(weth), ItemType.ERC20);
+
+        for (uint256 i; i < adapterUsers.length; i++) {
+            for (uint256 j; j < approvalsOfTheAdapter.length; j++) {
+                Approval memory approval = approvalsOfTheAdapter[j];
+
+                bool success;
+
+                uint256 selector;
+                uint256 approvalValue;
+
+                assembly {
+                    let approvalType := gt(mload(add(0x20, approval)), 1)
+                    approvalValue := sub(approvalType, iszero(approvalType))
+                    selector :=
+                        add(
+                            mul(0x095ea7b3, iszero(approvalType)),
+                            mul(0xa22cb465, approvalType)
+                        )
+                }
+
+                vm.prank(adapterUsers[i]);
+                (success,) = address(approval.token).call(
+                    abi.encodeWithSelector(
+                        bytes4(bytes32(selector << 224)), adapter, approvalValue
+                    )
+                );
+
+                if (!success) {
+                    revert("Generic adapter approval failed.");
+                }
+            }
+        }
+
+        // This is where the adapter approves Seaport.
+        Approval[] memory approvalsByTheAdapter = new Approval[](4);
+        approvalsByTheAdapter[0] = Approval(address(token1), ItemType.ERC20);
+        approvalsByTheAdapter[1] = Approval(address(test721_1), ItemType.ERC721);
+        approvalsByTheAdapter[2] =
+            Approval(address(test1155_1), ItemType.ERC1155);
+        approvalsByTheAdapter[3] = Approval(address(weth), ItemType.ERC20);
+
+        bytes memory contextArg = AdapterHelperLib.createGenericAdapterContext(
+            approvalsByTheAdapter, new Call[](0)
+        );
+
+        // Prank seaport to allow hitting the adapter directly.
+        vm.prank(address(seaport));
+        testAdapter.generateOrder(
+            address(this), new SpentItem[](0), new SpentItem[](0), contextArg
+        );
+
         // Do any final setup within config
         config.beforeAllPrepareMarketplace(alice, bob);
     }
@@ -325,7 +397,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                     || test721_1.ownerOf(1) == config.market()
             );
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -333,7 +405,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -407,7 +478,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -415,7 +486,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -496,7 +566,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -504,7 +574,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 item
             );
 
@@ -577,7 +646,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         returns (TestOrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -585,7 +654,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 item
             );
 
@@ -845,7 +913,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            // payload.executeOrder = AdapterEncodingHelperLib
+            // payload.executeOrder = AdapterHelperLib
             //     .createSeaportWrappedTestCallParameters(
             //     payload.executeOrder,
             //     address(context.fulfiller),
@@ -853,7 +921,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             //     address(context.flashloanOfferer),
             //     address(context.adapter),
             //     address(context.sidecar),
-            //     address(WETH_ADDRESS),
+            //
             //     item
             // );
 
@@ -1937,7 +2005,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(feeReciever1.balance, 0);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -1945,7 +2013,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -2022,7 +2089,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -2030,7 +2097,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -2135,7 +2201,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -2143,7 +2209,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -2222,7 +2287,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -2230,7 +2295,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 standardERC721
             );
 
@@ -2341,7 +2405,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 );
             }
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -2349,7 +2413,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 items
             );
 
@@ -2440,7 +2503,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(context.fulfiller),
@@ -2448,7 +2511,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                address(WETH_ADDRESS),
                 items
             );
 
@@ -2545,7 +2607,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(contexts[0].fulfiller),
@@ -2553,7 +2615,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(contexts[0].flashloanOfferer),
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
-                address(WETH_ADDRESS),
                 items
             );
 
@@ -2651,7 +2712,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 payload.submitOrder
             );
 
-            payload.executeOrder = AdapterEncodingHelperLib
+            payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
                 address(contexts[0].fulfiller),
@@ -2659,7 +2720,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(contexts[0].flashloanOfferer),
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
-                address(WETH_ADDRESS),
                 items
             );
 

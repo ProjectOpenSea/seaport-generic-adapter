@@ -14,8 +14,7 @@ import {
     TestItem20
 } from "../../../test/utils/Types.sol";
 
-import { AdapterEncodingHelperLib } from
-    "../../lib/AdapterEncodingHelperLib.sol";
+import { AdapterHelperLib } from "../../lib/AdapterHelperLib.sol";
 
 contract FoundationConfig is BaseMarketConfig {
     function name() external pure override returns (string memory) {

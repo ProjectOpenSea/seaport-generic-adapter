@@ -68,10 +68,10 @@ import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
 import {
-    AdapterEncodingHelperLib,
+    AdapterHelperLib,
     Approval,
     Flashloan
-} from "../src/lib/AdapterEncodingHelperLib.sol";
+} from "../src/lib/AdapterHelperLib.sol";
 
 import "forge-std/console.sol";
 
@@ -496,8 +496,9 @@ contract GenericAdapterTest is BaseOrderTest {
 
         spentItems[0] = spentItemNative;
 
-        bytes memory extraData = AdapterEncodingHelperLib
-            .createGenericAdapterContext(new Approval[](0), new Call[](0));
+        bytes memory extraData = AdapterHelperLib.createGenericAdapterContext(
+            new Approval[](0), new Call[](0)
+        );
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -675,8 +676,8 @@ contract GenericAdapterTest is BaseOrderTest {
         approvals[1] = Approval(erc721Address, ItemType.ERC721);
         approvals[2] = Approval(erc1155Address, ItemType.ERC1155);
 
-        bytes memory extraData = AdapterEncodingHelperLib
-            .createGenericAdapterContext(approvals, calls);
+        bytes memory extraData =
+            AdapterHelperLib.createGenericAdapterContext(approvals, calls);
 
         assertEq(
             testERC20.balanceOf(address(context.sidecar)),
@@ -769,8 +770,9 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[2] = callNative;
         }
 
-        bytes memory extraData = AdapterEncodingHelperLib
-            .createGenericAdapterContext(new Approval[](0), calls);
+        bytes memory extraData = AdapterHelperLib.createGenericAdapterContext(
+            new Approval[](0), calls
+        );
 
         assertEq(nativeAction, 0, "nativeAction should be 0");
 
@@ -959,7 +961,7 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[1] = callNative;
             calls[2] = callNative;
 
-            extraData = AdapterEncodingHelperLib.createGenericAdapterContext(
+            extraData = AdapterHelperLib.createGenericAdapterContext(
                 new Approval[](0), calls
             );
         }
@@ -1067,9 +1069,8 @@ contract GenericAdapterTest is BaseOrderTest {
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
-        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
-            address(this), flashloans
-        );
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
 
         // Add it to the order.
         order.withExtraData(extraData);
@@ -1134,7 +1135,7 @@ contract GenericAdapterTest is BaseOrderTest {
             calls[4] = callWithdrawWETH;
             calls[5] = callNativeAction;
 
-            extraData = AdapterEncodingHelperLib.createGenericAdapterContext(
+            extraData = AdapterHelperLib.createGenericAdapterContext(
                 new Approval[](0), calls
             );
         }
@@ -1222,9 +1223,8 @@ contract GenericAdapterTest is BaseOrderTest {
         flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
-        extraData = AdapterEncodingHelperLib.createFlashloanContext(
-            address(this), flashloans
-        );
+        extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
 
         // Add it all to the order.
         order.withExtraData(extraData);

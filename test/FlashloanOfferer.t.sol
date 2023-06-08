@@ -31,10 +31,7 @@ import { BaseOrderTest } from "./utils/BaseOrderTest.sol";
 
 import { Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import {
-    AdapterEncodingHelperLib,
-    Flashloan
-} from "../src/lib/AdapterEncodingHelperLib.sol";
+import { AdapterHelperLib, Flashloan } from "../src/lib/AdapterHelperLib.sol";
 
 contract FlashloanOffererTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
@@ -539,9 +536,8 @@ contract FlashloanOffererTest is BaseOrderTest {
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
-        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
-            address(this), flashloans
-        );
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
 
         // For now, just assume that the flashloan offerer is sufficiently
         // funded.
@@ -640,9 +636,8 @@ contract FlashloanOffererTest is BaseOrderTest {
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
-        bytes memory extraData = AdapterEncodingHelperLib.createFlashloanContext(
-            address(this), flashloans
-        );
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
 
         {
             // Add it all to the order.
