@@ -68,6 +68,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     address public adapter;
     address public sidecar;
 
+    TestItem721 standardERC721;
+
     ISeaport internal constant seaport =
         ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
@@ -163,21 +165,21 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         benchmark_BuyOfferedWETHWithERC721(config);
         benchmark_BuyOfferedWETHWithERC721_Adapter(config);
         benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
-            config
-        );
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
+        //     config
+        // );
         benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
         benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
         benchmark_BuyTenOfferedERC721WithEther(config);
         benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
-        //     config
-        // );
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
+            config
+        );
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
         benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
             config
@@ -232,6 +234,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         adapter = address(testAdapter);
         sidecar = address(testSidecar);
 
+        vm.deal(address(flashloanOfferer), type(uint128).max);
+
+        standardERC721 = TestItem721(address(test721_1), 1);
+
         // Do any final setup within config
         config.beforeAllPrepareMarketplace(alice, bob);
     }
@@ -283,13 +289,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721 -> ETH List-On-Chain)";
         test721_1.mint(alice, 1);
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
-
-        TestItem721 memory item = TestItem721(address(test721_1), 1);
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
@@ -306,8 +309,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             return;
         }
 
-        try config.getPayload_BuyOfferedERC721WithEther(context, item, 100)
-        returns (TestOrderPayload memory payload) {
+        try config.getPayload_BuyOfferedERC721WithEther(
+            context, standardERC721, 100
+        ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -330,7 +334,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.adapter),
                 address(context.sidecar),
                 address(WETH_ADDRESS),
-                item
+                standardERC721
             );
 
             _benchmarkCallWithParams(
@@ -379,12 +383,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721 -> ETH)";
         test721_1.mint(alice, 1);
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
-        TestItem721 memory item = TestItem721(address(test721_1), 1);
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
@@ -400,8 +402,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             return;
         }
 
-        try config.getPayload_BuyOfferedERC721WithEther(context, item, 100)
-        returns (TestOrderPayload memory payload) {
+        try config.getPayload_BuyOfferedERC721WithEther(
+            context, standardERC721, 100
+        ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
             payload.executeOrder = AdapterEncodingHelperLib
@@ -413,7 +416,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.adapter),
                 address(context.sidecar),
                 address(WETH_ADDRESS),
-                item
+                standardERC721
             );
 
             _benchmarkCallWithParams(
@@ -474,7 +477,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC1155 -> ETH List-On-Chain)";
         test1155_1.mint(alice, 1, 1);
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -553,7 +555,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC1155 -> ETH)";
         test1155_1.mint(alice, 1, 1);
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -821,17 +822,13 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         hevm.deal(bob, 100);
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
-        // Maybe not necessary.
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        TestItem721 memory item = TestItem721(address(test721_1), 1);
-
         try config.getPayload_BuyOfferedERC721WithERC20(
-            context, item, TestItem20(address(weth), 100)
+            context, standardERC721, TestItem20(address(weth), 100)
         ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
@@ -1903,7 +1900,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(ERC721 -> ETH One-Fee-Recipient List-On-Chain)";
         test721_1.mint(alice, 1);
-        vm.deal(address(flashloanOfferer), 505);
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
@@ -1920,10 +1916,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        TestItem721 memory item = TestItem721(address(test721_1), 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context,
-            item,
+            standardERC721,
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
             5
@@ -1951,7 +1946,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.adapter),
                 address(context.sidecar),
                 address(WETH_ADDRESS),
-                item
+                standardERC721
             );
 
             _benchmarkCallWithParams(
@@ -2005,13 +2000,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721 -> ETH One-Fee-Recipient)";
         test721_1.mint(alice, 1);
-        vm.deal(address(flashloanOfferer), 105);
 
         TestOrderContext memory context = TestOrderContext(
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
-
-        TestItem721 memory item = TestItem721(address(test721_1), 1);
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
@@ -2025,7 +2017,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, item, 100, feeReciever1, 5
+            context, standardERC721, 100, feeReciever1, 5
         ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
@@ -2039,7 +2031,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.adapter),
                 address(context.sidecar),
                 address(WETH_ADDRESS),
-                item
+                standardERC721
             );
 
             _benchmarkCallWithParams(
@@ -2113,16 +2105,21 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(ERC721 -> ETH Two-Fee-Recipient List-On-Chain)";
         test721_1.mint(alice, 1);
+
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(x2y2Config.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem721(address(test721_1), 1),
-            100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
+            context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
         ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
@@ -2137,6 +2134,18 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                address(WETH_ADDRESS),
+                standardERC721
+            );
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -2193,20 +2202,37 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721 -> ETH Two-Fee-Recipient)";
         test721_1.mint(alice, 1);
+
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(x2y2Config.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem721(address(test721_1), 1),
-            100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
+            context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
         ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                address(WETH_ADDRESS),
+                standardERC721
+            );
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -2280,19 +2306,26 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721x10 -> ETH List-On-Chain Adapter)";
 
-        TestItem721[] memory nfts = new TestItem721[](10);
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        TestItem721[] memory items = new TestItem721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
+            items[i] = TestItem721(address(test721_1), i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            nfts,
-            100
-        ) returns (TestOrderPayload memory payload) {
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(x2y2Config.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
+        try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
+        returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2307,6 +2340,18 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                     "Not owner"
                 );
             }
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                address(WETH_ADDRESS),
+                items
+            );
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -2366,22 +2411,46 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721x10 -> ETH Adapter)";
 
-        TestItem721[] memory nfts = new TestItem721[](10);
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(x2y2Config.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        TestItem721[] memory items = new TestItem721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
+            items[i] = TestItem721(address(test721_1), i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
             TestOrderContext(
                 false, true, alice, bob, flashloanOfferer, adapter, sidecar
             ),
-            nfts,
+            items,
             100
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                address(WETH_ADDRESS),
+                items
+            );
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -2442,18 +2511,27 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
     }
 
+    // TODO: come back and clean this up. It's extra hacky.
     function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel = "(ERC721x10 -> ETH Distinct Orders Adapter)";
 
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(x2y2Config.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        TestItem721[] memory items = new TestItem721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
+            items[i] = TestItem721(address(test721_1), i + 1);
             contexts[i] = TestOrderContext(
                 false, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -2461,11 +2539,23 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, items, ethAmounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(contexts[0].fulfiller),
+                address(seaport),
+                address(contexts[0].flashloanOfferer),
+                address(contexts[0].adapter),
+                address(contexts[0].sidecar),
+                address(WETH_ADDRESS),
+                items
+            );
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -2539,12 +2629,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             "(ERC721x10 -> ETH Distinct Orders List-On-Chain Adapter)";
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        TestItem721[] memory items = new TestItem721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
+            items[i] = TestItem721(address(test721_1), i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -2552,13 +2642,25 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, items, ethAmounts
         ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 alice,
                 payload.submitOrder
+            );
+
+            payload.executeOrder = AdapterEncodingHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(contexts[0].fulfiller),
+                address(seaport),
+                address(contexts[0].flashloanOfferer),
+                address(contexts[0].adapter),
+                address(contexts[0].sidecar),
+                address(WETH_ADDRESS),
+                items
             );
 
             _benchmarkCallWithParams(
