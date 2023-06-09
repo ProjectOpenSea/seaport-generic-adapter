@@ -52,8 +52,10 @@ interface IWETH {
     function approve(address, uint256) external returns (bool);
 }
 
+// TODO: Think about maybe just putting a SpentItem in here.
 struct Flashloan {
     uint88 amount;
+    ItemType itemType;
     bool shouldCallback;
     address recipient;
 }
@@ -225,8 +227,6 @@ library AdapterHelperLib {
     // TODO: think about whether the sidecar should be transferring these
     // directly or waiting for Seaport to do its optimized executions.
 
-    // TODO: refactor.
-
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         address fulfiller,
@@ -234,6 +234,7 @@ library AdapterHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
+        Flashloan[] memory flashloans,
         TestItem721 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](1);
@@ -245,6 +246,7 @@ library AdapterHelperLib {
             flashloanOfferer,
             adapter,
             sidecar,
+            flashloans,
             erc721s,
             new TestItem1155[](0)
         );
@@ -257,6 +259,7 @@ library AdapterHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
+        Flashloan[] memory flashloans,
         TestItem721[] memory nfts
     ) public view returns (TestCallParameters memory) {
         return createSeaportWrappedTestCallParameters(
@@ -266,6 +269,7 @@ library AdapterHelperLib {
             flashloanOfferer,
             adapter,
             sidecar,
+            flashloans,
             nfts,
             new TestItem1155[](0)
         );
@@ -278,6 +282,7 @@ library AdapterHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
+        Flashloan[] memory flashloans,
         TestItem1155 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem1155[] memory erc1155s = new TestItem1155[](1);
@@ -289,6 +294,7 @@ library AdapterHelperLib {
             flashloanOfferer,
             adapter,
             sidecar,
+            flashloans,
             new TestItem721[](0),
             erc1155s
         );
@@ -301,6 +307,7 @@ library AdapterHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
+        Flashloan[] memory flashloans,
         TestItem1155[] memory nfts
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](0);
@@ -312,6 +319,7 @@ library AdapterHelperLib {
             flashloanOfferer,
             adapter,
             sidecar,
+            flashloans,
             erc721s,
             nfts
         );
@@ -324,6 +332,7 @@ library AdapterHelperLib {
         address flashloanOfferer,
         address adapter,
         address sidecar,
+        Flashloan[] memory flashloans,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -331,6 +340,8 @@ library AdapterHelperLib {
         view
         returns (TestCallParameters memory wrappedTestCallParameter)
     {
+        uint256 totalFlashloanValueRequested;
+
         {
             wrappedTestCallParameter.target = seaport;
             wrappedTestCallParameter.value = testCallParameters.value;
@@ -341,8 +352,8 @@ library AdapterHelperLib {
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
             new AdvancedOrder[](3),
-            Flashloan(0, false, address(0)),
-            new Flashloan[](1),
+            Flashloan(0, ItemType.NATIVE, false, address(0)),
+            flashloans,
             Call(address(0), false, 0, bytes("")),
             new Call[](1),
             new bytes(0),
@@ -357,8 +368,10 @@ library AdapterHelperLib {
             infra.considerationArray[0] = ConsiderationItemLib.empty()
                 .withItemType(ItemType.NATIVE).withToken(address(0))
                 .withIdentifierOrCriteria(0).withStartAmount(
-                testCallParameters.value
-            ).withEndAmount(testCallParameters.value).withRecipient(address(0));
+                wrappedTestCallParameter.value
+            ).withEndAmount(wrappedTestCallParameter.value).withRecipient(
+                address(0)
+            );
 
             {
                 infra.orderParameters = OrderParametersLib.empty().withOrderType(
@@ -413,25 +426,31 @@ library AdapterHelperLib {
             infra.orders[1] = infra.order;
         }
 
-        // Create the flashloan, if necessary.
-        if (testCallParameters.value > 0) {
+        // TODO: handle the cases where no flashloan is requested or required.
+        if (true) {
             {
                 infra.order =
                     AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
             }
 
             {
+                for (uint256 i = 0; i < flashloans.length; i++) {
+                    totalFlashloanValueRequested += infra.flashloans[i].amount;
+                }
+
+                // Come back and think about the case where multiple flashloans
+                // of different types are required.
                 infra.considerationArray[0] = ConsiderationItemLib.empty()
-                    .withItemType(ItemType.NATIVE).withToken(address(0))
-                    .withIdentifierOrCriteria(0).withStartAmount(
-                    testCallParameters.value
-                ).withEndAmount(testCallParameters.value).withRecipient(
+                    .withItemType(infra.flashloans[0].itemType).withToken(
                     address(0)
-                );
+                ).withIdentifierOrCriteria(0).withStartAmount(
+                    totalFlashloanValueRequested
+                ).withEndAmount(totalFlashloanValueRequested)
+                    // TODO: think about whether this is backwards.
+                    .withRecipient(address(0));
             }
 
             {
-                // Think about how to handle this.
                 infra.orderParameters = OrderParametersLib.empty();
                 infra.orderParameters =
                     infra.orderParameters.withSalt(gasleft());
@@ -460,13 +479,8 @@ library AdapterHelperLib {
             }
 
             {
-                infra.flashloan =
-                    Flashloan(uint88(testCallParameters.value), true, adapter);
-                infra.flashloans = new Flashloan[](1);
-                infra.flashloans[0] = infra.flashloan;
-
                 infra.extraData =
-                    createFlashloanContext(address(fulfiller), infra.flashloans);
+                    createFlashloanContext(address(fulfiller), flashloans);
 
                 // Add it all to the order.
                 infra.order.withExtraData(infra.extraData);
@@ -483,10 +497,10 @@ library AdapterHelperLib {
                 {
                     OfferItem[] memory offerItems = new OfferItem[](1);
                     offerItems[0] = OfferItemLib.empty().withItemType(
-                        ItemType.NATIVE
+                        infra.flashloans[0].itemType
                     ).withToken(address(0)).withIdentifierOrCriteria(0)
-                        .withStartAmount(testCallParameters.value).withEndAmount(
-                        testCallParameters.value
+                        .withStartAmount(totalFlashloanValueRequested).withEndAmount(
+                        totalFlashloanValueRequested
                     );
 
                     infra.orderParameters = OrderParametersLib.empty();
@@ -538,15 +552,14 @@ library AdapterHelperLib {
                     offerComponentsMirror, considerationComponentsMirror
                 );
             }
-        } else {
-            // I don't think this should get hit and it might not even make
-            // sense yet or at all. Also not sure it even works lol.
-            infra.orders = new AdvancedOrder[](1);
-            infra.orders[0] = infra.order;
-
-            // Create the fulfillments?
-            infra.fulfillments = new Fulfillment[](0);
         }
+        // else {
+        //     infra.orders = new AdvancedOrder[](1);
+        //     infra.orders[0] = infra.order;
+
+        //     // Create the fulfillments.
+        //     infra.fulfillments = new Fulfillment[](0);
+        // }
 
         wrappedTestCallParameter.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,

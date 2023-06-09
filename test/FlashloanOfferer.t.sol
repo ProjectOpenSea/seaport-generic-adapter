@@ -531,8 +531,12 @@ contract FlashloanOffererTest is BaseOrderTest {
             SpentItem(ItemType.NATIVE, address(0), 0, flashloanValueRequested);
         maximumSpent[0] = spentItemMaxSpent;
 
-        Flashloan memory flashloan =
-            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan memory flashloan = Flashloan(
+            uint88(flashloanValueRequested),
+            ItemType.NATIVE,
+            true,
+            address(this)
+        );
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
@@ -631,8 +635,12 @@ contract FlashloanOffererTest is BaseOrderTest {
                 orderParameters.withTotalOriginalConsiderationItems(1);
         }
 
-        Flashloan memory flashloan =
-            Flashloan(uint88(flashloanValueRequested), true, address(this));
+        Flashloan memory flashloan = Flashloan(
+            uint88(flashloanValueRequested),
+            ItemType.NATIVE,
+            true,
+            address(this)
+        );
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 

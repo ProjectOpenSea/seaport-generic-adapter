@@ -1065,7 +1065,7 @@ contract GenericAdapterTest is BaseOrderTest {
         }
 
         Flashloan memory flashloan =
-            Flashloan(3 ether, true, address(context.adapter));
+            Flashloan(3 ether, ItemType.NATIVE, true, address(context.adapter));
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
@@ -1219,7 +1219,8 @@ contract GenericAdapterTest is BaseOrderTest {
             order.withParameters(orderParameters);
         }
 
-        flashloan = Flashloan(3 ether, true, address(context.adapter));
+        flashloan =
+            Flashloan(3 ether, ItemType.ERC20, true, address(context.adapter));
         flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
 
