@@ -426,8 +426,7 @@ library AdapterHelperLib {
             infra.orders[1] = infra.order;
         }
 
-        // TODO: handle the cases where no flashloan is requested or required.
-        if (true) {
+        if (flashloans.length > 0) {
             {
                 infra.order =
                     AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
@@ -552,14 +551,13 @@ library AdapterHelperLib {
                     offerComponentsMirror, considerationComponentsMirror
                 );
             }
-        }
-        // else {
-        //     infra.orders = new AdvancedOrder[](1);
-        //     infra.orders[0] = infra.order;
+        } else {
+            infra.orders = new AdvancedOrder[](1);
+            infra.orders[0] = infra.order;
 
-        //     // Create the fulfillments.
-        //     infra.fulfillments = new Fulfillment[](0);
-        // }
+            // Create the fulfillments.
+            infra.fulfillments = new Fulfillment[](0);
+        }
 
         wrappedTestCallParameter.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,

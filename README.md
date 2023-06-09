@@ -13,7 +13,7 @@ git clone --recurse-submodules https://github.com/ProjectOpenSea/seaport-generic
 ## Usage
 
 ```bash
-forge test
+forge test --fork-url $ETH_MAINNET_RPC --watch -vvv
 ```
 
 ## License
