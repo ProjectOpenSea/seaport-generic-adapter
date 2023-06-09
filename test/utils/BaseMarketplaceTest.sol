@@ -29,7 +29,7 @@ contract BaseMarketplaceTest is DSTestPlus {
     TestERC20 internal token1;
     TestERC20 internal token2;
     TestERC20 internal token3;
-    // TestERC20 internal weth;
+
     WETH internal constant weth =
         WETH(payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
 

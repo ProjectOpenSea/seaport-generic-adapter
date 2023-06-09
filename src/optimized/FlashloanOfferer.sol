@@ -143,6 +143,8 @@ contract FlashloanOfferer is ContractOffererInterface {
 
         if (minimumReceived.length == 0) {
             // No minimumReceived items indicates to perform a flashloan.
+            // TODO: Ensure the maximumSpent item is native or wrapped and not a
+            // shitcoin.
             if (_processFlashloan(context) > maximumSpentAmount) {
                 revert InsufficientMaximumSpentAmount();
             }

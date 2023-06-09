@@ -445,7 +445,6 @@ library AdapterHelperLib {
                 ).withIdentifierOrCriteria(0).withStartAmount(
                     totalFlashloanValueRequested
                 ).withEndAmount(totalFlashloanValueRequested)
-                    // TODO: think about whether this is backwards.
                     .withRecipient(address(0));
             }
 
@@ -485,8 +484,6 @@ library AdapterHelperLib {
                 infra.order.withExtraData(infra.extraData);
                 infra.orders[0] = infra.order;
             }
-
-            // TODO: Make sure the native and weth sides are squared up properly.
 
             // Build the mirror order.
             {
