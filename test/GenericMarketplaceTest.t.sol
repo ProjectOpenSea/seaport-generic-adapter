@@ -109,6 +109,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     // TODO: set up the no-flashloan versions of all these. Should be possible
     // to just use the native tokens sent by the fulfiller.
 
+    // TODO: after establishing marketplace coverage, think about doing
+    // more permutations with flashloans in general
+
+    // TODO: after all that, start working on fulfilling multiple orders in a
+    // single transaction.
+
     // Maybe eventually useful when it's time for combining orders from multiple
     // marketplaces.
     // function testSeaportOnePointFour() external {
@@ -246,81 +252,112 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         vm.deal(address(flashloanOfferer), type(uint128).max);
 
-        // This super fucks shit up for some reason. Dealing weth might prove
-        // tricky.
-        // deal(address(weth), address(flashloanOfferer), type(uint16).max);
-
         beforeAllPrepareMarketplaceTest(config);
 
-        // WORKING BELOW ///////////////////////////////////////////////////////
         benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC1155WithERC20(config);
+        benchmark_BuyOfferedERC1155WithERC20_Adapter(config);
+
         benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC1155WithERC721(config);
-        benchmark_BuyOfferedERC1155WithEther_Adapter(config);
-        benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
+
         benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC1155WithEther(config);
+        benchmark_BuyOfferedERC1155WithEther_Adapter(config);
+
         benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC20WithERC1155(config);
+        benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
+
         benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC20WithERC721(config);
+        benchmark_BuyOfferedERC20WithERC721_Adapter(config);
+
         benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC721WithERC1155(config);
+        benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
+
         benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
+
         benchmark_BuyOfferedERC721WithERC20(config);
-        benchmark_BuyOfferedERC721WithEther_Adapter(config);
-        benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
-        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
+
         benchmark_BuyOfferedERC721WithEther(config);
-        benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
-        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
-        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEther_Adapter(config);
+
+        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedERC721WithEtherFee(config);
+        benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
+
+        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
+
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
         benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
+
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
         benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
             config
         );
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
-        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
+
         benchmark_BuyOfferedERC721WithWETH(config);
+        benchmark_BuyOfferedERC721WithWETH_Adapter(config);
+
+        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
+        benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
+
         benchmark_BuyOfferedWETHWithERC721(config);
+        benchmark_BuyOfferedWETHWithERC721_Adapter(config);
+
         benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
+            config
+        );
+
         benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
-        benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
-        benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+
         benchmark_BuyTenOfferedERC721WithEther(config);
+        benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
+
+        benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
+
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
         benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
             config
         );
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
-        benchmark_MatchOrders_ABCA(config);
 
-        // THE UNWRITTEN ADAPTER TESTS
-        // benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
-        // benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
-        // benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
-        // benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
-        // benchmark_BuyOfferedERC20WithERC721_Adapter(config);
-        // benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
-        // benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
-        // benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
-        // benchmark_BuyOfferedERC721WithWETH_Adapter(config);
-        // benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
-        // benchmark_BuyOfferedWETHWithERC721_Adapter(config);
-        // benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(config);
-        // benchmark_MatchOrders_ABCA_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
+
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
+            config
+        );
+
+        benchmark_MatchOrders_ABCA(config);
+        benchmark_MatchOrders_ABCA_Adapter(config);
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
@@ -456,7 +493,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -551,11 +588,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill, w/ Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -652,7 +685,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -744,11 +777,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill, w/ Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -834,7 +863,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -901,11 +930,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill, w/ Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -965,15 +990,96 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     }
 
     // TODO: Think about this. First WETH case.
-    // TODO: after establishing marketplace coverage, think about doing
-    //       more permutations with flahsloans.
-    // TODO: after all that, start working on fulfilling multiple orders in a
-    //       single transaction.
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
+    function benchmark_BuyOfferedERC721WithWETH_Adapter(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+    {
+        string memory testLabel = "(benchmark_BuyOfferedERC721WithWETH_Adapter)";
+
+        // Only blur lets this happen for now.
+        // TODO: Come back and start tinkering with the orders to make the
+        //       generic adapter the taker.
+        if (
+            keccak256(bytes(config.name()))
+                != keccak256(bytes(blurConfig.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
+        test721_1.mint(alice, 1);
+        hevm.deal(bob, 100);
+        hevm.prank(bob);
+        weth.deposit{ value: 100 }();
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        try config.getPayload_BuyOfferedERC721WithWETH(
+            context, standardERC721, TestItem20(address(weth), 100)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(weth.balanceOf(alice), 0);
+            assertEq(weth.balanceOf(bob), 100);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                new TestItem721[](0)
+            );
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(weth.balanceOf(alice), 100);
+            assertEq(weth.balanceOf(bob), 0);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
     function benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter)";
+
+        // LR and X2Y2 require that the msg.sender is also the taker.
+        // 0x is OK with the sender and the taker being different, but it
+        // appears to grab the weth straight from the msg.sender if the taker is
+        // the null address and it reverts if the msg.sender is not the taker
+        // and the taker on the order is an address other than the null address.
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(looksRareConfig.name()))
+                || keccak256(bytes(config.name()))
+                    == keccak256(bytes(x2y2Config.name()))
+                || keccak256(bytes(config.name()))
+                    == keccak256(bytes(zeroExConfig.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
         test721_1.mint(alice, 1);
         hevm.deal(bob, 100);
         hevm.prank(bob);
@@ -1001,30 +1107,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            // JUST AN EXPERIMENT
-            vm.prank(address(context.sidecar));
-            weth.approve(
-                address(0xDef1C0ded9bec7F1a1670819833240f027b25EfF),
-                type(uint256).max
-            );
-            vm.prank(address(context.sidecar));
-            weth.approve(
-                address(0x4aF649FFde640CEb34b1AfaBa3e0Bb8e9698cb01),
-                type(uint256).max
-            );
-
-            // TODO: THIS IS WHERE TO PICK UP
-
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.ERC20,
-                shouldCallback: true,
-                recipient: address(sidecar) // TODO: Think about this.
-             });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
@@ -1033,13 +1115,13 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 address(context.flashloanOfferer),
                 address(context.adapter),
                 address(context.sidecar),
-                flashloanArray,
-                standardERC721
+                new Flashloan[](0),
+                new TestItem721[](0)
             );
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -1076,46 +1158,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                bob,
-                payload.executeOrder
-            );
-
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(weth.balanceOf(alice), 100);
-            assertEq(weth.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
-
-    function benchmark_BuyOfferedERC721WithWETH_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(benchmark_BuyOfferedERC721WithWETH_Adapter)";
-        test721_1.mint(alice, 1);
-        hevm.deal(bob, 100);
-        hevm.prank(bob);
-        weth.deposit{ value: 100 }();
-
-        try config.getPayload_BuyOfferedERC721WithWETH(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem721(address(test721_1), 1),
-            TestItem20(address(weth), 100)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(weth.balanceOf(alice), 0);
-            assertEq(weth.balanceOf(bob), 100);
-
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill, w/ Sig Through Adapter"
-                    )
-                ),
                 bob,
                 payload.executeOrder
             );
@@ -1173,39 +1215,43 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter)";
-        test1155_1.mint(alice, 1, 1);
-        token1.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem1155(address(test1155_1), 1, 1),
-            TestItem20(address(token1), 100)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // test1155_1.mint(alice, 1, 1);
+        // token1.mint(bob, 100);
+        // try config.getPayload_BuyOfferedERC1155WithERC20(
+        //     TestOrderContext(
+        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem1155(address(test1155_1), 1, 1),
+        //     TestItem20(address(token1), 100)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 100);
+        //     assertEq(token1.balanceOf(bob), 0);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC1155WithERC20(BaseMarketConfig config)
@@ -1246,36 +1292,36 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_Adapter)";
-        test1155_1.mint(alice, 1, 1);
-        token1.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem1155(address(test1155_1), 1, 1),
-            TestItem20(address(token1), 100)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // test1155_1.mint(alice, 1, 1);
+        // token1.mint(bob, 100);
+        // try config.getPayload_BuyOfferedERC1155WithERC20(
+        //     TestOrderContext(
+        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem1155(address(test1155_1), 1, 1),
+        //     TestItem20(address(token1), 100)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 100);
+        //     assertEq(token1.balanceOf(bob), 0);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC20WithERC721_ListOnChain(
@@ -1327,43 +1373,47 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter)";
-        token1.mint(alice, 100);
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem20(address(token1), 100),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            // Allow the market to escrow after listing
-            assert(
-                token1.balanceOf(alice) == 100
-                    || token1.balanceOf(config.market()) == 100
-            );
-            assertEq(token1.balanceOf(bob), 0);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // token1.mint(alice, 100);
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedERC20WithERC721(
+        //     TestOrderContext(
+        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem20(address(token1), 100),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     // Allow the market to escrow after listing
+        //     assert(
+        //         token1.balanceOf(alice) == 100
+        //             || token1.balanceOf(config.market()) == 100
+        //     );
+        //     assertEq(token1.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC20WithERC721(BaseMarketConfig config)
@@ -1404,36 +1454,36 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_Adapter)";
-        token1.mint(alice, 100);
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem20(address(token1), 100),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // token1.mint(alice, 100);
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedERC20WithERC721(
+        //     TestOrderContext(
+        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem20(address(token1), 100),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(token1.balanceOf(alice), 100);
+        //     assertEq(token1.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedWETHWithERC721_ListOnChain(
@@ -1487,45 +1537,49 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter)";
-        hevm.deal(alice, 100);
-        hevm.prank(alice);
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem20(address(weth), 100),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            // Allow the market to escrow after listing
-            assert(
-                weth.balanceOf(alice) == 100
-                    || weth.balanceOf(config.market()) == 100
-            );
-            assertEq(weth.balanceOf(bob), 0);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // hevm.deal(alice, 100);
+        // hevm.prank(alice);
+        // weth.deposit{ value: 100 }();
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedWETHWithERC721(
+        //     TestOrderContext(
+        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem20(address(weth), 100),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(weth.balanceOf(alice), 0);
-            assertEq(weth.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     // Allow the market to escrow after listing
+        //     assert(
+        //         weth.balanceOf(alice) == 100
+        //             || weth.balanceOf(config.market()) == 100
+        //     );
+        //     assertEq(weth.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(weth.balanceOf(alice), 0);
+        //     assertEq(weth.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedWETHWithERC721(BaseMarketConfig config)
@@ -1568,38 +1622,38 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         prepareTest(config)
     {
         string memory testLabel = "(benchmark_BuyOfferedWETHWithERC721_Adapter)";
-        hevm.deal(alice, 100);
-        hevm.prank(alice);
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            TestItem20(address(weth), 100),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(weth.balanceOf(alice), 100);
-            assertEq(weth.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(weth.balanceOf(alice), 0);
-            assertEq(weth.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // hevm.deal(alice, 100);
+        // hevm.prank(alice);
+        // weth.deposit{ value: 100 }();
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedWETHWithERC721(
+        //     TestOrderContext(
+        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     ),
+        //     TestItem20(address(weth), 100),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(weth.balanceOf(alice), 100);
+        //     assertEq(weth.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(weth.balanceOf(alice), 0);
+        //     assertEq(weth.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC20WithERC1155_ListOnChain(
@@ -1648,40 +1702,44 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        token1.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context,
-            TestItem20(address(token1), 100),
-            TestItem1155(address(test1155_1), 1, 1)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // TestOrderContext memory context = TestOrderContext(
+        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // token1.mint(alice, 100);
+        // test1155_1.mint(bob, 1, 1);
+        // try config.getPayload_BuyOfferedERC20WithERC1155(
+        //     context,
+        //     TestItem20(address(token1), 100),
+        //     TestItem1155(address(test1155_1), 1, 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 100);
+        //     assertEq(token1.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC20WithERC1155(BaseMarketConfig config)
@@ -1723,37 +1781,37 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        token1.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context,
-            TestItem20(address(token1), 100),
-            TestItem1155(address(test1155_1), 1, 1)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-            assertEq(token1.balanceOf(alice), 100);
-            assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(token1.balanceOf(alice), 0);
-            assertEq(token1.balanceOf(bob), 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // TestOrderContext memory context = TestOrderContext(
+        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // token1.mint(alice, 100);
+        // test1155_1.mint(bob, 1, 1);
+        // try config.getPayload_BuyOfferedERC20WithERC1155(
+        //     context,
+        //     TestItem20(address(token1), 100),
+        //     TestItem1155(address(test1155_1), 1, 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 100);
+        //     assertEq(token1.balanceOf(bob), 0);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        //     assertEq(token1.balanceOf(alice), 0);
+        //     assertEq(token1.balanceOf(bob), 100);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC721WithERC1155_ListOnChain(
@@ -1800,38 +1858,42 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC721WithERC1155(
-            context,
-            TestItem721(address(test721_1), 1),
-            TestItem1155(address(test1155_1), 1, 1)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // TestOrderContext memory context = TestOrderContext(
+        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // test721_1.mint(alice, 1);
+        // test1155_1.mint(bob, 1, 1);
+        // try config.getPayload_BuyOfferedERC721WithERC1155(
+        //     context,
+        //     TestItem721(address(test721_1), 1),
+        //     TestItem1155(address(test1155_1), 1, 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC721WithERC1155(BaseMarketConfig config)
@@ -1871,35 +1933,35 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC721WithERC1155(
-            context,
-            TestItem721(address(test721_1), 1),
-            TestItem1155(address(test1155_1), 1, 1)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // TestOrderContext memory context = TestOrderContext(
+        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // test721_1.mint(alice, 1);
+        // test1155_1.mint(bob, 1, 1);
+        // try config.getPayload_BuyOfferedERC721WithERC1155(
+        //     context,
+        //     TestItem721(address(test721_1), 1),
+        //     TestItem1155(address(test1155_1), 1, 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC1155WithERC721_ListOnChain(
@@ -1946,38 +2008,42 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC1155WithERC721(
-            context,
-            TestItem1155(address(test1155_1), 1, 1),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // TestOrderContext memory context = TestOrderContext(
+        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // test1155_1.mint(alice, 1, 1);
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedERC1155WithERC721(
+        //     context,
+        //     TestItem1155(address(test1155_1), 1, 1),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC1155WithERC721(BaseMarketConfig config)
@@ -2017,35 +2083,35 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     ) internal prepareTest(config) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_Adapter)";
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC1155WithERC721(
-            context,
-            TestItem1155(address(test1155_1), 1, 1),
-            TestItem721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        // TestOrderContext memory context = TestOrderContext(
+        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // test1155_1.mint(alice, 1, 1);
+        // test721_1.mint(bob, 1);
+        // try config.getPayload_BuyOfferedERC1155WithERC721(
+        //     context,
+        //     TestItem1155(address(test1155_1), 1, 1),
+        //     TestItem721(address(test721_1), 1)
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
+
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(
@@ -2163,7 +2229,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -2247,9 +2313,6 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            // vm.deal(address(bob), 1010);
-            // payload.executeOrder.value = 505 * 2;
-
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
@@ -2264,11 +2327,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -2389,7 +2448,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -2490,11 +2549,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill w/ Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -2631,7 +2686,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -2749,11 +2804,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill /w Sig Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill /w Sig*")),
                 bob,
                 payload.executeOrder
             );
@@ -2875,11 +2926,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill /w Sigs Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
                 bob,
                 payload.executeOrder
             );
@@ -3003,7 +3050,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -3065,45 +3112,44 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
-        token1.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
-            erc20Amounts[i] = 100 + i;
-        }
+        // token1.mint(bob, 1045);
+        // TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        // TestItem721[] memory nfts = new TestItem721[](10);
+        // uint256[] memory erc20Amounts = new uint256[](10);
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, address(token1), nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), alice);
-            }
+        // for (uint256 i = 0; i < 10; i++) {
+        //     test721_1.mint(alice, i + 1);
+        //     nfts[i] = TestItem721(address(test721_1), i + 1);
+        //     contexts[i] = TestOrderContext(
+        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     );
+        //     erc20Amounts[i] = 100 + i;
+        // }
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill /w Sigs Through Adapter"
-                    )
-                ),
-                bob,
-                payload.executeOrder
-            );
+        // try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        //     contexts, address(token1), nfts, erc20Amounts
+        // ) returns (TestOrderPayload memory payload) {
+        //     for (uint256 i = 1; i <= 10; i++) {
+        //         assertEq(test721_1.ownerOf(i), alice);
+        //     }
 
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-            assertEq(token1.balanceOf(alice), 1045);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     for (uint256 i = 1; i <= 10; i++) {
+        //         assertEq(test721_1.ownerOf(i), bob);
+        //     }
+        //     assertEq(token1.balanceOf(alice), 1045);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
@@ -3157,43 +3203,46 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
-        token1.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-        for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(address(test721_1), i + 1);
-            contexts[i] = TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
-            erc20Amounts[i] = 100 + i;
-        }
+        // token1.mint(bob, 1045);
+        // TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        // TestItem721[] memory nfts = new TestItem721[](10);
+        // uint256[] memory erc20Amounts = new uint256[](10);
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, address(token1), nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                alice,
-                payload.submitOrder
-            );
+        // for (uint256 i = 0; i < 10; i++) {
+        //     test721_1.mint(alice, i + 1);
+        //     nfts[i] = TestItem721(address(test721_1), i + 1);
+        //     contexts[i] = TestOrderContext(
+        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        //     );
+        //     erc20Amounts[i] = 100 + i;
+        // }
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        //     contexts, address(token1), nfts, erc20Amounts
+        // ) returns (TestOrderPayload memory payload) {
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " List")),
+        //         alice,
+        //         payload.submitOrder
+        //     );
 
-            for (uint256 i = 1; i <= 10; i++) {
-                assertEq(test721_1.ownerOf(i), bob);
-            }
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     for (uint256 i = 1; i <= 10; i++) {
+        //         assertEq(test721_1.ownerOf(i), bob);
+        //     }
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(
@@ -3247,6 +3296,19 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter)";
 
+        // Blur already doesn't support this, adapter or otherwise.
+        if (
+            keccak256(bytes(config.name()))
+                == keccak256(bytes(zeroExConfig.name()))
+                || keccak256(bytes(config.name()))
+                    == keccak256(bytes(x2y2Config.name()))
+                || keccak256(bytes(config.name()))
+                    == keccak256(bytes(sudoswapConfig.name()))
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
+
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
@@ -3270,13 +3332,21 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(contexts[0].fulfiller),
+                address(seaport),
+                address(contexts[0].flashloanOfferer),
+                address(contexts[0].adapter),
+                address(contexts[0].sidecar),
+                new Flashloan[](0),
+                new TestItem721[](0)
+            );
+
             _benchmarkCallWithParams(
                 config.name(),
-                string(
-                    abi.encodePacked(
-                        testLabel, " Fulfill /w Sigs Through Adapter"
-                    )
-                ),
+                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
                 bob,
                 payload.executeOrder
             );
@@ -3369,9 +3439,21 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 payload.submitOrder
             );
 
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(contexts[0].fulfiller),
+                address(seaport),
+                address(contexts[0].flashloanOfferer),
+                address(contexts[0].adapter),
+                address(contexts[0].sidecar),
+                new Flashloan[](0),
+                new TestItem721[](0)
+            );
+
             _benchmarkCallWithParams(
                 config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
                 bob,
                 payload.executeOrder
             );
@@ -3439,47 +3521,50 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     {
         string memory testLabel = "(benchmark_MatchOrders_ABCA_Adapter)";
 
-        test721_1.mint(alice, 1);
-        test721_1.mint(cal, 2);
-        test721_1.mint(bob, 3);
+        _logNotSupported(config.name(), testLabel);
+        return;
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](3);
-        TestItem721[] memory nfts = new TestItem721[](3);
+        // test721_1.mint(alice, 1);
+        // test721_1.mint(cal, 2);
+        // test721_1.mint(bob, 3);
 
-        contexts[0] = TestOrderContext(
-            false, true, alice, address(0), flashloanOfferer, adapter, sidecar
-        );
-        contexts[1] = TestOrderContext(
-            false, true, cal, address(0), flashloanOfferer, adapter, sidecar
-        );
-        contexts[2] = TestOrderContext(
-            false, true, bob, address(0), flashloanOfferer, adapter, sidecar
-        );
+        // TestOrderContext[] memory contexts = new TestOrderContext[](3);
+        // TestItem721[] memory nfts = new TestItem721[](3);
 
-        nfts[0] = TestItem721(address(test721_1), 1);
-        nfts[1] = TestItem721(address(test721_1), 2);
-        nfts[2] = TestItem721(address(test721_1), 3);
+        // contexts[0] = TestOrderContext(
+        //     false, true, alice, address(0), flashloanOfferer, adapter, sidecar
+        // );
+        // contexts[1] = TestOrderContext(
+        //     false, true, cal, address(0), flashloanOfferer, adapter, sidecar
+        // );
+        // contexts[2] = TestOrderContext(
+        //     false, true, bob, address(0), flashloanOfferer, adapter, sidecar
+        // );
 
-        try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-            TestOrderPayload memory payload
-        ) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test721_1.ownerOf(2), cal);
-            assertEq(test721_1.ownerOf(3), bob);
+        // nfts[0] = TestItem721(address(test721_1), 1);
+        // nfts[1] = TestItem721(address(test721_1), 2);
+        // nfts[2] = TestItem721(address(test721_1), 3);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill Through Adapter")),
-                bob,
-                payload.executeOrder
-            );
+        // try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
+        //     TestOrderPayload memory payload
+        // ) {
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test721_1.ownerOf(2), cal);
+        //     assertEq(test721_1.ownerOf(3), bob);
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test721_1.ownerOf(2), alice);
-            assertEq(test721_1.ownerOf(3), cal);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         bob,
+        //         payload.executeOrder
+        //     );
+
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test721_1.ownerOf(2), alice);
+        //     assertEq(test721_1.ownerOf(3), cal);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -3538,11 +3623,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function _logNotSupported(string memory name, string memory label)
         internal
     {
-        emit log(
-            string(
-                abi.encodePacked("[", name, "] ", label, " -- NOT SUPPORTED")
-            )
-        );
+        // Omit for now to mitigate spammy logging.
+        // emit log(
+        //     string(
+        //         abi.encodePacked("[", name, "] ", label, " -- NOT SUPPORTED")
+        //     )
+        // );
     }
 
     function _benchmarkCallWithParams(
