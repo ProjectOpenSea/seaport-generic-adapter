@@ -79,6 +79,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     address public adapter;
     address public sidecar;
 
+    uint256 public costOfLastCall;
+
     TestItem721 standardERC721;
     TestItem721 standardERC721Two;
 
@@ -402,6 +404,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -415,6 +419,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -459,6 +465,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -494,6 +502,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -522,6 +532,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -589,6 +601,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -615,6 +629,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -625,6 +641,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -654,6 +672,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -686,6 +706,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -715,6 +737,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -778,6 +802,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -805,6 +831,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -820,6 +848,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -849,6 +879,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -864,6 +896,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -897,6 +931,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -931,6 +967,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -962,6 +1000,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -977,6 +1017,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1045,6 +1087,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -1095,6 +1139,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1122,6 +1168,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -1158,6 +1206,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1187,6 +1237,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1198,6 +1250,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1241,7 +1295,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1275,6 +1329,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1311,7 +1367,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1341,6 +1397,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1356,6 +1414,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1403,7 +1463,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1437,6 +1497,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1473,7 +1535,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1505,6 +1567,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1520,6 +1584,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1569,7 +1635,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1605,6 +1671,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1643,7 +1711,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1674,6 +1742,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1685,6 +1755,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1729,7 +1801,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1764,6 +1836,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1801,7 +1875,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1832,6 +1906,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1842,6 +1918,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1884,7 +1962,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1917,6 +1995,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -1952,7 +2032,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -1982,6 +2062,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -1992,6 +2074,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2034,7 +2118,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -2067,6 +2151,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2102,7 +2188,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -2132,6 +2218,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2146,6 +2234,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2191,6 +2281,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2230,6 +2322,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2262,6 +2356,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2328,6 +2424,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2359,6 +2457,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2374,6 +2474,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2413,6 +2515,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2449,6 +2553,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2485,6 +2591,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fullfil /w Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2550,6 +2658,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2584,6 +2694,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2599,6 +2711,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2650,6 +2764,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2687,6 +2803,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2725,6 +2843,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sig")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2805,6 +2925,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sig*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2846,6 +2968,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -2927,6 +3051,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -2964,6 +3090,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -2973,6 +3101,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3022,6 +3152,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -3051,6 +3183,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -3093,6 +3227,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3178,6 +3314,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -3185,6 +3323,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3232,7 +3372,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -3277,6 +3417,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3347,6 +3489,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -3388,6 +3532,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -3395,6 +3541,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3435,6 +3583,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
                 alice,
                 payload.submitOrder
             );
@@ -3454,6 +3604,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
                 bob,
                 payload.executeOrder
             );
@@ -3503,6 +3655,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
+                true,
+                false,
                 bob,
                 payload.executeOrder
             );
@@ -3554,7 +3708,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         //     _benchmarkCallWithParams(
         //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),
+        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
         //         payload.executeOrder
         //     );
@@ -3634,6 +3788,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function _benchmarkCallWithParams(
         string memory name,
         string memory label,
+        bool shouldLog,
+        bool shouldLogGasDelta,
         address sender,
         TestCallParameters memory params
     ) internal {
@@ -3657,9 +3813,20 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
         hevm.stopPrank();
 
-        emit log_named_uint(
-            _formatLog(name, label), gasDelta + _additionalGasFee(params.data)
-        );
+        uint256 gasUsed = gasDelta + _additionalGasFee(params.data);
+
+        if (shouldLog) {
+            emit log_named_uint(_formatLog(name, label), gasUsed);
+
+            // After the && is just safety.
+            if (shouldLogGasDelta && gasUsed > costOfLastCall) {
+                emit log_named_uint("gas delta", gasUsed - costOfLastCall);
+                console.log("");
+            }
+
+            costOfLastCall = gasUsed;
+        }
+
     }
 
     function _additionalGasFee(bytes memory callData)

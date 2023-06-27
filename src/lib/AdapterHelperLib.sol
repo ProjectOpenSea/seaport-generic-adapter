@@ -444,8 +444,9 @@ library AdapterHelperLib {
                     address(0)
                 ).withIdentifierOrCriteria(0).withStartAmount(
                     totalFlashloanValueRequested
-                ).withEndAmount(totalFlashloanValueRequested)
-                    .withRecipient(address(0));
+                ).withEndAmount(totalFlashloanValueRequested).withRecipient(
+                    address(0)
+                );
             }
 
             {
