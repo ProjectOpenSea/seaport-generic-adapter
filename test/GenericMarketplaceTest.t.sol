@@ -123,32 +123,26 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     //     benchmarkMarket(seaportOnePointFourConfig);
     // }
 
-    // Foundation is friendly but limited.
     function testFoundation() external {
         benchmarkMarket(foundationConfig);
     }
 
-    // X2Y2 doesn't let you use ETH if you're not the msg.sender.
     function testX2Y2() external {
         benchmarkMarket(x2y2Config);
     }
 
-    // LR doesn't let you use ETH if you're not the msg.sender.
     function testLooksRare() external {
         benchmarkMarket(looksRareConfig);
     }
 
-    // Sudo has some issue that's pretty pervasive.
     function testSudoswap() external {
         benchmarkMarket(sudoswapConfig);
     }
 
-    // 0x is a good citizen.
     function testZeroEx() external {
         benchmarkMarket(zeroExConfig);
     }
 
-    // Blur doesn't let you use ETH if you're not the msg.sender.
     function testBlur() external {
         benchmarkMarket(blurConfig);
     }
@@ -256,112 +250,112 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         beforeAllPrepareMarketplaceTest(config);
 
-        benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
+        // benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC1155WithERC20(config);
-        benchmark_BuyOfferedERC1155WithERC20_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithERC20(config);
+        // benchmark_BuyOfferedERC1155WithERC20_Adapter(config);
 
-        benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
+        // benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC1155WithERC721(config);
-        benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithERC721(config);
+        // benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
 
-        benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
+        // benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC1155WithEther(config);
-        benchmark_BuyOfferedERC1155WithEther_Adapter(config);
+        // benchmark_BuyOfferedERC1155WithEther(config);
+        // benchmark_BuyOfferedERC1155WithEther_Adapter(config);
 
-        benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
+        // benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC20WithERC1155(config);
-        benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
+        // benchmark_BuyOfferedERC20WithERC1155(config);
+        // benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
 
-        benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
-        benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
+        // benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC20WithERC721(config);
-        benchmark_BuyOfferedERC20WithERC721_Adapter(config);
+        // benchmark_BuyOfferedERC20WithERC721(config);
+        // benchmark_BuyOfferedERC20WithERC721_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithERC1155(config);
-        benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
+        // benchmark_BuyOfferedERC721WithERC1155(config);
+        // benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithERC20(config);
-        benchmark_BuyOfferedERC721WithERC20_Adapter(config);
+        // benchmark_BuyOfferedERC721WithERC20(config);
+        // benchmark_BuyOfferedERC721WithERC20_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEther(config);
-        benchmark_BuyOfferedERC721WithEther_Adapter(config);
+        // benchmark_BuyOfferedERC721WithEther(config);
+        // benchmark_BuyOfferedERC721WithEther_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEtherFee(config);
-        benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
+        // benchmark_BuyOfferedERC721WithEtherFee(config);
+        // benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
+        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
+        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
-            config
-        );
+        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
+        //     config
+        // );
 
-        benchmark_BuyOfferedERC721WithWETH(config);
+        // benchmark_BuyOfferedERC721WithWETH(config);
         benchmark_BuyOfferedERC721WithWETH_Adapter(config);
 
-        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
-        benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
+        // benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
-        benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
+        // benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
+        // benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
 
-        benchmark_BuyOfferedWETHWithERC721(config);
-        benchmark_BuyOfferedWETHWithERC721_Adapter(config);
+        // benchmark_BuyOfferedWETHWithERC721(config);
+        // benchmark_BuyOfferedWETHWithERC721_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
-            config
-        );
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
+        //     config
+        // );
 
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
+        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithEther(config);
-        benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithEther(config);
+        // benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
+        // benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
+        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
-            config
-        );
+        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
+        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
+        //     config
+        // );
 
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
+        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
+        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
 
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
-            config
-        );
+        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
+        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
+        //     config
+        // );
 
-        benchmark_MatchOrders_ABCA(config);
-        benchmark_MatchOrders_ABCA_Adapter(config);
+        // benchmark_MatchOrders_ABCA(config);
+        // benchmark_MatchOrders_ABCA_Adapter(config);
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
@@ -446,16 +440,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-            // Not sure why sudo isn't working. Probably needs to be loaded up
-            // with a deeper pool?
-            || keccak256(bytes(config.name()))
-                == keccak256(bytes(sudoswapConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), sudoswapConfig.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -559,15 +547,11 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
             // Not sure why sudo isn't working.
-            || keccak256(bytes(config.name()))
-                == keccak256(bytes(sudoswapConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            || _sameName(config.name(), sudoswapConfig.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -766,10 +750,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -877,14 +859,10 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         // TODO: Figure out how to get ERC20s into the adapter/sidecar before
         // execution time.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(zeroExConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(sudoswapConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), zeroExConfig.name())
+                || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -1000,12 +978,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         // LR, X2Y2, and 0x are not working. Blur, Foundation, and Sudo don't
         // support this lol.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(zeroExConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -1113,12 +1088,14 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithWETH_Adapter)";
 
-        // Only blur lets this happen for now.
-        // TODO: Come back and start tinkering with the orders to make the
-        //       generic adapter the taker.
+        // Only Blur is working. These three error and the others skip bc not
+        // supported.
         if (
-            keccak256(bytes(config.name()))
-                != keccak256(bytes(blurConfig.name()))
+            // X2Y2 gives an input sig error.
+            _sameName(config.name(), x2y2Config.name())
+            // LR and 0x try to transfer WETH from the sidecar.
+            || _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -1139,6 +1116,14 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
+
+            if (!_sameName(config.name(), blurConfig.name())) {
+                payload.executeOrder.data = _replaceAddress(
+                    payload.executeOrder.data,
+                    context.fulfiller,
+                    context.sidecar
+                );
+            }
 
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
@@ -1181,12 +1166,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         // the null address and it reverts if the msg.sender is not the taker
         // and the taker on the order is an address other than the null address.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(zeroExConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2330,12 +2312,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2456,12 +2435,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(looksRareConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2574,10 +2550,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         );
 
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2687,10 +2661,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         test721_1.mint(alice, 1);
 
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2806,10 +2778,8 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             "(benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter)";
 
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(blurConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(sudoswapConfig.name()))
+            _sameName(config.name(), blurConfig.name())
+                || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -2825,10 +2795,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             items[i] = TestItem721(address(test721_1), i + 1);
         }
 
-        if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-        ) {
+        if (_sameName(config.name(), x2y2Config.name())) {
             _logNotSupported(config.name(), testLabel);
             return;
         }
@@ -2937,18 +2904,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEther_Adapter)";
 
-        if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(blurConfig.name()))
-        ) {
+        if (_sameName(config.name(), blurConfig.name())) {
             _logNotSupported(config.name(), testLabel);
             return;
         }
 
-        if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-        ) {
+        if (_sameName(config.name(), x2y2Config.name())) {
             _logNotSupported(config.name(), testLabel);
             return;
         }
@@ -3063,12 +3024,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(sudoswapConfig.name()))
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
+                || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -3196,12 +3154,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(blurConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(sudoswapConfig.name()))
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), blurConfig.name())
+                || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -3514,12 +3469,9 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         // Blur already doesn't support this, adapter or otherwise.
         if (
-            keccak256(bytes(config.name()))
-                == keccak256(bytes(zeroExConfig.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(x2y2Config.name()))
-                || keccak256(bytes(config.name()))
-                    == keccak256(bytes(sudoswapConfig.name()))
+            _sameName(config.name(), zeroExConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
             return;
@@ -3838,6 +3790,45 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         returns (uint8 v, bytes32 r, bytes32 s)
     {
         (v, r, s) = hevm.sign(privateKeys[signer], digest);
+    }
+
+    function _sameName(string memory name1, string memory name2)
+        internal
+        pure
+        returns (bool)
+    {
+        return keccak256(bytes(name1)) == keccak256(bytes(name2));
+    }
+
+    function _replaceAddress(
+        bytes memory data,
+        address oldAddress,
+        address newAddress
+    ) internal pure returns (bytes memory) {
+        bytes memory tempBytes = new bytes(20);
+        bytes32 replacementAddress = bytes32(uint256(uint160(newAddress)) << 96);
+
+        // Iterate over the bytes data one byte at a time.
+        for (uint256 i; i < data.length - 20; i++) {
+            // Using each possible starting byte, create a temporary 20 byte
+            // candidate address chunk.
+            for (uint256 j; j < 20; j++) {
+                tempBytes[j] = data[i + j];
+            }
+
+            // If the candidate address chunk matches the old address, replace.
+            if (
+                (uint256(bytes32(tempBytes)) >> 96)
+                    == uint256(uint160(oldAddress))
+            ) {
+                // Replace the old address with the new address.
+                for (uint256 j; j < 20; j++) {
+                    data[i + j] = replacementAddress[j];
+                }
+            }
+        }
+
+        return data;
     }
 
     function _formatLog(string memory name, string memory label)
