@@ -250,112 +250,112 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         beforeAllPrepareMarketplaceTest(config);
 
-        // benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
-        // benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC1155WithERC20_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC1155WithERC20(config);
-        // benchmark_BuyOfferedERC1155WithERC20_Adapter(config);
+        benchmark_BuyOfferedERC1155WithERC20(config);
+        benchmark_BuyOfferedERC1155WithERC20_Adapter(config);
 
-        // benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
-        // benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC1155WithERC721_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC1155WithERC721(config);
-        // benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
+        benchmark_BuyOfferedERC1155WithERC721(config);
+        benchmark_BuyOfferedERC1155WithERC721_Adapter(config);
 
-        // benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
-        // benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC1155WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC1155WithEther(config);
-        // benchmark_BuyOfferedERC1155WithEther_Adapter(config);
+        benchmark_BuyOfferedERC1155WithEther(config);
+        benchmark_BuyOfferedERC1155WithEther_Adapter(config);
 
-        // benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
-        // benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC20WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC20WithERC1155(config);
-        // benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
+        benchmark_BuyOfferedERC20WithERC1155(config);
+        benchmark_BuyOfferedERC20WithERC1155_Adapter(config);
 
-        // benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
-        // benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC20WithERC721_ListOnChain(config);
+        benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC20WithERC721(config);
-        // benchmark_BuyOfferedERC20WithERC721_Adapter(config);
+        benchmark_BuyOfferedERC20WithERC721(config);
+        benchmark_BuyOfferedERC20WithERC721_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC721WithERC1155_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithERC1155(config);
-        // benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
+        benchmark_BuyOfferedERC721WithERC1155(config);
+        benchmark_BuyOfferedERC721WithERC1155_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC721WithERC20_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithERC20(config);
-        // benchmark_BuyOfferedERC721WithERC20_Adapter(config);
+        benchmark_BuyOfferedERC721WithERC20(config);
+        benchmark_BuyOfferedERC721WithERC20_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEther(config);
-        // benchmark_BuyOfferedERC721WithEther_Adapter(config);
+        benchmark_BuyOfferedERC721WithEther(config);
+        benchmark_BuyOfferedERC721WithEther_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEtherFee(config);
-        // benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
+        benchmark_BuyOfferedERC721WithEtherFee(config);
+        benchmark_BuyOfferedERC721WithEtherFee_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
-        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(config);
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
-        //     config
-        // );
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
+            config
+        );
 
-        // benchmark_BuyOfferedERC721WithWETH(config);
+        benchmark_BuyOfferedERC721WithWETH(config);
         benchmark_BuyOfferedERC721WithWETH_Adapter(config);
 
-        // benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
-        // benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedERC721WithWETH_ListOnChain(config);
+        benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
-        // benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
+        benchmark_BuyOfferedWETHWithERC721_ListOnChain(config);
+        benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(config);
 
-        // benchmark_BuyOfferedWETHWithERC721(config);
-        // benchmark_BuyOfferedWETHWithERC721_Adapter(config);
+        benchmark_BuyOfferedWETHWithERC721(config);
+        benchmark_BuyOfferedWETHWithERC721_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
-        //     config
-        // );
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
+            config
+        );
 
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
-        // benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(config);
+        benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithEther(config);
-        // benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithEther(config);
+        benchmark_BuyTenOfferedERC721WithEther_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
-        // benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithEther_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(config);
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        // benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
-        //     config
-        // );
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
+            config
+        );
 
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
 
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        // benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
-        //     config
-        // );
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
+        benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
+            config
+        );
 
-        // benchmark_MatchOrders_ABCA(config);
-        // benchmark_MatchOrders_ABCA_Adapter(config);
+        benchmark_MatchOrders_ABCA(config);
+        benchmark_MatchOrders_ABCA_Adapter(config);
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
@@ -1654,48 +1654,72 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         string memory testLabel =
             "(benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return;
+        // TODO: Come back and see if it's possible to make 0x work.
+        if (
+            _sameName(config.name(), zeroExConfig.name())
+                || _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
 
-        // hevm.deal(alice, 100);
-        // hevm.prank(alice);
-        // weth.deposit{ value: 100 }();
-        // test721_1.mint(bob, 1);
-        // try config.getPayload_BuyOfferedWETHWithERC721(
-        //     TestOrderContext(
-        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem20(address(weth), 100),
-        //     standardERC721
-        // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     // Allow the market to escrow after listing
-        //     assert(
-        //         weth.balanceOf(alice) == 100
-        //             || weth.balanceOf(config.market()) == 100
-        //     );
-        //     assertEq(weth.balanceOf(bob), 0);
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        weth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
 
-        //     _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+        try config.getPayload_BuyOfferedWETHWithERC721(
+            context, TestItem20(address(weth), 100), standardERC721
+        ) returns (TestOrderPayload memory payload) {
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
 
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(weth.balanceOf(alice), 0);
-        //     assertEq(weth.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            assertEq(test721_1.ownerOf(1), bob);
+            // Allow the market to escrow after listing
+            assert(
+                weth.balanceOf(alice) == 100
+                    || weth.balanceOf(config.market()) == 100
+            );
+            assertEq(weth.balanceOf(bob), 0);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                new TestItem721[](0)
+            );
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(weth.balanceOf(alice), 0);
+            assertEq(weth.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedWETHWithERC721(BaseMarketConfig config)
@@ -1741,37 +1765,59 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     {
         string memory testLabel = "(benchmark_BuyOfferedWETHWithERC721_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return;
+        // Only Blur works.  Invalid signer error for 0x and the rest aren't
+        // supported. Sender errors for LR and X2Y2.
+        if (
+            _sameName(config.name(), zeroExConfig.name())
+                || _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+        ) {
+            _logNotSupported(config.name(), testLabel);
+            return;
+        }
 
-        // hevm.deal(alice, 100);
-        // hevm.prank(alice);
-        // weth.deposit{ value: 100 }();
-        // test721_1.mint(bob, 1);
-        // try config.getPayload_BuyOfferedWETHWithERC721(
-        //     TestOrderContext(
-        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem20(address(weth), 100),
-        //     standardERC721
-        // ) returns (TestOrderPayload memory payload) {
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(weth.balanceOf(alice), 100);
-        //     assertEq(weth.balanceOf(bob), 0);
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        //     _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        weth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
+        try config.getPayload_BuyOfferedWETHWithERC721(
+            context, TestItem20(address(weth), 100), standardERC721
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(weth.balanceOf(alice), 100);
+            assertEq(weth.balanceOf(bob), 0);
 
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(weth.balanceOf(alice), 0);
-        //     assertEq(weth.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                new TestItem721[](0)
+            );
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(weth.balanceOf(alice), 0);
+            assertEq(weth.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC20WithERC1155_ListOnChain(
