@@ -65,6 +65,14 @@ struct Approval {
     ItemType itemType;
 }
 
+struct CastOfCharacters {
+    address fulfiller;
+    address seaport;
+    address flashloanOfferer;
+    address adapter;
+    address sidecar;
+}
+
 /**
  * @title AdapterHelperLib
  * @author snotrocket.eth
@@ -211,19 +219,6 @@ library AdapterHelperLib {
         }
     }
 
-    struct AdapterWrapperInfra {
-        ConsiderationItem[] considerationArray;
-        OrderParameters orderParameters;
-        AdvancedOrder order;
-        AdvancedOrder[] orders;
-        Flashloan flashloan;
-        Flashloan[] flashloans;
-        Call call;
-        Call[] calls;
-        bytes extraData;
-        Fulfillment[] fulfillments;
-    }
-
     // TODO: think about whether the sidecar should be transferring these
     // directly or waiting for Seaport to do its optimized executions.
 
@@ -239,6 +234,7 @@ library AdapterHelperLib {
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](1);
         erc721s[0] = nft;
+
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
             fulfiller,
@@ -287,6 +283,7 @@ library AdapterHelperLib {
     ) public view returns (TestCallParameters memory) {
         TestItem1155[] memory erc1155s = new TestItem1155[](1);
         erc1155s[0] = nft;
+
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
             fulfiller,
@@ -340,13 +337,76 @@ library AdapterHelperLib {
         view
         returns (TestCallParameters memory wrappedTestCallParameter)
     {
+        TestCallParameters[] memory testCallParametersArray =
+            new TestCallParameters[](1);
+        testCallParametersArray[0] = testCallParameters;
+        CastOfCharacters memory castOfCharacters = CastOfCharacters(
+            fulfiller, seaport, flashloanOfferer, adapter, sidecar
+        );
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParametersArray,
+            castOfCharacters,
+            flashloans,
+            erc721s,
+            erc1155s
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters[] memory testCallParametersArray,
+        address fulfiller,
+        address seaport,
+        address flashloanOfferer,
+        address adapter,
+        address sidecar,
+        Flashloan[] memory flashloans,
+        TestItem721[] memory erc721s,
+        TestItem1155[] memory erc1155s
+    )
+        public
+        view
+        returns (TestCallParameters memory wrappedTestCallParameter)
+    {
+        CastOfCharacters memory castOfCharacters = CastOfCharacters(
+            fulfiller, seaport, flashloanOfferer, adapter, sidecar
+        );
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParametersArray,
+            castOfCharacters,
+            flashloans,
+            erc721s,
+            erc1155s
+        );
+    }
+
+    struct AdapterWrapperInfra {
+        ConsiderationItem[] considerationArray;
+        OrderParameters orderParameters;
+        AdvancedOrder order;
+        AdvancedOrder[] orders;
+        Flashloan flashloan;
+        Flashloan[] flashloans;
+        Call call;
+        Call[] calls;
+        bytes extraData;
+        Fulfillment[] fulfillments;
+        uint256 value;
         uint256 totalFlashloanValueRequested;
+    }
 
-        {
-            wrappedTestCallParameter.target = seaport;
-            wrappedTestCallParameter.value = testCallParameters.value;
-        }
-
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters[] memory testCallParametersArray,
+        CastOfCharacters memory castOfCharacters,
+        Flashloan[] memory flashloans,
+        TestItem721[] memory erc721s,
+        TestItem1155[] memory erc1155s
+    )
+        public
+        view
+        returns (TestCallParameters memory wrappedTestCallParameter)
+    {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra(
             new ConsiderationItem[](1),
             OrderParametersLib.empty(),
@@ -357,8 +417,19 @@ library AdapterHelperLib {
             Call(address(0), false, 0, bytes("")),
             new Call[](1),
             new bytes(0),
-            new Fulfillment[](3)
+            new Fulfillment[](3),
+            0,
+            0
         );
+
+        {
+            for (uint256 i; i < testCallParametersArray.length; ++i) {
+                infra.value += testCallParametersArray[i].value;
+            }
+
+            wrappedTestCallParameter.target = castOfCharacters.seaport;
+            wrappedTestCallParameter.value = infra.value;
+        }
 
         {
             // Create the adapter order.
@@ -379,7 +450,9 @@ library AdapterHelperLib {
                 ).withStartTime(block.timestamp).withEndTime(
                     block.timestamp + 100
                 ).withConsideration(new ConsiderationItem[](0))
-                    .withTotalOriginalConsiderationItems(0).withOfferer(adapter);
+                    .withTotalOriginalConsiderationItems(0).withOfferer(
+                    castOfCharacters.adapter
+                );
                 infra.orderParameters =
                     infra.orderParameters.withSalt(gasleft());
                 infra.orderParameters =
@@ -394,26 +467,31 @@ library AdapterHelperLib {
 
             // One call to execute the base call (the original
             // testCallParameters), plus one call for each NFT.
-            infra.calls = new Call[](1 + erc721s.length + erc1155s.length);
+            infra.calls =
+            new Call[](testCallParametersArray.length + erc721s.length + erc1155s.length);
 
             {
-                infra.call = Call(
-                    address(testCallParameters.target),
-                    false,
-                    testCallParameters.value,
-                    testCallParameters.data
-                );
-
-                infra.calls[0] = infra.call;
+                for (uint256 i = 0; i < testCallParametersArray.length; i++) {
+                    infra.calls[i] = Call(
+                        address(testCallParametersArray[i].target),
+                        false,
+                        testCallParametersArray[i].value,
+                        testCallParametersArray[i].data
+                    );
+                }
 
                 Call[] memory nftCalls = _createNftTransferCalls(
-                    address(sidecar), address(fulfiller), erc721s, erc1155s
+                    address(castOfCharacters.sidecar),
+                    address(castOfCharacters.fulfiller),
+                    erc721s,
+                    erc1155s
                 );
 
                 // Populate the calls array with the NFT transfer calls from the
                 // helper.
                 for (uint256 i = 0; i < nftCalls.length; i++) {
-                    infra.calls[i + 1] = nftCalls[i];
+                    infra.calls[testCallParametersArray.length + i] =
+                        nftCalls[i];
                 }
             }
 
@@ -434,7 +512,8 @@ library AdapterHelperLib {
 
             {
                 for (uint256 i = 0; i < flashloans.length; i++) {
-                    totalFlashloanValueRequested += infra.flashloans[i].amount;
+                    infra.totalFlashloanValueRequested +=
+                        infra.flashloans[i].amount;
                 }
 
                 // Come back and think about the case where multiple flashloans
@@ -443,18 +522,18 @@ library AdapterHelperLib {
                     .withItemType(infra.flashloans[0].itemType).withToken(
                     address(0)
                 ).withIdentifierOrCriteria(0).withStartAmount(
-                    totalFlashloanValueRequested
-                ).withEndAmount(totalFlashloanValueRequested).withRecipient(
-                    address(0)
-                );
+                    infra.totalFlashloanValueRequested
+                ).withEndAmount(infra.totalFlashloanValueRequested)
+                    .withRecipient(address(0));
             }
 
             {
                 infra.orderParameters = OrderParametersLib.empty();
                 infra.orderParameters =
                     infra.orderParameters.withSalt(gasleft());
-                infra.orderParameters =
-                    infra.orderParameters.withOfferer(address(fulfiller));
+                infra.orderParameters = infra.orderParameters.withOfferer(
+                    address(castOfCharacters.fulfiller)
+                );
                 infra.orderParameters = infra.orderParameters.withOrderType(
                     OrderType.FULL_OPEN
                 ).withStartTime(block.timestamp);
@@ -462,8 +541,9 @@ library AdapterHelperLib {
                     infra.orderParameters.withEndTime(block.timestamp + 100);
                 infra.orderParameters =
                     infra.orderParameters.withTotalOriginalConsiderationItems(0);
-                infra.orderParameters =
-                    infra.orderParameters.withOfferer(flashloanOfferer);
+                infra.orderParameters = infra.orderParameters.withOfferer(
+                    castOfCharacters.flashloanOfferer
+                );
                 infra.orderParameters =
                     infra.orderParameters.withOrderType(OrderType.CONTRACT);
                 infra.orderParameters =
@@ -478,8 +558,9 @@ library AdapterHelperLib {
             }
 
             {
-                infra.extraData =
-                    createFlashloanContext(address(fulfiller), flashloans);
+                infra.extraData = createFlashloanContext(
+                    address(castOfCharacters.fulfiller), flashloans
+                );
 
                 // Add it all to the order.
                 infra.order.withExtraData(infra.extraData);
@@ -496,15 +577,15 @@ library AdapterHelperLib {
                     offerItems[0] = OfferItemLib.empty().withItemType(
                         infra.flashloans[0].itemType
                     ).withToken(address(0)).withIdentifierOrCriteria(0)
-                        .withStartAmount(totalFlashloanValueRequested).withEndAmount(
-                        totalFlashloanValueRequested
-                    );
+                        .withStartAmount(infra.totalFlashloanValueRequested)
+                        .withEndAmount(infra.totalFlashloanValueRequested);
 
                     infra.orderParameters = OrderParametersLib.empty();
                     infra.orderParameters =
                         infra.orderParameters.withSalt(gasleft());
-                    infra.orderParameters =
-                        infra.orderParameters.withOfferer(address(fulfiller));
+                    infra.orderParameters = infra.orderParameters.withOfferer(
+                        address(castOfCharacters.fulfiller)
+                    );
                     infra.orderParameters =
                         infra.orderParameters.withOrderType(OrderType.FULL_OPEN);
                     infra.orderParameters =

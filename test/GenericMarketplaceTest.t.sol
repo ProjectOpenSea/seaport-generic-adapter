@@ -12,6 +12,7 @@ import { SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 import {
     AdapterHelperLib,
     Approval,
+    CastOfCharacters,
     Flashloan
 } from "../src/lib/AdapterHelperLib.sol";
 
@@ -104,21 +105,15 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     // require addressing the taker issue below or else moving the skipping
     // logic around a bit.
 
-    // TODO: think about globally or at least in some cases changing the payload
-    // to make the taker the sidecar to get around the taker == msg.sender
-    // requirements.
-
-    // TODO: set up the no-flashloan versions of all these. Should be possible
-    // to just use the native tokens sent by the fulfiller.
-
     // TODO: after establishing marketplace coverage, think about doing
     // more permutations with flashloans in general
 
     // TODO: after all that, start working on fulfilling multiple orders in a
     // single transaction.
 
-    // Maybe eventually useful when it's time for combining orders from multiple
-    // marketplaces.
+    // Seaport doesn't get tested directly, since there's no need to route
+    // through the adapter for native Seaport orders. Also it's impossible bc
+    // of the prohibition on reentrant calls.
     // function testSeaportOnePointFour() external {
     //     benchmarkMarket(seaportOnePointFourConfig);
     // }
@@ -147,12 +142,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         benchmarkMarket(blurConfig);
     }
 
-    function benchmarkMarket(BaseMarketConfig config) public {
-        // This is kind of a weird spot for this setup, but the benchmarking
-        // repo that this is cribbed from relies on recording logs to wipe them
-        // out between function calls. So it's important to be careful where
-        // you record logs, because it seems that they collide.
-
+    function _doSetup() internal {
         testFlashloanOfferer = FlashloanOffererInterface(
             deployCode(
                 "out/FlashloanOfferer.sol/FlashloanOfferer.json",
@@ -247,6 +237,192 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         );
 
         vm.deal(address(flashloanOfferer), type(uint128).max);
+    }
+
+    function _prepareMarketplaces(BaseMarketConfig[] memory configs) public {
+        for (uint256 i; i < configs.length; i++) {
+            beforeAllPrepareMarketplaceTest(configs[i]);
+        }
+    }
+
+    // The idea here is to fulfill a bunch of orders individually and add up all
+    // the gas costs. This is like someone just clicking around on these
+    // marketplaces fulfilling orders directly.
+    function testFulfillMixedOrdersIndividually() external {
+        BaseMarketConfig[] memory configs = new BaseMarketConfig[](4);
+        configs[0] = foundationConfig;
+        configs[1] = zeroExConfig;
+        configs[2] = blurConfig;
+        configs[3] = seaportOnePointFourConfig;
+        benchmarkMixedIndividually(configs);
+    }
+
+    function benchmarkMixedIndividually(BaseMarketConfig[] memory configs)
+        public
+    {
+        _doSetup();
+        _prepareMarketplaces(configs);
+
+        uint256 firstOrderGasUsed =
+            benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(configs[0]);
+        uint256 secondOrderGasUsed =
+            benchmark_BuyOfferedERC1155WithEther_ListOnChain(configs[1]);
+        uint256 thirdOrderGasUsed =
+            benchmark_BuyOfferedWETHWithERC721(configs[2]);
+        uint256 fourthOrderGasUsed =
+            benchmark_BuyOfferedERC1155WithERC20(configs[3]);
+
+        uint256 totalGasUsed = firstOrderGasUsed + secondOrderGasUsed
+            + thirdOrderGasUsed + fourthOrderGasUsed;
+
+        emit log_named_uint(
+            "Total gas for fulfilling orders individually", totalGasUsed
+        );
+    }
+
+    function testFulfillMixedOrdersIndividuallyThroughAdapter() external {
+        BaseMarketConfig[] memory configs = new BaseMarketConfig[](4);
+        configs[0] = foundationConfig;
+        configs[1] = zeroExConfig;
+        configs[2] = blurConfig;
+        configs[3] = seaportOnePointFourConfig;
+        benchmarkMixedIndividuallyThroughAdapter(configs);
+    }
+
+    function benchmarkMixedIndividuallyThroughAdapter(
+        BaseMarketConfig[] memory configs
+    ) public {
+        _doSetup();
+        _prepareMarketplaces(configs);
+
+        uint256 firstOrderGasUsed =
+        benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(configs[0]);
+        uint256 secondOrderGasUsed =
+            benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(configs[1]);
+        uint256 thirdOrderGasUsed =
+            benchmark_BuyOfferedWETHWithERC721_Adapter(configs[2]);
+        uint256 fourthOrderGasUsed =
+            benchmark_BuyOfferedERC1155WithERC20(configs[3]);
+
+        uint256 totalGasUsed = firstOrderGasUsed + secondOrderGasUsed
+            + thirdOrderGasUsed + fourthOrderGasUsed;
+
+        emit log_named_uint(
+            "Total gas for fulfilling orders individually with adapter",
+            totalGasUsed
+        );
+    }
+
+    function benchmarkMixedAggregatedThroughSeaport(
+        BaseMarketConfig[] memory configs
+    ) public {
+        _doSetup();
+        _prepareMarketplaces(configs);
+
+        // Set up the orders. The Seaport order should be passed in normally,
+        // and the rest will have to be put together in a big Call array.
+
+        string memory testLabel = "Placeholder";
+
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        TestCallParameters[] memory executionPayloads =
+            new TestCallParameters[](3);
+
+        test721_1.mint(alice, 1);
+        try configs[0].getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
+            context,
+            standardERC721,
+            500, // increased so that the fee recipient recieves 1%
+            feeReciever1,
+            5
+        ) returns (TestOrderPayload memory payload) {
+            // Fire off the actual prep call to ready the order.
+            _benchmarkCallWithParams(
+                configs[0].name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
+
+            // Allow the market to escrow after listing
+            assert(
+                test721_1.ownerOf(1) == alice
+                    || test721_1.ownerOf(1) == configs[0].market()
+            );
+            assertEq(feeReciever1.balance, 0);
+
+            executionPayloads[0] = payload.executeOrder;
+
+            // TODO: remember to move these down below to make sure I'm checking.
+            // assertEq(test721_1.ownerOf(1), bob);
+            // assertEq(feeReciever1.balance, 5);
+        } catch {
+            _logNotSupported(configs[0].name(), testLabel);
+        }
+
+        test1155_1.mint(alice, 1, 1);
+
+        TestItem1155 memory item = TestItem1155(address(test1155_1), 1, 1);
+
+        try configs[1].getPayload_BuyOfferedERC1155WithEther(context, item, 100)
+        returns (TestOrderPayload memory payload) {
+            _benchmarkCallWithParams(
+                configs[1].name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
+
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(test1155_1.balanceOf(bob, 1), 0);
+
+            executionPayloads[1] = payload.executeOrder;
+        } catch {
+            _logNotSupported(configs[1].name(), testLabel);
+        }
+
+        context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        weth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
+        try configs[2].getPayload_BuyOfferedWETHWithERC721(
+            context, TestItem20(address(weth), 100), standardERC721
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(weth.balanceOf(alice), 100);
+            assertEq(weth.balanceOf(bob), 0);
+
+            executionPayloads[2] = payload.executeOrder;
+        } catch {
+            _logNotSupported(configs[2].name(), testLabel);
+        }
+
+        // Here, set up the "prime" seaport order.
+
+        // TODO: handle flashloans
+        // TODO: verify token balances
+        // TODO: rework the helper function to take an arbitrary number of calls
+    }
+
+    // TODO: GO back and make sure the gas calculations are correct.
+
+    function benchmarkMarket(BaseMarketConfig config) public {
+        // This is kind of a weird spot for this setup, but the benchmarking
+        // repo that this is cribbed from relies on recording logs to wipe them
+        // out between function calls. So it's important to be careful where
+        // you record logs, because it seems that they collide.
+        _doSetup();
 
         beforeAllPrepareMarketplaceTest(config);
 
@@ -386,7 +562,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEther_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEther_ListOnChain)";
         test721_1.mint(alice, 1);
@@ -397,7 +573,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             standardERC721,
             100
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -412,7 +588,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                     || test721_1.ownerOf(1) == config.market()
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -429,7 +605,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEther_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
@@ -446,13 +622,13 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -489,7 +665,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 standardERC721
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -507,6 +683,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithEther)";
         test721_1.mint(alice, 1);
@@ -519,7 +696,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
                 true,
@@ -536,7 +713,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEther_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEther_Adapter)";
         test721_1.mint(alice, 1);
@@ -554,7 +731,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
@@ -584,7 +761,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 standardERC721
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 true,
@@ -601,7 +778,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithEther_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithEther_ListOnChain)";
         test1155_1.mint(alice, 1, 1);
@@ -612,7 +789,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             TestItem1155(address(test1155_1), 1, 1),
             100
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -624,7 +801,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -642,7 +819,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter)";
         test1155_1.mint(alice, 1, 1);
@@ -655,7 +832,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         try config.getPayload_BuyOfferedERC1155WithEther(context, item, 100)
         returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -689,7 +866,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 item
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -708,6 +885,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC1155WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC1155WithEther)";
         test1155_1.mint(alice, 1, 1);
@@ -720,7 +898,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         ) returns (TestOrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
                 true,
@@ -737,7 +915,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithEther_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithEther_Adapter)";
         test1155_1.mint(alice, 1, 1);
@@ -754,7 +932,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), x2y2Config.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedERC1155WithEther(context, item, 100)
@@ -783,7 +961,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 item
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 true,
@@ -800,7 +978,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC20_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC20_ListOnChain)";
         test721_1.mint(alice, 1);
@@ -812,7 +990,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             standardERC721,
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -829,7 +1007,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -848,7 +1026,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC20_ListOnChain_Adapter)";
 
@@ -865,7 +1043,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -888,7 +1066,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             standardERC721,
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -917,7 +1095,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -937,6 +1115,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithERC20(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithERC20)";
         test721_1.mint(alice, 1);
@@ -952,7 +1131,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
                 true,
@@ -971,7 +1150,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC20_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC20_Adapter)";
 
@@ -983,7 +1162,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -1015,7 +1194,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 true,
@@ -1034,7 +1213,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithWETH_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithWETH_ListOnChain)";
         test721_1.mint(alice, 1);
@@ -1048,7 +1227,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             standardERC721,
             TestItem20(address(weth), 100)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1065,7 +1244,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -1085,6 +1264,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithWETH_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithWETH_Adapter)";
 
@@ -1098,7 +1278,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         test721_1.mint(alice, 1);
@@ -1137,7 +1317,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
                 true,
@@ -1156,7 +1336,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithWETH_ListOnChain_Adapter)";
 
@@ -1171,7 +1351,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), zeroExConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         test721_1.mint(alice, 1);
@@ -1186,7 +1366,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, TestItem20(address(weth), 100)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1215,7 +1395,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -1235,6 +1415,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithWETH(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithWETH)";
         test721_1.mint(alice, 1);
@@ -1253,7 +1434,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
                 true,
@@ -1272,7 +1453,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC20_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_ListOnChain)";
         test1155_1.mint(alice, 1, 1);
@@ -1284,7 +1465,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             TestItem1155(address(test1155_1), 1, 1),
             TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1297,7 +1478,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -1316,12 +1497,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // test1155_1.mint(alice, 1, 1);
         // token1.mint(bob, 100);
@@ -1332,7 +1513,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     TestItem1155(address(test1155_1), 1, 1),
         //     TestItem20(address(token1), 100)
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
@@ -1343,7 +1524,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(token1.balanceOf(alice), 0);
         //     assertEq(token1.balanceOf(bob), 100);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -1361,6 +1542,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC1155WithERC20(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC1155WithERC20)";
         test1155_1.mint(alice, 1, 1);
@@ -1376,7 +1558,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -1395,12 +1577,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC20_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // test1155_1.mint(alice, 1, 1);
         // token1.mint(bob, 100);
@@ -1415,7 +1597,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(token1.balanceOf(alice), 0);
         //     assertEq(token1.balanceOf(bob), 100);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
@@ -1432,7 +1614,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC721_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_ListOnChain)";
         token1.mint(alice, 100);
@@ -1444,7 +1626,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             TestItem20(address(token1), 100),
             standardERC721
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1461,7 +1643,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -1480,12 +1662,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // token1.mint(alice, 100);
         // test721_1.mint(bob, 1);
@@ -1496,7 +1678,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     TestItem20(address(token1), 100),
         //     standardERC721
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
@@ -1511,7 +1693,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     );
         //     assertEq(token1.balanceOf(bob), 0);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -1529,6 +1711,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC20WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC20WithERC721)";
         token1.mint(alice, 100);
@@ -1544,7 +1727,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 100);
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -1563,12 +1746,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC721_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // token1.mint(alice, 100);
         // test721_1.mint(bob, 1);
@@ -1583,7 +1766,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(token1.balanceOf(alice), 100);
         //     assertEq(token1.balanceOf(bob), 0);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
@@ -1600,7 +1783,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedWETHWithERC721_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedWETHWithERC721_ListOnChain)";
         hevm.deal(alice, 100);
@@ -1614,7 +1797,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             TestItem20(address(weth), 100),
             standardERC721
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1631,7 +1814,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(weth.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -1650,7 +1833,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedWETHWithERC721_ListOnChain_Adapter)";
 
@@ -1661,7 +1844,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), x2y2Config.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -1676,7 +1859,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, TestItem20(address(weth), 100), standardERC721
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1705,7 +1888,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -1725,6 +1908,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedWETHWithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedWETHWithERC721)";
         hevm.deal(alice, 100);
@@ -1742,7 +1926,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -1762,6 +1946,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedWETHWithERC721_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedWETHWithERC721_Adapter)";
 
@@ -1773,7 +1958,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), x2y2Config.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -1803,7 +1988,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
                 true,
@@ -1822,7 +2007,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC1155_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_ListOnChain)";
         TestOrderContext memory context = TestOrderContext(
@@ -1835,7 +2020,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             TestItem20(address(token1), 100),
             TestItem1155(address(test1155_1), 1, 1)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -1848,7 +2033,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 100);
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -1867,12 +2052,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // TestOrderContext memory context = TestOrderContext(
         //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -1884,7 +2069,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     TestItem20(address(token1), 100),
         //     TestItem1155(address(test1155_1), 1, 1)
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
@@ -1895,7 +2080,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(token1.balanceOf(alice), 100);
         //     assertEq(token1.balanceOf(bob), 0);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -1913,6 +2098,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC20WithERC1155(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC20WithERC1155)";
         TestOrderContext memory context = TestOrderContext(
@@ -1929,7 +2115,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(token1.balanceOf(alice), 100);
             assertEq(token1.balanceOf(bob), 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -1948,12 +2134,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC20WithERC1155_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // TestOrderContext memory context = TestOrderContext(
         //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -1969,7 +2155,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(token1.balanceOf(alice), 100);
         //     assertEq(token1.balanceOf(bob), 0);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
@@ -1986,7 +2172,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC1155_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_ListOnChain)";
         TestOrderContext memory context = TestOrderContext(
@@ -1997,7 +2183,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, TestItem1155(address(test1155_1), 1, 1)
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2009,7 +2195,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test1155_1.balanceOf(bob, 1), 1);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -2027,12 +2213,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // TestOrderContext memory context = TestOrderContext(
         //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -2044,7 +2230,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     standardERC721,
         //     TestItem1155(address(test1155_1), 1, 1)
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
@@ -2054,7 +2240,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(test721_1.ownerOf(1), alice);
         //     assertEq(test1155_1.balanceOf(bob, 1), 1);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -2071,6 +2257,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithERC1155(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithERC1155)";
         TestOrderContext memory context = TestOrderContext(
@@ -2084,7 +2271,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test1155_1.balanceOf(bob, 1), 1);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -2102,12 +2289,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithERC1155_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // TestOrderContext memory context = TestOrderContext(
         //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -2122,7 +2309,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(test721_1.ownerOf(1), alice);
         //     assertEq(test1155_1.balanceOf(bob, 1), 1);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
         //         bob,
@@ -2138,7 +2325,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC721_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_ListOnChain)";
         TestOrderContext memory context = TestOrderContext(
@@ -2149,7 +2336,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, TestItem1155(address(test1155_1), 1, 1), standardERC721
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2161,7 +2348,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -2179,12 +2366,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // TestOrderContext memory context = TestOrderContext(
         //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
@@ -2196,7 +2383,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     TestItem1155(address(test1155_1), 1, 1),
         //     standardERC721
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
@@ -2206,7 +2393,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(test721_1.ownerOf(1), bob);
         //     assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -2223,6 +2410,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC1155WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC1155WithERC721)";
         TestOrderContext memory context = TestOrderContext(
@@ -2236,7 +2424,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -2254,57 +2442,57 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC1155WithERC721_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_Adapter)";
 
-        // _logNotSupported(config.name(), testLabel);
-        // return;
+        _logNotSupported(config.name(), testLabel);
+        return 0;
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
+        // TestOrderContext memory context = TestOrderContext(
+        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // );
+        // test1155_1.mint(alice, 1, 1);
+        // test721_1.mint(bob, 1);
 
-        TestItem1155 memory item1155 = TestItem1155(address(test1155_1), 1, 1);
-        try config.getPayload_BuyOfferedERC1155WithERC721(
-            context, item1155, standardERC721
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
+        // TestItem1155 memory item1155 = TestItem1155(address(test1155_1), 1, 1);
+        // try config.getPayload_BuyOfferedERC1155WithERC721(
+        //     context, item1155, standardERC721
+        // ) returns (TestOrderPayload memory payload) {
+        //     assertEq(test721_1.ownerOf(1), bob);
+        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            payload.executeOrder = AdapterHelperLib
-                .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
-                new Flashloan[](0),
-                standardERC721
-            );
+        //     payload.executeOrder = AdapterHelperLib
+        //         .createSeaportWrappedTestCallParameters(
+        //         payload.executeOrder,
+        //         address(context.fulfiller),
+        //         address(seaport),
+        //         address(context.flashloanOfferer),
+        //         address(context.adapter),
+        //         address(context.sidecar),
+        //         new Flashloan[](0),
+        //         standardERC721
+        //     );
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+        //     gasUsed = _benchmarkCallWithParams(
+        //         config.name(),
+        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+        //         true,
+        //         true,
+        //         bob,
+        //         payload.executeOrder
+        //     );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test1155_1.balanceOf(bob, 1), 1);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
+        //     assertEq(test721_1.ownerOf(1), alice);
+        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
+        // } catch {
+        //     _logNotSupported(config.name(), testLabel);
+        // }
     }
 
     function benchmark_BuyOfferedERC721WithEtherFee_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFee_ListOnChain)";
         test721_1.mint(alice, 1);
@@ -2317,7 +2505,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             feeReciever1,
             5
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2333,7 +2521,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(feeReciever1.balance, 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -2351,7 +2539,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFee_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
@@ -2363,7 +2551,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -2377,7 +2565,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             feeReciever1,
             5
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2418,7 +2606,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             // Increase the value to account for the fee.
             payload.executeOrder.value = 505;
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -2437,6 +2625,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyOfferedERC721WithEtherFee(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyOfferedERC721WithEtherFee)";
         test721_1.mint(alice, 1);
@@ -2452,7 +2641,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
                 true,
@@ -2470,7 +2659,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFee_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFee_Adapter)";
         test721_1.mint(alice, 1);
@@ -2486,7 +2675,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
@@ -2517,7 +2706,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 standardERC721
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
                 true,
@@ -2535,7 +2724,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain)";
         test721_1.mint(alice, 1);
@@ -2550,7 +2739,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             feeReciever2,
             5
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2567,7 +2756,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -2586,7 +2775,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
@@ -2600,13 +2789,13 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2644,7 +2833,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 standardERC721
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -2663,7 +2852,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients)";
         test721_1.mint(alice, 1);
@@ -2682,7 +2871,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fullfil /w Sig")),
                 true,
@@ -2701,7 +2890,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithEtherFeeTwoRecipients_Adapter)";
         test721_1.mint(alice, 1);
@@ -2711,7 +2900,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), blurConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -2747,7 +2936,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 standardERC721
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
                 true,
@@ -2766,7 +2955,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEther_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEther_ListOnChain)";
 
@@ -2783,7 +2972,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             nfts,
             100
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2800,7 +2989,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 );
             }
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -2819,7 +3008,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEther_ListOnChain_Adapter)";
 
@@ -2828,7 +3017,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -2843,12 +3032,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
         if (_sameName(config.name(), x2y2Config.name())) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
         returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -2887,7 +3076,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 items
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -2907,6 +3096,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_BuyTenOfferedERC721WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_BuyTenOfferedERC721WithEther)";
 
@@ -2927,7 +3117,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sig")),
                 true,
@@ -2946,18 +3136,18 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEther_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEther_Adapter)";
 
         if (_sameName(config.name(), blurConfig.name())) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         if (_sameName(config.name(), x2y2Config.name())) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext memory context = TestOrderContext(
@@ -3003,7 +3193,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 items
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sig*")),
                 true,
@@ -3022,7 +3212,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders)";
 
@@ -3046,7 +3236,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
                 true,
@@ -3065,7 +3255,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
@@ -3075,7 +3265,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
@@ -3126,7 +3316,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 items
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
                 true,
@@ -3145,7 +3335,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
@@ -3165,7 +3355,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -3176,7 +3366,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
             // @dev checking ownership here (when nfts are escrowed in different contracts) is messy so we skip it for now
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -3195,7 +3385,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
@@ -3205,7 +3395,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
@@ -3224,7 +3414,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, items, ethAmounts
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -3255,7 +3445,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 items
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -3274,7 +3464,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders)";
 
@@ -3299,7 +3489,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
                 true,
@@ -3319,12 +3509,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // token1.mint(bob, 1045);
         // TestOrderContext[] memory contexts = new TestOrderContext[](10);
@@ -3347,7 +3537,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //         assertEq(test721_1.ownerOf(i), alice);
         //     }
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
         //         bob,
@@ -3365,7 +3555,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
@@ -3386,7 +3576,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, address(token1), nfts, erc20Amounts
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -3395,7 +3585,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 payload.submitOrder
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -3414,12 +3604,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // token1.mint(bob, 1045);
         // TestOrderContext[] memory contexts = new TestOrderContext[](10);
@@ -3438,14 +3628,14 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         // try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         //     contexts, address(token1), nfts, erc20Amounts
         // ) returns (TestOrderPayload memory payload) {
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
         //         alice,
         //         payload.submitOrder
         //     );
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -3462,7 +3652,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithWETHDistinctOrders(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithWETHDistinctOrders)";
 
@@ -3489,7 +3679,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
                 true,
@@ -3509,7 +3699,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_Adapter)";
 
@@ -3520,7 +3710,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 || _sameName(config.name(), sudoswapConfig.name())
         ) {
             _logNotSupported(config.name(), testLabel);
-            return;
+            return 0;
         }
 
         hevm.deal(bob, 1045);
@@ -3558,7 +3748,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
                 true,
@@ -3578,7 +3768,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain)";
 
@@ -3601,7 +3791,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, address(weth), nfts, wethAmounts
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -3610,7 +3800,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 payload.submitOrder
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill")),
                 true,
@@ -3629,7 +3819,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) {
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter)";
 
@@ -3652,7 +3842,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, address(weth), nfts, wethAmounts
         ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
                 false,
@@ -3673,7 +3863,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
                 new TestItem721[](0)
             );
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
                 true,
@@ -3693,6 +3883,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_MatchOrders_ABCA(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_MatchOrders_ABCA)";
 
@@ -3724,7 +3915,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test721_1.ownerOf(2), cal);
             assertEq(test721_1.ownerOf(3), bob);
 
-            _benchmarkCallWithParams(
+            gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
                 true,
@@ -3744,11 +3935,12 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
     function benchmark_MatchOrders_ABCA_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
+        returns (uint256 gasUsed)
     {
         string memory testLabel = "(benchmark_MatchOrders_ABCA_Adapter)";
 
         _logNotSupported(config.name(), testLabel);
-        return;
+        return 0;
 
         // test721_1.mint(alice, 1);
         // test721_1.mint(cal, 2);
@@ -3778,7 +3970,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         //     assertEq(test721_1.ownerOf(2), cal);
         //     assertEq(test721_1.ownerOf(3), bob);
 
-        //     _benchmarkCallWithParams(
+        //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
         //         bob,
@@ -3903,7 +4095,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         bool shouldLogGasDelta,
         address sender,
         TestCallParameters memory params
-    ) internal {
+    ) internal returns (uint256 gasUsed) {
         hevm.startPrank(sender);
         uint256 gasDelta;
         bool success;
@@ -3924,7 +4116,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         }
         hevm.stopPrank();
 
-        uint256 gasUsed = gasDelta + _additionalGasFee(params.data);
+        gasUsed = gasDelta + _additionalGasFee(params.data);
 
         if (shouldLog) {
             emit log_named_uint(_formatLog(name, label), gasUsed);
