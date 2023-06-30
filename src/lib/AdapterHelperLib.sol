@@ -396,6 +396,7 @@ library AdapterHelperLib {
         uint256 totalFlashloanValueRequested;
     }
 
+    // TODO: get to the point where this works.
     function createSeaportWrappedTestCallParameters(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
@@ -407,247 +408,37 @@ library AdapterHelperLib {
         view
         returns (TestCallParameters memory wrappedTestCallParameter)
     {
-        AdapterWrapperInfra memory infra = AdapterWrapperInfra(
-            new ConsiderationItem[](1),
-            OrderParametersLib.empty(),
-            AdvancedOrderLib.empty(),
-            new AdvancedOrder[](3),
-            Flashloan(0, ItemType.NATIVE, false, address(0)),
+        AdvancedOrder[] memory orders;
+        Fulfillment[] memory fulfillments;
+        (
+            orders,
+            fulfillments
+        ) = createSeaportWrappedTestCallParametersReturnGranular(
+            testCallParametersArray,
+            castOfCharacters,
             flashloans,
-            Call(address(0), false, 0, bytes("")),
-            new Call[](1),
-            new bytes(0),
-            new Fulfillment[](3),
-            0,
-            0
+            erc721s,
+            erc1155s
         );
-
-        {
-            for (uint256 i; i < testCallParametersArray.length; ++i) {
-                infra.value += testCallParametersArray[i].value;
-            }
-
-            wrappedTestCallParameter.target = castOfCharacters.seaport;
-            wrappedTestCallParameter.value = infra.value;
-        }
-
-        {
-            // Create the adapter order.
-            infra.order =
-                AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
-
-            infra.considerationArray[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.NATIVE).withToken(address(0))
-                .withIdentifierOrCriteria(0).withStartAmount(
-                wrappedTestCallParameter.value
-            ).withEndAmount(wrappedTestCallParameter.value).withRecipient(
-                address(0)
-            );
-
-            {
-                infra.orderParameters = OrderParametersLib.empty().withOrderType(
-                    OrderType.FULL_OPEN
-                ).withStartTime(block.timestamp).withEndTime(
-                    block.timestamp + 100
-                ).withConsideration(new ConsiderationItem[](0))
-                    .withTotalOriginalConsiderationItems(0).withOfferer(
-                    castOfCharacters.adapter
-                );
-                infra.orderParameters =
-                    infra.orderParameters.withSalt(gasleft());
-                infra.orderParameters =
-                    infra.orderParameters.withOrderType(OrderType.CONTRACT);
-                infra.orderParameters = infra.orderParameters.withOffer(
-                    new OfferItem[](0)
-                ).withConsideration(infra.considerationArray)
-                    .withTotalOriginalConsiderationItems(1);
-
-                infra.order = infra.order.withParameters(infra.orderParameters);
-            }
-
-            // One call to execute the base call (the original
-            // testCallParameters), plus one call for each NFT.
-            infra.calls =
-            new Call[](testCallParametersArray.length + erc721s.length + erc1155s.length);
-
-            {
-                for (uint256 i = 0; i < testCallParametersArray.length; i++) {
-                    infra.calls[i] = Call(
-                        address(testCallParametersArray[i].target),
-                        false,
-                        testCallParametersArray[i].value,
-                        testCallParametersArray[i].data
-                    );
-                }
-
-                Call[] memory nftCalls = _createNftTransferCalls(
-                    address(castOfCharacters.sidecar),
-                    address(castOfCharacters.fulfiller),
-                    erc721s,
-                    erc1155s
-                );
-
-                // Populate the calls array with the NFT transfer calls from the
-                // helper.
-                for (uint256 i = 0; i < nftCalls.length; i++) {
-                    infra.calls[testCallParametersArray.length + i] =
-                        nftCalls[i];
-                }
-            }
-
-            {
-                infra.extraData =
-                    createGenericAdapterContext(new Approval[](0), infra.calls);
-            }
-
-            infra.order = infra.order.withExtraData(infra.extraData);
-            infra.orders[1] = infra.order;
-        }
-
-        if (flashloans.length > 0) {
-            {
-                infra.order =
-                    AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
-            }
-
-            {
-                for (uint256 i = 0; i < flashloans.length; i++) {
-                    infra.totalFlashloanValueRequested +=
-                        infra.flashloans[i].amount;
-                }
-
-                // Come back and think about the case where multiple flashloans
-                // of different types are required.
-                infra.considerationArray[0] = ConsiderationItemLib.empty()
-                    .withItemType(infra.flashloans[0].itemType).withToken(
-                    address(0)
-                ).withIdentifierOrCriteria(0).withStartAmount(
-                    infra.totalFlashloanValueRequested
-                ).withEndAmount(infra.totalFlashloanValueRequested)
-                    .withRecipient(address(0));
-            }
-
-            {
-                infra.orderParameters = OrderParametersLib.empty();
-                infra.orderParameters =
-                    infra.orderParameters.withSalt(gasleft());
-                infra.orderParameters = infra.orderParameters.withOfferer(
-                    address(castOfCharacters.fulfiller)
-                );
-                infra.orderParameters = infra.orderParameters.withOrderType(
-                    OrderType.FULL_OPEN
-                ).withStartTime(block.timestamp);
-                infra.orderParameters =
-                    infra.orderParameters.withEndTime(block.timestamp + 100);
-                infra.orderParameters =
-                    infra.orderParameters.withTotalOriginalConsiderationItems(0);
-                infra.orderParameters = infra.orderParameters.withOfferer(
-                    castOfCharacters.flashloanOfferer
-                );
-                infra.orderParameters =
-                    infra.orderParameters.withOrderType(OrderType.CONTRACT);
-                infra.orderParameters =
-                    infra.orderParameters.withOffer(new OfferItem[](0));
-                infra.orderParameters = infra.orderParameters.withConsideration(
-                    infra.considerationArray
-                );
-                infra.orderParameters =
-                    infra.orderParameters.withTotalOriginalConsiderationItems(1);
-
-                infra.order.withParameters(infra.orderParameters);
-            }
-
-            {
-                infra.extraData = createFlashloanContext(
-                    address(castOfCharacters.fulfiller), flashloans
-                );
-
-                // Add it all to the order.
-                infra.order.withExtraData(infra.extraData);
-                infra.orders[0] = infra.order;
-            }
-
-            // Build the mirror order.
-            {
-                infra.order =
-                    AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
-                // Create the parameters for the order.
-                {
-                    OfferItem[] memory offerItems = new OfferItem[](1);
-                    offerItems[0] = OfferItemLib.empty().withItemType(
-                        infra.flashloans[0].itemType
-                    ).withToken(address(0)).withIdentifierOrCriteria(0)
-                        .withStartAmount(infra.totalFlashloanValueRequested)
-                        .withEndAmount(infra.totalFlashloanValueRequested);
-
-                    infra.orderParameters = OrderParametersLib.empty();
-                    infra.orderParameters =
-                        infra.orderParameters.withSalt(gasleft());
-                    infra.orderParameters = infra.orderParameters.withOfferer(
-                        address(castOfCharacters.fulfiller)
-                    );
-                    infra.orderParameters =
-                        infra.orderParameters.withOrderType(OrderType.FULL_OPEN);
-                    infra.orderParameters =
-                        infra.orderParameters.withStartTime(block.timestamp);
-                    infra.orderParameters =
-                        infra.orderParameters.withEndTime(block.timestamp + 100);
-                    infra.orderParameters = infra
-                        .orderParameters
-                        .withConsideration(new ConsiderationItem[](0));
-                    infra.orderParameters = infra
-                        .orderParameters
-                        .withTotalOriginalConsiderationItems(0);
-                    infra.orderParameters =
-                        infra.orderParameters.withOffer(offerItems);
-                    infra.order =
-                        infra.order.withParameters(infra.orderParameters);
-                    infra.orders[2] = infra.order;
-                }
-            }
-
-            // Create the fulfillments.
-            infra.fulfillments = new Fulfillment[](2);
-            {
-                FulfillmentComponent[] memory offerComponentsFlashloan =
-                    new FulfillmentComponent[](1);
-                FulfillmentComponent[] memory considerationComponentsFlashloan =
-                    new FulfillmentComponent[](1);
-                FulfillmentComponent[] memory offerComponentsMirror =
-                    new FulfillmentComponent[](1);
-                FulfillmentComponent[] memory considerationComponentsMirror =
-                    new FulfillmentComponent[](1);
-
-                offerComponentsFlashloan[0] = FulfillmentComponent(0, 0);
-                considerationComponentsFlashloan[0] = FulfillmentComponent(2, 0);
-                offerComponentsMirror[0] = FulfillmentComponent(2, 0);
-                considerationComponentsMirror[0] = FulfillmentComponent(0, 0);
-
-                infra.fulfillments[0] = Fulfillment(
-                    offerComponentsFlashloan, considerationComponentsFlashloan
-                );
-                infra.fulfillments[1] = Fulfillment(
-                    offerComponentsMirror, considerationComponentsMirror
-                );
-            }
-        } else {
-            infra.orders = new AdvancedOrder[](1);
-            infra.orders[0] = infra.order;
-
-            // Create the fulfillments.
-            infra.fulfillments = new Fulfillment[](0);
-        }
 
         wrappedTestCallParameter.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,
-            infra.orders,
+            orders,
             new CriteriaResolver[](0),
-            infra.fulfillments,
+            fulfillments,
             address(0)
         );
+
+        uint256 value;
+
+        for (uint256 i; i < testCallParametersArray.length; ++i) {
+            value += testCallParametersArray[i].value;
+        }
+
+        wrappedTestCallParameter.value = value;
+        wrappedTestCallParameter.target = castOfCharacters.seaport;
     }
 
-    // TODO: refactor
     function createSeaportWrappedTestCallParametersReturnGranular(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
