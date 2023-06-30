@@ -30,6 +30,7 @@ contract FoundationConfig is BaseMarketConfig {
 
     function beforeAllPrepareMarketplace(address, address) external override {
         // ERC-20 n/a but currently required by the test suite
+
         buyerNftApprovalTarget = sellerNftApprovalTarget =
         buyerErc20ApprovalTarget =
             sellerErc20ApprovalTarget = address(foundation);

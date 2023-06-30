@@ -156,6 +156,19 @@ contract BaseMarketplaceTest is DSTestPlus {
         hevm.record();
     }
 
+    /**
+     * @dev reset written token storage slots to 0 and reinitialize
+     *      uint128(MAX_INT) erc20 balances for 3 test accounts and this.
+     */
+    function _resetStorageAndEth(address[] memory markets) internal {
+        _resetTokensStorage();
+        _restoreEthBalances();
+        for (uint256 i = 0; i < markets.length; i++) {
+            _resetMarketStorage(markets[i]);
+        }
+        hevm.record();
+    }
+
     function _restoreEthBalances() internal {
         for (uint256 i = 0; i < accounts.length; i++) {
             hevm.deal(accounts[i], uint128(MAX_INT));

@@ -10,11 +10,28 @@ import {
     TestItem1155,
     TestItem20
 } from "../../../test/utils/Types.sol";
-import "./lib/ConsiderationStructs.sol";
+import "seaport-types/lib/ConsiderationStructs.sol";
 import "./lib/ConsiderationTypeHashes.sol";
 import { ConsiderationInterface as ISeaport } from
-    "./interfaces/ConsiderationInterface.sol";
+    "seaport-types/interfaces/ConsiderationInterface.sol";
 import "forge-std/console2.sol";
+
+// prettier-ignore
+enum BasicOrderRouteType
+// 0: provide Ether (or other native token) to receive offered ERC721 item.
+{
+    ETH_TO_ERC721,
+    // 1: provide Ether (or other native token) to receive offered ERC1155 item.
+    ETH_TO_ERC1155,
+    // 2: provide ERC20 item to receive offered ERC721 item.
+    ERC20_TO_ERC721,
+    // 3: provide ERC20 item to receive offered ERC1155 item.
+    ERC20_TO_ERC1155,
+    // 4: provide ERC721 item to receive offered ERC20 item.
+    ERC721_TO_ERC20,
+    // 5: provide ERC1155 item to receive offered ERC20 item.
+    ERC1155_TO_ERC20
+}
 
 contract SeaportOnePointFourConfig is
     BaseMarketConfig,
@@ -471,6 +488,34 @@ contract SeaportOnePointFourConfig is
         );
     }
 
+    function getComponents_BuyOfferedERC1155WithERC20(
+        address maker,
+        TestItem1155 calldata nft,
+        TestItem20 memory erc20
+    ) public view override returns (BasicOrderParameters memory) {
+        (, BasicOrderParameters memory basicComponents) = buildBasicOrder(
+            BasicOrderRouteType.ERC20_TO_ERC1155,
+            maker,
+            OfferItem(
+                ItemType.ERC1155,
+                nft.token,
+                nft.identifier,
+                nft.amount,
+                nft.amount
+            ),
+            ConsiderationItem(
+                ItemType.ERC20,
+                erc20.token,
+                0,
+                erc20.amount,
+                erc20.amount,
+                payable(maker)
+            )
+        );
+
+        return basicComponents;
+    }
+
     function getPayload_BuyOfferedERC1155WithERC20(
         TestOrderContext calldata context,
         TestItem1155 calldata nft,
@@ -600,6 +645,33 @@ contract SeaportOnePointFourConfig is
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
                 basicComponents
+            )
+        );
+    }
+
+    function getComponents_BuyOfferedERC20WithERC1155(
+        address maker,
+        TestItem20 calldata erc20,
+        TestItem1155 calldata nft
+    )
+        external
+        view
+        override
+        returns (BasicOrderParameters memory basicComponents)
+    {
+        (, basicComponents) = buildBasicOrder(
+            BasicOrderRouteType.ERC1155_TO_ERC20,
+            maker,
+            OfferItem(
+                ItemType.ERC20, erc20.token, 0, erc20.amount, erc20.amount
+            ),
+            ConsiderationItem(
+                ItemType.ERC1155,
+                nft.token,
+                nft.identifier,
+                nft.amount,
+                nft.amount,
+                payable(maker)
             )
         );
     }
@@ -1013,6 +1085,72 @@ contract SeaportOnePointFourConfig is
     }
 
     function getPayload_MatchOrders_ABCA(
+        TestOrderContext[] calldata contexts,
+        TestItem721[] calldata nfts
+    ) external view override returns (TestOrderPayload memory execution) {
+        require(contexts.length == nfts.length, "invalid input");
+
+        Order[] memory orders = new Order[](contexts.length);
+        Fulfillment[] memory fullfillments = new Fulfillment[](nfts.length);
+
+        for (uint256 i = 0; i < nfts.length; i++) {
+            uint256 wrappedIndex = i + 1 == nfts.length ? 0 : i + 1; // wrap around back to 0
+            {
+                OfferItem[] memory offerItems = new OfferItem[](1);
+                offerItems[0] = OfferItem(
+                    ItemType.ERC721, nfts[i].token, nfts[i].identifier, 1, 1
+                );
+
+                ConsiderationItem[] memory considerationItems =
+                    new ConsiderationItem[](1);
+                considerationItems[0] = ConsiderationItem(
+                    ItemType.ERC721,
+                    nfts[wrappedIndex].token,
+                    nfts[wrappedIndex].identifier,
+                    1,
+                    1,
+                    payable(contexts[i].offerer)
+                );
+                orders[i] = buildOrder(
+                    contexts[i].offerer, offerItems, considerationItems
+                );
+            }
+            // Set fulfillment
+            {
+                FulfillmentComponent memory nftConsiderationComponent =
+                    FulfillmentComponent(i, 0);
+
+                FulfillmentComponent memory nftOfferComponent =
+                    FulfillmentComponent(wrappedIndex, 0);
+
+                FulfillmentComponent[] memory nftOfferComponents =
+                    new FulfillmentComponent[](1);
+                nftOfferComponents[0] = nftOfferComponent;
+
+                FulfillmentComponent[] memory nftConsiderationComponents =
+                new FulfillmentComponent[](
+                        1
+                    );
+                nftConsiderationComponents[0] = nftConsiderationComponent;
+                fullfillments[i] =
+                    Fulfillment(nftOfferComponents, nftConsiderationComponents);
+            }
+        }
+
+        execution.executeOrder = TestCallParameters(
+            address(seaport),
+            0,
+            abi.encodeWithSelector(
+                ISeaport.matchOrders.selector, orders, fullfillments
+            )
+        );
+    }
+
+    // This should take an arbitrary number of "prime" seaport orders. Then it
+    // should also take in the relevant data to add on flashloans if necessary,
+    // their corresponding mirror orders, and the adapter order to execute
+    // the aggregated orders from other marketplaces.
+    function getPayload_MatchOrders_Aggregate(
         TestOrderContext[] calldata contexts,
         TestItem721[] calldata nfts
     ) external view override returns (TestOrderPayload memory execution) {

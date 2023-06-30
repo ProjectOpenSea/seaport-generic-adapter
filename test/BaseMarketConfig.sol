@@ -25,6 +25,9 @@ import { GenericAdapterInterface } from
 import { GenericAdapterSidecarInterface } from
     "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
+import { BasicOrderParameters } from
+    "seaport-types/lib/ConsiderationStructs.sol";
+
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
     GenericAdapterInterface testAdapter;
@@ -390,6 +393,29 @@ abstract contract BaseMarketConfig {
         TestOrderContext[] calldata,
         TestItem721[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_MatchOrders_Aggregate(
+        TestOrderContext[] calldata,
+        TestItem721[] calldata
+    ) external view virtual returns (TestOrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getComponents_BuyOfferedERC1155WithERC20(
+        address,
+        TestItem1155 calldata,
+        TestItem20 memory
+    ) public view virtual returns (BasicOrderParameters memory) {
+        _notImplemented();
+    }
+
+    function getComponents_BuyOfferedERC20WithERC1155(
+        address,
+        TestItem20 calldata,
+        TestItem1155 calldata
+    ) external view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
     }
 

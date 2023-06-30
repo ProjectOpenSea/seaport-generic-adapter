@@ -7,7 +7,20 @@ import { Vm } from "forge-std/Vm.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
-import { SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
+import {
+    AdvancedOrder,
+    BasicOrderParameters,
+    ConsiderationItem,
+    CriteriaResolver,
+    Fulfillment,
+    FulfillmentComponent,
+    OfferItem,
+    OrderComponents,
+    OrderParameters,
+    SpentItem
+} from "seaport-types/lib/ConsiderationStructs.sol";
+
+import { OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {
     AdapterHelperLib,
@@ -59,11 +72,23 @@ import "./utils/BaseMarketplaceTest.sol";
 
 import "forge-std/console.sol";
 
+import { ConsiderationTypeHashes } from
+    "../src/marketplaces/seaport-1.4/lib/ConsiderationTypeHashes.sol";
+
+import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
+
 address constant VM_ADDRESS =
     address(uint160(uint256(keccak256("hevm cheat code"))));
 Vm constant vm = Vm(VM_ADDRESS);
 
-contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
+contract GenericMarketplaceTest is
+    BaseMarketplaceTest,
+    StdCheats,
+    ConsiderationTypeHashes
+{
+    using OrderParametersLib for OrderParameters;
+    using OrderParametersLib for OrderParameters[];
+
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
     BaseMarketConfig looksRareConfig;
@@ -268,7 +293,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         uint256 secondOrderGasUsed =
             benchmark_BuyOfferedERC1155WithEther_ListOnChain(configs[1]);
         uint256 thirdOrderGasUsed =
-            benchmark_BuyOfferedWETHWithERC721(configs[2]);
+            benchmark_BuyOfferedERC721WithWETH(configs[2]);
         uint256 fourthOrderGasUsed =
             benchmark_BuyOfferedERC1155WithERC20(configs[3]);
 
@@ -300,7 +325,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         uint256 secondOrderGasUsed =
             benchmark_BuyOfferedERC1155WithEther_ListOnChain_Adapter(configs[1]);
         uint256 thirdOrderGasUsed =
-            benchmark_BuyOfferedWETHWithERC721_Adapter(configs[2]);
+            benchmark_BuyOfferedERC721WithWETH_Adapter(configs[2]);
         uint256 fourthOrderGasUsed =
             benchmark_BuyOfferedERC1155WithERC20(configs[3]);
 
@@ -313,27 +338,69 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         );
     }
 
-    function benchmarkMixedAggregatedThroughSeaport(
-        BaseMarketConfig[] memory configs
-    ) public {
+    function testMixedAggregatedThroughSeaport() external {
+        BaseMarketConfig[] memory configs = new BaseMarketConfig[](4);
+        configs[0] = foundationConfig;
+        configs[1] = zeroExConfig;
+        configs[2] = blurConfig;
+        configs[3] = seaportOnePointFourConfig;
+
         _doSetup();
         _prepareMarketplaces(configs);
+
+        uint256 gasUsed = benchmarkMixedAggregatedThroughSeaport(configs);
+
+        emit log_named_uint(
+            "Total gas for fulfilling orders aggregated through Seaport",
+            gasUsed
+        );
+    }
+
+    struct BenchmarkAggregatedInfra {
+        string testLabel;
+        TestOrderContext context;
+        TestCallParameters[] executionPayloads;
+        AdvancedOrder[] adapterOrders;
+        Fulfillment[] adapterFulfillments;
+        CastOfCharacters castOfCharacters;
+        Flashloan[] flashloans;
+        TestItem721[] erc721s;
+        TestItem1155[] erc1155s;
+        TestItem1155 item1155;
+        AdvancedOrder[] finalOrders;
+        Fulfillment[] finalFulfillments;
+    }
+
+    function benchmarkMixedAggregatedThroughSeaport(
+        BaseMarketConfig[] memory configs
+    ) public prepareAggregationTest(configs) returns (uint256) {
+        BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra(
+            "Mixed aggregated through Seaport",
+            TestOrderContext(
+                true, true, alice, bob, flashloanOfferer, adapter, sidecar
+            ),
+            new TestCallParameters[](3),
+            new AdvancedOrder[](3),
+            new Fulfillment[](2),
+            CastOfCharacters(
+                bob, address(seaport), flashloanOfferer, adapter, sidecar
+            ),
+            new Flashloan[](1),
+            new TestItem721[](1),
+            new TestItem1155[](2),
+            TestItem1155(address(test1155_1), 1, 1),
+            new AdvancedOrder[](5),
+            new Fulfillment[](4)
+        );
 
         // Set up the orders. The Seaport order should be passed in normally,
         // and the rest will have to be put together in a big Call array.
 
-        string memory testLabel = "Placeholder";
-
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-
-        TestCallParameters[] memory executionPayloads =
-            new TestCallParameters[](3);
-
+        vm.deal(alice, 0);
         test721_1.mint(alice, 1);
+
         try configs[0].getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context,
+            infra.context,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
@@ -342,7 +409,7 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             // Fire off the actual prep call to ready the order.
             _benchmarkCallWithParams(
                 configs[0].name(),
-                string(abi.encodePacked(testLabel, " List")),
+                string(abi.encodePacked(infra.testLabel, " List")),
                 false,
                 false,
                 alice,
@@ -356,24 +423,19 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             );
             assertEq(feeReciever1.balance, 0);
 
-            executionPayloads[0] = payload.executeOrder;
-
-            // TODO: remember to move these down below to make sure I'm checking.
-            // assertEq(test721_1.ownerOf(1), bob);
-            // assertEq(feeReciever1.balance, 5);
+            infra.executionPayloads[0] = payload.executeOrder;
         } catch {
-            _logNotSupported(configs[0].name(), testLabel);
+            _logNotSupported(configs[0].name(), infra.testLabel);
         }
 
         test1155_1.mint(alice, 1, 1);
 
-        TestItem1155 memory item = TestItem1155(address(test1155_1), 1, 1);
-
-        try configs[1].getPayload_BuyOfferedERC1155WithEther(context, item, 100)
-        returns (TestOrderPayload memory payload) {
+        try configs[1].getPayload_BuyOfferedERC1155WithEther(
+            infra.context, infra.item1155, 100
+        ) returns (TestOrderPayload memory payload) {
             _benchmarkCallWithParams(
                 configs[1].name(),
-                string(abi.encodePacked(testLabel, " List")),
+                string(abi.encodePacked(infra.testLabel, " List")),
                 false,
                 false,
                 alice,
@@ -383,36 +445,253 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
 
-            executionPayloads[1] = payload.executeOrder;
+            infra.executionPayloads[1] = payload.executeOrder;
         } catch {
-            _logNotSupported(configs[1].name(), testLabel);
+            _logNotSupported(configs[1].name(), infra.testLabel);
         }
 
-        context = TestOrderContext(
+        infra.context = TestOrderContext(
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        hevm.deal(alice, 100);
-        hevm.prank(alice);
+        test721_1.mint(alice, 2);
+        hevm.deal(bob, 100);
+        hevm.prank(bob);
         weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
-        try configs[2].getPayload_BuyOfferedWETHWithERC721(
-            context, TestItem20(address(weth), 100), standardERC721
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(weth.balanceOf(alice), 100);
-            assertEq(weth.balanceOf(bob), 0);
 
-            executionPayloads[2] = payload.executeOrder;
+        // Start with all buy offered NFT with X. But eventually test a mix of
+        // offered X for NFT. The helper will need more detail about each NFT
+        // transfer (sender, receiver, etc.)
+        try configs[2].getPayload_BuyOfferedERC721WithWETH(
+            infra.context,
+            TestItem721(address(test721_1), 2),
+            TestItem20(address(weth), 100)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(2), alice);
+            assertEq(weth.balanceOf(bob), 100);
+            assertEq(weth.balanceOf(alice), 0);
+
+            infra.executionPayloads[2] = payload.executeOrder;
         } catch {
-            _logNotSupported(configs[2].name(), testLabel);
+            _logNotSupported(configs[2].name(), infra.testLabel);
         }
 
-        // Here, set up the "prime" seaport order.
+        // Set up the aggregated orders.
+        // Orders will be prime seaport order, flashloan, mirror, adapter.
 
-        // TODO: handle flashloans
-        // TODO: verify token balances
-        // TODO: rework the helper function to take an arbitrary number of calls
+        test1155_1.mint(alice, 2, 1);
+        hevm.deal(bob, 100);
+        token1.mint(bob, 100);
+
+        assertEq(token1.balanceOf(bob), 100);
+        assertEq(token1.balanceOf(alice), 0);
+
+        infra.flashloans[0] = Flashloan({
+            amount: 605,
+            itemType: ItemType.NATIVE,
+            shouldCallback: true,
+            recipient: address(adapter)
+        });
+
+        infra.erc721s[0] = TestItem721(address(test721_1), 1);
+        infra.erc1155s[0] = TestItem1155(address(test1155_1), 1, 1);
+
+        // This should provide all the info required for the aggregated orders.
+        (infra.adapterOrders, infra.adapterFulfillments) = AdapterHelperLib
+            .createSeaportWrappedTestCallParametersReturnGranular(
+            infra.executionPayloads,
+            infra.castOfCharacters,
+            infra.flashloans,
+            infra.erc721s,
+            infra.erc1155s
+        );
+
+        AdvancedOrder memory orderOffer1155;
+        AdvancedOrder memory orderConsider155;
+
+        {
+            BasicOrderParameters memory params = configs[3]
+                .getComponents_BuyOfferedERC1155WithERC20(
+                alice,
+                TestItem1155(address(test1155_1), 2, 1),
+                TestItem20(address(token1), 100)
+            );
+
+            orderOffer1155 = _createSeaportOrder(params);
+
+            params = configs[3].getComponents_BuyOfferedERC20WithERC1155(
+                bob,
+                TestItem20(address(token1), 100),
+                TestItem1155(address(test1155_1), 2, 1)
+            );
+
+            orderConsider155 = _createSeaportOrder(params);
+        }
+
+        {
+            infra.finalOrders[0] = infra.adapterOrders[0];
+            infra.finalOrders[1] = infra.adapterOrders[1];
+            infra.finalOrders[2] = infra.adapterOrders[2];
+            infra.finalOrders[3] = orderOffer1155;
+            infra.finalOrders[4] = orderConsider155;
+        }
+
+        FulfillmentComponent[] memory offerComponentsPrime =
+            new FulfillmentComponent[](1);
+        FulfillmentComponent[] memory considerationComponentsPrime =
+            new FulfillmentComponent[](1);
+
+        offerComponentsPrime[0] = FulfillmentComponent(3, 0);
+        considerationComponentsPrime[0] = FulfillmentComponent(4, 0);
+
+        Fulfillment memory primeFulfillment = Fulfillment({
+            offerComponents: offerComponentsPrime,
+            considerationComponents: considerationComponentsPrime
+        });
+
+        FulfillmentComponent[] memory offerComponentsMirror =
+            new FulfillmentComponent[](1);
+        FulfillmentComponent[] memory considerationComponentsMirror =
+            new FulfillmentComponent[](1);
+
+        offerComponentsMirror[0] = FulfillmentComponent(4, 0);
+        considerationComponentsMirror[0] = FulfillmentComponent(3, 0);
+
+        Fulfillment memory mirrorFulfillment = Fulfillment({
+            offerComponents: offerComponentsMirror,
+            considerationComponents: considerationComponentsMirror
+        });
+
+        infra.finalFulfillments[0] = infra.adapterFulfillments[0];
+        infra.finalFulfillments[1] = infra.adapterFulfillments[1];
+        infra.finalFulfillments[2] = primeFulfillment;
+        infra.finalFulfillments[3] = mirrorFulfillment;
+
+        TestCallParameters memory finalCallParams;
+
+        {
+            finalCallParams = TestCallParameters(
+                address(seaport), // target will definitely be seaport
+                605, // value will be sum of all the values
+                abi.encodeWithSelector(
+                    ISeaport.matchAdvancedOrders.selector,
+                    infra.finalOrders,
+                    new CriteriaResolver[](0),
+                    infra.finalFulfillments,
+                    address(0)
+                )
+            );
+        }
+
+        vm.deal(bob, 605);
+
+        uint256 gasUsed = _benchmarkCallWithParams(
+            configs[3].name(),
+            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated")),
+            true,
+            false,
+            bob,
+            finalCallParams
+        );
+
+        // EXPECTED OUTCOMES
+        // Bob should get the 721, 1
+        // Bob should get the 721, 2
+        assertEq(test721_1.ownerOf(1), bob, "Bob did not get the 721 1");
+        assertEq(test721_1.ownerOf(2), bob, "Bob did not get the 721 2");
+
+        // Bob should get the 1155, 1, 1
+        // Bob should get the 1155, 2, 1
+        assertEq(
+            test1155_1.balanceOf(bob, 1), 1, "Bob did not get the 1155 1 1"
+        );
+        assertEq(
+            test1155_1.balanceOf(bob, 2), 1, "Bob did not get the 1155 2 1"
+        );
+
+        // Alice gets 500 native
+        // Alice gets 100 native
+        // 575 after fees.
+        assertEq(alice.balance, 575, "Alice did not get the native");
+
+        // Fee reciever gets 5 native
+        assertEq(feeReciever1.balance, 5);
+
+        // Alice gets 100 wrapped
+        assertEq(weth.balanceOf(alice), 100, "Alice did not get the wrapped");
+
+        // Alice gets 100 token1
+        assertEq(token1.balanceOf(alice), 100, "Alice did not get the token1");
+
+        return gasUsed;
+    }
+
+    function _createSeaportOrder(BasicOrderParameters memory basicParams)
+        internal
+        returns (AdvancedOrder memory)
+    {
+        OrderParameters memory params = OrderParameters({
+            offerer: basicParams.offerer,
+            zone: basicParams.zone,
+            offer: new OfferItem[](1),
+            consideration: new ConsiderationItem[](1),
+            orderType: OrderType.FULL_OPEN,
+            startTime: basicParams.startTime,
+            endTime: basicParams.endTime,
+            zoneHash: basicParams.zoneHash,
+            salt: basicParams.salt + gasleft(),
+            conduitKey: basicParams.offererConduitKey,
+            totalOriginalConsiderationItems: 1
+        });
+
+        uint256 basicOrderType = uint256(basicParams.basicOrderType);
+
+        OfferItem memory offerItem;
+        offerItem.itemType = basicOrderType > 15
+            ? ItemType.ERC20
+            : basicOrderType > 11
+                ? ItemType.ERC1155
+                : basicOrderType > 7
+                    ? ItemType.ERC721
+                    : basicOrderType > 3 ? ItemType.ERC1155 : ItemType.ERC721;
+        offerItem.token = basicParams.offerToken;
+        offerItem.identifierOrCriteria = basicParams.offerIdentifier;
+        offerItem.startAmount = basicParams.offerAmount;
+        offerItem.endAmount = basicParams.offerAmount;
+
+        params.offer[0] = offerItem;
+
+        ConsiderationItem memory considerationItem;
+
+        considerationItem.itemType = basicOrderType < 8
+            ? ItemType.NATIVE
+            : basicOrderType < 16
+                ? ItemType.ERC20
+                : basicOrderType < 20 ? ItemType.ERC721 : ItemType.ERC1155;
+        considerationItem.token = basicParams.considerationToken;
+        considerationItem.identifierOrCriteria =
+            basicParams.considerationIdentifier;
+        considerationItem.startAmount = basicParams.considerationAmount;
+        considerationItem.endAmount = basicParams.considerationAmount;
+        considerationItem.recipient = basicParams.offerer;
+
+        params.consideration[0] = considerationItem;
+
+        bytes32 digest = _deriveEIP712Digest(_deriveOrderHash(params, 0));
+
+        (uint8 v, bytes32 r, bytes32 s) =
+            _signDigest(basicParams.offerer, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        AdvancedOrder memory advancedOrder = AdvancedOrder({
+            parameters: params,
+            numerator: 1,
+            denominator: 1,
+            signature: signature,
+            extraData: new bytes(0)
+        });
+
+        return advancedOrder;
     }
 
     // TODO: GO back and make sure the gas calculations are correct.
@@ -3993,6 +4272,47 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
         super.setUp();
     }
 
+    modifier prepareAggregationTest(BaseMarketConfig[] memory configs) {
+        address[] memory markets = new address[](configs.length);
+        for (uint256 i = 0; i < configs.length; i++) {
+            markets[i] = address(configs[i].market());
+        }
+        _resetStorageAndEth(markets);
+
+        // console.log('Maybe preparing Foundation');
+        // console.log(configs[0].sellerErc20ApprovalTarget());
+        // revert();
+
+        for (uint256 i = 0; i < configs.length; i++) {
+            require(
+                configs[i].sellerErc20ApprovalTarget() != address(0)
+                    && configs[i].sellerNftApprovalTarget() != address(0)
+                    && configs[i].buyerErc20ApprovalTarget() != address(0)
+                    && configs[i].buyerNftApprovalTarget() != address(0),
+                "BaseMarketplaceTester::prepareAggregationTest: approval target not set"
+            );
+            _setApprovals(
+                alice,
+                configs[i].sellerErc20ApprovalTarget(),
+                configs[i].sellerNftApprovalTarget(),
+                configs[i].sellerErc1155ApprovalTarget()
+            );
+            _setApprovals(
+                cal,
+                configs[i].sellerErc20ApprovalTarget(),
+                configs[i].sellerNftApprovalTarget(),
+                configs[i].sellerErc1155ApprovalTarget()
+            );
+            _setApprovals(
+                bob,
+                configs[i].buyerErc20ApprovalTarget(),
+                configs[i].buyerNftApprovalTarget(),
+                configs[i].buyerErc1155ApprovalTarget()
+            );
+        }
+        _;
+    }
+
     modifier prepareTest(BaseMarketConfig config) {
         _resetStorageAndEth(config.market());
         require(
@@ -4025,6 +4345,13 @@ contract GenericMarketplaceTest is BaseMarketplaceTest, StdCheats {
 
     function signDigest(address signer, bytes32 digest)
         external
+        returns (uint8 v, bytes32 r, bytes32 s)
+    {
+        (v, r, s) = hevm.sign(privateKeys[signer], digest);
+    }
+
+    function _signDigest(address signer, bytes32 digest)
+        internal
         returns (uint8 v, bytes32 r, bytes32 s)
     {
         (v, r, s) = hevm.sign(privateKeys[signer], digest);
