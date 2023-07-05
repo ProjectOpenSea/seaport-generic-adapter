@@ -506,6 +506,7 @@ contract GenericMarketplaceTest is
             infra.executionPayloads,
             infra.castOfCharacters,
             infra.flashloans,
+            new ConsiderationItem[](0),
             infra.erc721s,
             infra.erc1155s
         );
