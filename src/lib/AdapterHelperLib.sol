@@ -230,6 +230,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](1);
@@ -243,6 +244,7 @@ library AdapterHelperLib {
             adapter,
             sidecar,
             flashloans,
+            considerationArray,
             erc721s,
             new TestItem1155[](0)
         );
@@ -256,6 +258,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721[] memory nfts
     ) public view returns (TestCallParameters memory) {
         return createSeaportWrappedTestCallParameters(
@@ -266,6 +269,7 @@ library AdapterHelperLib {
             adapter,
             sidecar,
             flashloans,
+            considerationArray,
             nfts,
             new TestItem1155[](0)
         );
@@ -279,6 +283,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem1155 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem1155[] memory erc1155s = new TestItem1155[](1);
@@ -292,6 +297,7 @@ library AdapterHelperLib {
             adapter,
             sidecar,
             flashloans,
+            considerationArray,
             new TestItem721[](0),
             erc1155s
         );
@@ -305,6 +311,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem1155[] memory nfts
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](0);
@@ -317,6 +324,7 @@ library AdapterHelperLib {
             adapter,
             sidecar,
             flashloans,
+            considerationArray,
             erc721s,
             nfts
         );
@@ -330,6 +338,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -348,6 +357,7 @@ library AdapterHelperLib {
             testCallParametersArray,
             castOfCharacters,
             flashloans,
+            considerationArray,
             erc721s,
             erc1155s
         );
@@ -361,6 +371,7 @@ library AdapterHelperLib {
         address adapter,
         address sidecar,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -376,6 +387,7 @@ library AdapterHelperLib {
             testCallParametersArray,
             castOfCharacters,
             flashloans,
+            considerationArray,
             erc721s,
             erc1155s
         );
@@ -396,11 +408,11 @@ library AdapterHelperLib {
         uint256 totalFlashloanValueRequested;
     }
 
-    // TODO: get to the point where this works.
     function createSeaportWrappedTestCallParameters(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -410,13 +422,12 @@ library AdapterHelperLib {
     {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
-        (
-            orders,
-            fulfillments
-        ) = createSeaportWrappedTestCallParametersReturnGranular(
+        (orders, fulfillments) =
+        createSeaportWrappedTestCallParametersReturnGranular(
             testCallParametersArray,
             castOfCharacters,
             flashloans,
+            considerationArray,
             erc721s,
             erc1155s
         );
@@ -443,6 +454,7 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -454,7 +466,9 @@ library AdapterHelperLib {
         )
     {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra(
-            new ConsiderationItem[](1),
+            considerationArray.length == 0
+                ? new ConsiderationItem[](1)
+                : considerationArray,
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
             new AdvancedOrder[](3),
@@ -482,18 +496,23 @@ library AdapterHelperLib {
             infra.order =
                 AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-            infra.considerationArray[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.NATIVE).withToken(address(0))
-                .withIdentifierOrCriteria(0).withStartAmount(infra.value)
-                .withEndAmount(infra.value).withRecipient(address(0));
+            // Default to this consideration array.
+            if (
+                keccak256(abi.encode(infra.considerationArray[0]))
+                    == keccak256(abi.encode(ConsiderationItemLib.empty()))
+            ) {
+                infra.considerationArray[0] = ConsiderationItemLib.empty()
+                    .withItemType(ItemType.NATIVE).withToken(address(0))
+                    .withIdentifierOrCriteria(0).withStartAmount(infra.value)
+                    .withEndAmount(infra.value).withRecipient(address(0));
+            }
 
             {
                 infra.orderParameters = OrderParametersLib.empty().withOrderType(
                     OrderType.FULL_OPEN
                 ).withStartTime(block.timestamp).withEndTime(
                     block.timestamp + 100
-                ).withConsideration(new ConsiderationItem[](0))
-                    .withTotalOriginalConsiderationItems(0).withOfferer(
+                ).withTotalOriginalConsiderationItems(0).withOfferer(
                     castOfCharacters.adapter
                 );
                 infra.orderParameters =
@@ -503,7 +522,9 @@ library AdapterHelperLib {
                 infra.orderParameters = infra.orderParameters.withOffer(
                     new OfferItem[](0)
                 ).withConsideration(infra.considerationArray)
-                    .withTotalOriginalConsiderationItems(1);
+                    .withTotalOriginalConsiderationItems(
+                    infra.considerationArray.length
+                );
 
                 infra.order = infra.order.withParameters(infra.orderParameters);
             }
@@ -558,6 +579,8 @@ library AdapterHelperLib {
                     infra.totalFlashloanValueRequested +=
                         infra.flashloans[i].amount;
                 }
+
+                infra.considerationArray = new ConsiderationItem[](1);
 
                 // Come back and think about the case where multiple flashloans
                 // of different types are required.

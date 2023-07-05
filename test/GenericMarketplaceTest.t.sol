@@ -5,6 +5,8 @@ import { StdCheats } from "forge-std/StdCheats.sol";
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
+
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {
@@ -88,6 +90,8 @@ contract GenericMarketplaceTest is
 {
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
+    using ConsiderationItemLib for ConsiderationItem;
+    using ConsiderationItemLib for ConsiderationItem[];
 
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
@@ -204,7 +208,7 @@ contract GenericMarketplaceTest is
         adapterUsers[1] = address(bob);
         adapterUsers[2] = address(cal);
 
-        Approval[] memory approvalsOfTheAdapter = new Approval[](4);
+        Approval[] memory approvalsOfTheAdapter = new Approval[](5);
         approvalsOfTheAdapter[0] = Approval(address(token1), ItemType.ERC20);
         approvalsOfTheAdapter[1] = Approval(address(test721_1), ItemType.ERC721);
         approvalsOfTheAdapter[2] =
@@ -941,6 +945,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -1037,6 +1042,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -1142,6 +1148,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 item
             );
 
@@ -1237,6 +1244,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 item
             );
 
@@ -1371,6 +1379,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -1470,6 +1479,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -1593,6 +1603,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -1671,6 +1682,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -1860,35 +1872,66 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        // test1155_1.mint(alice, 1, 1);
-        // token1.mint(bob, 100);
-        // try config.getPayload_BuyOfferedERC1155WithERC20(
-        //     TestOrderContext(
-        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem1155(address(test1155_1), 1, 1),
-        //     TestItem20(address(token1), 100)
-        // ) returns (TestOrderPayload memory payload) {
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
+        // Cheat the context for LR.
+        if (_sameName(config.name(), looksRareConfig.name())) {
+            context.fulfiller = address(context.sidecar);
+        }
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+        test1155_1.mint(alice, 1, 1);
+        token1.mint(bob, 100);
+        try config.getPayload_BuyOfferedERC1155WithERC20(
+            context,
+            TestItem1155(address(test1155_1), 1, 1),
+            TestItem20(address(token1), 100)
+        ) returns (TestOrderPayload memory payload) {
+            // Put the context back.
+            if (_sameName(config.name(), looksRareConfig.name())) {
+                context.fulfiller = bob;
+            }
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
 
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 100);
-        //     assertEq(token1.balanceOf(bob), 0);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC20).withToken(address(token1))
+                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+                .withRecipient(address(0));
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                TestItem1155(address(test1155_1), 1, 1)
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test1155_1.balanceOf(bob, 1), 1);
+            assertEq(token1.balanceOf(alice), 100);
+            assertEq(token1.balanceOf(bob), 0);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC20WithERC721_ListOnChain(
@@ -2164,6 +2207,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -2264,6 +2308,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -2879,6 +2924,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -2982,6 +3028,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -3109,6 +3156,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -3212,6 +3260,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 standardERC721
             );
 
@@ -3352,6 +3401,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 items
             );
 
@@ -3469,6 +3519,7 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 items
             );
 
@@ -3592,6 +3643,7 @@ contract GenericMarketplaceTest is
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 items
             );
 
@@ -3721,6 +3773,7 @@ contract GenericMarketplaceTest is
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
                 flashloanArray,
+                new ConsiderationItem[](0),
                 items
             );
 
@@ -4024,6 +4077,7 @@ contract GenericMarketplaceTest is
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -4139,6 +4193,7 @@ contract GenericMarketplaceTest is
                 address(contexts[0].adapter),
                 address(contexts[0].sidecar),
                 new Flashloan[](0),
+                new ConsiderationItem[](0),
                 new TestItem721[](0)
             );
 
@@ -4339,6 +4394,20 @@ contract GenericMarketplaceTest is
             config.buyerErc20ApprovalTarget(),
             config.buyerNftApprovalTarget(),
             config.buyerErc1155ApprovalTarget()
+        );
+        // This simulates passing in a Call that approves some target
+        // marketplace.
+        _setApprovals(
+            sidecar,
+            config.buyerErc20ApprovalTarget(),
+            config.buyerNftApprovalTarget(),
+            config.buyerErc1155ApprovalTarget()
+        );
+        _setApprovals(
+            sidecar,
+            config.sellerErc20ApprovalTarget(),
+            config.sellerNftApprovalTarget(),
+            config.sellerErc1155ApprovalTarget()
         );
         _;
     }
