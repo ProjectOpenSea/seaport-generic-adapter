@@ -36,6 +36,7 @@ import {
 
 import {
     TestCallParameters,
+    TestItem20,
     TestItem721,
     TestItem1155
 } from "../../test/utils/Types.sol";
@@ -358,6 +359,7 @@ library AdapterHelperLib {
             castOfCharacters,
             flashloans,
             considerationArray,
+            new TestItem20[](0),
             erc721s,
             erc1155s
         );
@@ -388,24 +390,44 @@ library AdapterHelperLib {
             castOfCharacters,
             flashloans,
             considerationArray,
+            new TestItem20[](0),
             erc721s,
             erc1155s
         );
     }
 
-    struct AdapterWrapperInfra {
-        ConsiderationItem[] considerationArray;
-        OrderParameters orderParameters;
-        AdvancedOrder order;
-        AdvancedOrder[] orders;
-        Flashloan flashloan;
-        Flashloan[] flashloans;
-        Call call;
-        Call[] calls;
-        bytes extraData;
-        Fulfillment[] fulfillments;
-        uint256 value;
-        uint256 totalFlashloanValueRequested;
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        address fulfiller,
+        address seaport,
+        address flashloanOfferer,
+        address adapter,
+        address sidecar,
+        Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
+        TestItem20[] memory erc20s
+    )
+        public
+        view
+        returns (TestCallParameters memory wrappedTestCallParameter)
+    {
+        TestCallParameters[] memory testCallParametersArray =
+            new TestCallParameters[](1);
+        testCallParametersArray[0] = testCallParameters;
+
+        CastOfCharacters memory castOfCharacters = CastOfCharacters(
+            fulfiller, seaport, flashloanOfferer, adapter, sidecar
+        );
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParametersArray,
+            castOfCharacters,
+            flashloans,
+            considerationArray,
+            erc20s,
+            new TestItem721[](0),
+            new TestItem1155[](0)
+        );
     }
 
     function createSeaportWrappedTestCallParameters(
@@ -413,6 +435,7 @@ library AdapterHelperLib {
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
+        TestItem20[] memory erc20s,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -428,6 +451,7 @@ library AdapterHelperLib {
             castOfCharacters,
             flashloans,
             considerationArray,
+            erc20s,
             erc721s,
             erc1155s
         );
@@ -450,11 +474,27 @@ library AdapterHelperLib {
         wrappedTestCallParameter.target = castOfCharacters.seaport;
     }
 
+    struct AdapterWrapperInfra {
+        ConsiderationItem[] considerationArray;
+        OrderParameters orderParameters;
+        AdvancedOrder order;
+        AdvancedOrder[] orders;
+        Flashloan flashloan;
+        Flashloan[] flashloans;
+        Call call;
+        Call[] calls;
+        bytes extraData;
+        Fulfillment[] fulfillments;
+        uint256 value;
+        uint256 totalFlashloanValueRequested;
+    }
+
     function createSeaportWrappedTestCallParametersReturnGranular(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
+        TestItem20[] memory erc20s,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
@@ -529,10 +569,8 @@ library AdapterHelperLib {
                 infra.order = infra.order.withParameters(infra.orderParameters);
             }
 
-            // One call to execute the base call (the original
-            // testCallParameters), plus one call for each NFT.
             infra.calls =
-            new Call[](testCallParametersArray.length + erc721s.length + erc1155s.length);
+            new Call[](testCallParametersArray.length + erc20s.length + erc721s.length + erc1155s.length);
 
             {
                 for (uint256 i = 0; i < testCallParametersArray.length; i++) {
@@ -544,18 +582,19 @@ library AdapterHelperLib {
                     );
                 }
 
-                Call[] memory nftCalls = _createNftTransferCalls(
+                Call[] memory tokenCalls = _createTokenTransferCalls(
                     address(castOfCharacters.sidecar),
                     address(castOfCharacters.fulfiller),
+                    erc20s,
                     erc721s,
                     erc1155s
                 );
 
                 // Populate the calls array with the NFT transfer calls from the
                 // helper.
-                for (uint256 i = 0; i < nftCalls.length; i++) {
+                for (uint256 i = 0; i < tokenCalls.length; i++) {
                     infra.calls[testCallParametersArray.length + i] =
-                        nftCalls[i];
+                        tokenCalls[i];
                 }
             }
 
@@ -707,14 +746,31 @@ library AdapterHelperLib {
         return (infra.orders, infra.fulfillments);
     }
 
-    function _createNftTransferCalls(
+    function _createTokenTransferCalls(
         address from,
         address to,
+        TestItem20[] memory test20s,
         TestItem721[] memory test721s,
         TestItem1155[] memory test1155s
     ) public pure returns (Call[] memory calls) {
         Call memory call;
-        calls = new Call[](test721s.length + test1155s.length);
+        calls = new Call[](test20s.length + test721s.length + test1155s.length);
+
+        for (uint256 i; i < test20s.length; ++i) {
+            call = Call(
+                address(test20s[i].token),
+                false,
+                0,
+                abi.encodeWithSelector(
+                    ERC20.transferFrom.selector,
+                    address(from),
+                    address(to),
+                    test20s[i].amount
+                )
+            );
+
+            calls[i] = call;
+        }
 
         for (uint256 i; i < test721s.length; ++i) {
             call = Call(
@@ -729,7 +785,7 @@ library AdapterHelperLib {
                 )
             );
 
-            calls[i] = call;
+            calls[i + test20s.length] = call;
         }
 
         for (uint256 i; i < test1155s.length; ++i) {
@@ -747,7 +803,7 @@ library AdapterHelperLib {
                 )
             );
 
-            calls[i + test721s.length] = call;
+            calls[i + test20s.length + test721s.length] = call;
         }
     }
 }

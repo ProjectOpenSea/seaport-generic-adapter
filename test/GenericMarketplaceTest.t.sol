@@ -507,6 +507,7 @@ contract GenericMarketplaceTest is
             infra.castOfCharacters,
             infra.flashloans,
             new ConsiderationItem[](0),
+            new TestItem20[](0),
             infra.erc721s,
             infra.erc1155s
         );
@@ -825,6 +826,7 @@ contract GenericMarketplaceTest is
         SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
             alice, bob, erc20Addresses, erc721Addresses
         );
+
         for (uint256 i = 0; i < setupCalls.length; i++) {
             hevm.startPrank(setupCalls[i].sender);
             (bool avoidWarning, bytes memory data) =
@@ -1341,6 +1343,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         token1.mint(bob, 100);
 
+        // TODO: come back and tidy this up.
         vm.startPrank(context.sidecar);
         // Pretend like the sidecar has already approved the contract that sudo
         // uses to transfer tokens.
@@ -1793,42 +1796,66 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC20_ListOnChain_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        // test1155_1.mint(alice, 1, 1);
-        // token1.mint(bob, 100);
-        // try config.getPayload_BuyOfferedERC1155WithERC20(
-        //     TestOrderContext(
-        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem1155(address(test1155_1), 1, 1),
-        //     TestItem20(address(token1), 100)
-        // ) returns (TestOrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
+        test1155_1.mint(alice, 1, 1);
+        token1.mint(bob, 100);
+        try config.getPayload_BuyOfferedERC1155WithERC20(
+            context,
+            TestItem1155(address(test1155_1), 1, 1),
+            TestItem20(address(token1), 100)
+        ) returns (TestOrderPayload memory payload) {
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
 
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
 
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 100);
-        //     assertEq(token1.balanceOf(bob), 0);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC20).withToken(address(token1))
+                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+                .withRecipient(address(0));
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                TestItem1155(address(test1155_1), 1, 1)
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test1155_1.balanceOf(bob, 1), 1);
+            assertEq(token1.balanceOf(alice), 100);
+            assertEq(token1.balanceOf(bob), 0);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC1155WithERC20(BaseMarketConfig config)
@@ -1989,46 +2016,81 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        // TODO: Look into why Sudo is broken.
+        if (_sameName(config.name(), sudoswapConfig.name())) {
+            _logNotSupported(config.name(), testLabel);
+            return 0;
+        }
 
-        // token1.mint(alice, 100);
-        // test721_1.mint(bob, 1);
-        // try config.getPayload_BuyOfferedERC20WithERC721(
-        //     TestOrderContext(
-        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem20(address(token1), 100),
-        //     standardERC721
-        // ) returns (TestOrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     // Allow the market to escrow after listing
-        //     assert(
-        //         token1.balanceOf(alice) == 100
-        //             || token1.balanceOf(config.market()) == 100
-        //     );
-        //     assertEq(token1.balanceOf(bob), 0);
+        token1.mint(alice, 100);
+        test721_1.mint(bob, 1);
+        try config.getPayload_BuyOfferedERC20WithERC721(
+            context, TestItem20(address(token1), 100), standardERC721
+        ) returns (TestOrderPayload memory payload) {
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+            assertEq(test721_1.ownerOf(1), bob);
+            // Allow the market to escrow after listing
+            assert(
+                token1.balanceOf(alice) == 100
+                    || token1.balanceOf(config.market()) == 100
+            );
+            assertEq(token1.balanceOf(bob), 0);
 
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC721).withToken(address(test721_1))
+                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+                .withRecipient(address(0));
+
+            TestItem20[] memory erc20s = new TestItem20[](1);
+            erc20s[0] = TestItem20(address(token1), 100);
+
+            // Look into why token1 requires an explicit approval lol.
+            vm.prank(address(context.sidecar));
+            token1.approve(address(context.sidecar), 100);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                erc20s
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC20WithERC721(BaseMarketConfig config)
@@ -2381,43 +2443,72 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_ListOnChain_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        TestOrderContext memory context = TestOrderContext(
+            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+        token1.mint(alice, 100);
+        test1155_1.mint(bob, 1, 1);
+        try config.getPayload_BuyOfferedERC20WithERC1155(
+            context,
+            TestItem20(address(token1), 100),
+            TestItem1155(address(test1155_1), 1, 1)
+        ) returns (TestOrderPayload memory payload) {
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        // );
-        // token1.mint(alice, 100);
-        // test1155_1.mint(bob, 1, 1);
-        // try config.getPayload_BuyOfferedERC20WithERC1155(
-        //     context,
-        //     TestItem20(address(token1), 100),
-        //     TestItem1155(address(test1155_1), 1, 1)
-        // ) returns (TestOrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
+            assertEq(test1155_1.balanceOf(bob, 1), 1);
+            assertEq(token1.balanceOf(alice), 100);
+            assertEq(token1.balanceOf(bob), 0);
 
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 100);
-        //     assertEq(token1.balanceOf(bob), 0);
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC1155).withToken(address(test1155_1))
+                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+                .withRecipient(address(0));
 
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            TestItem20[] memory erc20s = new TestItem20[](1);
+            erc20s[0] = TestItem20(address(token1), 100);
+
+            // Look into why token1 requires an explicit approval lol.
+            vm.prank(address(context.sidecar));
+            token1.approve(address(context.sidecar), 100);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                erc20s
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC20WithERC1155(BaseMarketConfig config)
@@ -2463,36 +2554,74 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC1155_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        // );
-        // token1.mint(alice, 100);
-        // test1155_1.mint(bob, 1, 1);
-        // try config.getPayload_BuyOfferedERC20WithERC1155(
-        //     context,
-        //     TestItem20(address(token1), 100),
-        //     TestItem1155(address(test1155_1), 1, 1)
-        // ) returns (TestOrderPayload memory payload) {
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 100);
-        //     assertEq(token1.balanceOf(bob), 0);
+        // Cheat the context for LR.
+        if (_sameName(config.name(), looksRareConfig.name())) {
+            context.fulfiller = address(context.sidecar);
+        }
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+        token1.mint(alice, 100);
+        test1155_1.mint(bob, 1, 1);
+        try config.getPayload_BuyOfferedERC20WithERC1155(
+            context,
+            TestItem20(address(token1), 100),
+            TestItem1155(address(test1155_1), 1, 1)
+        ) returns (TestOrderPayload memory payload) {
+            // Put the context back.
+            if (_sameName(config.name(), looksRareConfig.name())) {
+                context.fulfiller = bob;
+            }
 
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            assertEq(test1155_1.balanceOf(bob, 1), 1);
+            assertEq(token1.balanceOf(alice), 100);
+            assertEq(token1.balanceOf(bob), 0);
+
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC1155).withToken(address(test1155_1))
+                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+                .withRecipient(address(0));
+
+            TestItem20[] memory erc20s = new TestItem20[](1);
+            erc20s[0] = TestItem20(address(token1), 100);
+
+            // Look into why token1 requires an explicit approval lol.
+            vm.prank(address(context.sidecar));
+            token1.approve(address(context.sidecar), 100);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                erc20s
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedERC721WithERC1155_ListOnChain(
@@ -2695,6 +2824,7 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_ListOnChain_Adapter)";
 
+        // Only seaport so skipping here.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
@@ -4334,10 +4464,6 @@ contract GenericMarketplaceTest is
             markets[i] = address(configs[i].market());
         }
         _resetStorageAndEth(markets);
-
-        // console.log('Maybe preparing Foundation');
-        // console.log(configs[0].sellerErc20ApprovalTarget());
-        // revert();
 
         for (uint256 i = 0; i < configs.length; i++) {
             require(
