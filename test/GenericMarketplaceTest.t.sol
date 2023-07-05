@@ -1440,39 +1440,56 @@ contract GenericMarketplaceTest is
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+
     function benchmark_BuyOfferedERC721WithERC20_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC20_Adapter)";
 
-        // LR, X2Y2, and 0x are not working. Blur, Foundation, and Sudo don't
-        // support this lol.
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), zeroExConfig.name())
-        ) {
-            _logNotSupported(config.name(), testLabel);
-            return 0;
-        }
-
         TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
+
+        if (
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), looksRareConfig.name())
+        ) {
+            context.fulfiller = address(context.sidecar);
+        }
 
         test721_1.mint(alice, 1);
         token1.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            standardERC721,
-            TestItem20(address(token1), 100)
+            context, standardERC721, TestItem20(address(token1), 100)
         ) returns (TestOrderPayload memory payload) {
+            // Put the context back.
+            context.fulfiller = bob;
+
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(token1.balanceOf(alice), 0);
             assertEq(token1.balanceOf(bob), 100);
+
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC20).withToken(address(token1))
+                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+                .withRecipient(address(0));
+
+            TestItem20[] memory erc20s;
+            TestItem721[] memory erc721s;
+
+            erc20s = new TestItem20[](0);
+            erc721s = new TestItem721[](1);
+            erc721s[0] = standardERC721;
+
+            vm.prank(address(context.sidecar));
+            token1.approve(address(context.sidecar), 100);
 
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
@@ -1483,8 +1500,9 @@ contract GenericMarketplaceTest is
                 address(context.adapter),
                 address(context.sidecar),
                 new Flashloan[](0),
-                new ConsiderationItem[](0),
-                new TestItem721[](0)
+                adapterOrderConsideration,
+                erc20s,
+                erc721s
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1496,8 +1514,8 @@ contract GenericMarketplaceTest is
                 payload.executeOrder
             );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(token1.balanceOf(alice), 100);
+            assertEq(test721_1.ownerOf(1), bob, "Bob did not get NFT");
+            assertEq(token1.balanceOf(alice), 100, "Alice did not get ERC20");
             assertEq(token1.balanceOf(bob), 0);
         } catch {
             _logNotSupported(config.name(), testLabel);
@@ -2135,35 +2153,78 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC20WithERC721_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
 
-        // token1.mint(alice, 100);
-        // test721_1.mint(bob, 1);
-        // try config.getPayload_BuyOfferedERC20WithERC721(
-        //     TestOrderContext(
-        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     ),
-        //     TestItem20(address(token1), 100),
-        //     standardERC721
-        // ) returns (TestOrderPayload memory payload) {
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(token1.balanceOf(alice), 100);
-        //     assertEq(token1.balanceOf(bob), 0);
+        // Cheat the context for LR and X2Y2.
+        if (
+            _sameName(config.name(), looksRareConfig.name())
+                || _sameName(config.name(), x2y2Config.name())
+        ) {
+            context.fulfiller = address(context.sidecar);
+        }
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+        token1.mint(alice, 100);
+        test721_1.mint(bob, 1);
+        try config.getPayload_BuyOfferedERC20WithERC721(
+            context, TestItem20(address(token1), 100), standardERC721
+        ) returns (TestOrderPayload memory payload) {
+            // Put the context back.
+            if (
+                _sameName(config.name(), looksRareConfig.name())
+                    || _sameName(config.name(), x2y2Config.name())
+            ) {
+                context.fulfiller = bob;
+            }
 
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(token1.balanceOf(alice), 0);
-        //     assertEq(token1.balanceOf(bob), 100);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(token1.balanceOf(alice), 100);
+            assertEq(token1.balanceOf(bob), 0);
+
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC721).withToken(address(test721_1))
+                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+                .withRecipient(address(0));
+
+            TestItem20[] memory erc20s = new TestItem20[](1);
+            erc20s[0] = TestItem20(address(token1), 100);
+
+            // Look into why token1 requires an explicit approval lol.
+            vm.prank(address(context.sidecar));
+            token1.approve(address(context.sidecar), 100);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(context.fulfiller),
+                address(seaport),
+                address(context.flashloanOfferer),
+                address(context.adapter),
+                address(context.sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                erc20s
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(token1.balanceOf(alice), 0);
+            assertEq(token1.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyOfferedWETHWithERC721_ListOnChain(
@@ -2671,6 +2732,7 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_ListOnChain_Adapter)";
 
+        // Only seaport, skip for now.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
@@ -2747,6 +2809,7 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC721WithERC1155_Adapter)";
 
+        // Only seaport, skip for now.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
@@ -2901,6 +2964,7 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyOfferedERC1155WithERC721_Adapter)";
 
+        // Only seaport so skipping here.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
@@ -3976,44 +4040,91 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        token1.mint(bob, 1045);
+        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        TestItem721[] memory nfts = new TestItem721[](10);
+        uint256[] memory erc20Amounts = new uint256[](10);
 
-        // token1.mint(bob, 1045);
-        // TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        // TestItem721[] memory nfts = new TestItem721[](10);
-        // uint256[] memory erc20Amounts = new uint256[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            test721_1.mint(alice, i + 1);
+            nfts[i] = TestItem721(address(test721_1), i + 1);
+            contexts[i] = TestOrderContext(
+                false, true, alice, bob, flashloanOfferer, adapter, sidecar
+            );
+            erc20Amounts[i] = 100 + i;
+        }
 
-        // for (uint256 i = 0; i < 10; i++) {
-        //     test721_1.mint(alice, i + 1);
-        //     nfts[i] = TestItem721(address(test721_1), i + 1);
-        //     contexts[i] = TestOrderContext(
-        //         false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     );
-        //     erc20Amounts[i] = 100 + i;
-        // }
+        if (
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), looksRareConfig.name())
+        ) {
+            for (uint256 i = 0; i < contexts.length; i++) {
+                contexts[i].fulfiller = address(contexts[i].sidecar);
+            }
+        }
 
-        // try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        //     contexts, address(token1), nfts, erc20Amounts
-        // ) returns (TestOrderPayload memory payload) {
-        //     for (uint256 i = 1; i <= 10; i++) {
-        //         assertEq(test721_1.ownerOf(i), alice);
-        //     }
+        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+            contexts, address(token1), nfts, erc20Amounts
+        ) returns (TestOrderPayload memory payload) {
+            if (
+                _sameName(config.name(), x2y2Config.name())
+                    || _sameName(config.name(), looksRareConfig.name())
+            ) {
+                for (uint256 i = 0; i < contexts.length; i++) {
+                    contexts[i].fulfiller = bob;
+                }
+            }
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
-        //         bob,
-        //         payload.executeOrder
-        //     );
+            for (uint256 i = 1; i <= 10; i++) {
+                assertEq(test721_1.ownerOf(i), alice);
+            }
 
-        //     for (uint256 i = 1; i <= 10; i++) {
-        //         assertEq(test721_1.ownerOf(i), bob);
-        //     }
-        //     assertEq(token1.balanceOf(alice), 1045);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            uint256 totalERC20Amount;
+
+            for (uint256 i = 0; i < contexts.length; i++) {
+                totalERC20Amount += erc20Amounts[i];
+            }
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(ItemType.ERC20).withToken(address(token1))
+                .withIdentifierOrCriteria(0).withStartAmount(totalERC20Amount)
+                .withEndAmount(totalERC20Amount).withRecipient(address(0));
+
+            vm.prank(address(contexts[0].sidecar));
+            token1.approve(address(contexts[0].sidecar), totalERC20Amount);
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedTestCallParameters(
+                payload.executeOrder,
+                address(contexts[0].fulfiller),
+                address(seaport),
+                address(contexts[0].flashloanOfferer),
+                address(contexts[0].adapter),
+                address(contexts[0].sidecar),
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                nfts
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            for (uint256 i = 1; i <= 10; i++) {
+                assertEq(test721_1.ownerOf(i), bob, "Bob did not get the NFT");
+            }
+            assertEq(token1.balanceOf(alice), 1045, "Alice did not get paid");
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function benchmark_BuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(

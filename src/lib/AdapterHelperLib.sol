@@ -431,6 +431,41 @@ library AdapterHelperLib {
     }
 
     function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        address fulfiller,
+        address seaport,
+        address flashloanOfferer,
+        address adapter,
+        address sidecar,
+        Flashloan[] memory flashloans,
+        ConsiderationItem[] memory considerationArray,
+        TestItem20[] memory erc20s,
+        TestItem721[] memory nfts
+    )
+        public
+        view
+        returns (TestCallParameters memory wrappedTestCallParameter)
+    {
+        TestCallParameters[] memory testCallParametersArray =
+            new TestCallParameters[](1);
+        testCallParametersArray[0] = testCallParameters;
+
+        CastOfCharacters memory castOfCharacters = CastOfCharacters(
+            fulfiller, seaport, flashloanOfferer, adapter, sidecar
+        );
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParametersArray,
+            castOfCharacters,
+            flashloans,
+            considerationArray,
+            erc20s,
+            nfts,
+            new TestItem1155[](0)
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
