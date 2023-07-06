@@ -1153,14 +1153,6 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(_test20Address)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s;
             TestItem721[] memory erc721s;
 
@@ -1178,7 +1170,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC20ConsiderationArray"
+                ),
                 erc20s,
                 erc721s
             );
@@ -1270,14 +1264,6 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(_test20Address)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s;
             TestItem721[] memory erc721s;
 
@@ -1285,15 +1271,14 @@ contract GenericMarketplaceTest is
             erc721s = new TestItem721[](1);
             erc721s[0] = standardERC721;
 
-            vm.prank(sidecar);
-            test20.approve(sidecar, 100);
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC20ConsiderationArray"
+                ),
                 erc20s,
                 erc721s
             );
@@ -1400,12 +1385,9 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(bob), 100);
 
             ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(wethAddress)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
+            ConsiderationItemLib.fromDefaultMany(
+                "standardWethConsiderationArray"
+            );
 
             TestItem721[] memory erc721s = new TestItem721[](1);
             erc721s[0] = standardERC721;
@@ -1490,12 +1472,9 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(bob), 100);
 
             ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(wethAddress)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
+            ConsiderationItemLib.fromDefaultMany(
+                "standardWethConsiderationArray"
+            );
 
             TestItem721[] memory erc721s = new TestItem721[](1);
             erc721s[0] = standardERC721;
@@ -1516,15 +1495,6 @@ contract GenericMarketplaceTest is
                 adapterOrderConsideration,
                 erc721s
             );
-
-            // payload.executeOrder = payload
-            //     .executeOrder
-            //     .createSeaportWrappedTestCallParameters(
-            //     stdCastOfCharacters,
-            //     new Flashloan[](0),
-            //     new ConsiderationItem[](0),
-            //     new TestItem721[](0)
-            // );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1655,20 +1625,14 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(_test20Address)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC20ConsiderationArray"
+                ),
                 standardERC1155
             );
 
@@ -1753,20 +1717,14 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(_test20Address)
-                .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-                .withRecipient(address(0));
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC20ConsiderationArray"
+                ),
                 standardERC1155
             );
 
@@ -1874,27 +1832,17 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(bob), 0);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC721).withToken(_test721Address)
-                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardERC20;
-
-            // Look into why test20 requires an explicit approval lol.
-            vm.prank(sidecar);
-            test20.approve(sidecar, 100);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
                 erc20s
             );
 
@@ -1982,27 +1930,17 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC721).withToken(_test721Address)
-                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardERC20;
-
-            // Look into why test20 requires an explicit approval lol.
-            vm.prank(sidecar);
-            test20.approve(sidecar, 100);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
                 erc20s
             );
 
@@ -2109,14 +2047,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(weth.balanceOf(bob), 0);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC721).withToken(_test721Address)
-                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardWeth;
 
@@ -2129,7 +2059,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
                 erc20s
             );
 
@@ -2229,14 +2161,6 @@ contract GenericMarketplaceTest is
                     new TestItem721[](0)
                 );
             } else {
-                ConsiderationItem[] memory adapterOrderConsideration =
-                    new ConsiderationItem[](1);
-
-                adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                    .withItemType(ItemType.ERC721).withToken(_test721Address)
-                    .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                    .withRecipient(address(0));
-
                 TestItem20[] memory erc20s = new TestItem20[](1);
                 erc20s[0] = standardWeth;
 
@@ -2249,7 +2173,9 @@ contract GenericMarketplaceTest is
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
                     new Flashloan[](0),
-                    adapterOrderConsideration,
+                    ConsiderationItemLib.fromDefaultMany(
+                        "standardERC721ConsiderationArray"
+                    ),
                     erc20s
                 );
             }
@@ -2342,27 +2268,17 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC1155).withToken(_test1155Address)
-                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardERC20;
-
-            // Look into why test20 requires an explicit approval lol.
-            vm.prank(sidecar);
-            test20.approve(sidecar, 100);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC1155ConsiderationArray"
+                ),
                 erc20s
             );
 
@@ -2446,27 +2362,17 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC1155).withToken(_test1155Address)
-                .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-                .withRecipient(address(0));
-
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardERC20;
-
-            // Look into why test20 requires an explicit approval lol.
-            vm.prank(sidecar);
-            test20.approve(sidecar, 100);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC1155ConsiderationArray"
+                ),
                 erc20s
             );
 
@@ -3837,13 +3743,9 @@ contract GenericMarketplaceTest is
                 totalERC20Amount += erc20Amounts[i];
             }
 
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(_test20Address)
-                .withIdentifierOrCriteria(0).withStartAmount(totalERC20Amount)
-                .withEndAmount(totalERC20Amount).withRecipient(address(0));
-
-            vm.prank(contexts[0].sidecar);
-            test20.approve(contexts[0].sidecar, totalERC20Amount);
+            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
+                "standardERC20ConsiderationItem"
+            ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
             payload.executeOrder = payload
                 .executeOrder
@@ -3927,46 +3829,83 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
-        _logNotSupported(config.name(), testLabel);
-        return 0;
+        test20.mint(bob, 1045);
+        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        TestItem721[] memory nfts = new TestItem721[](10);
+        uint256[] memory erc20Amounts = new uint256[](10);
 
-        // test20.mint(bob, 1045);
-        // TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        // TestItem721[] memory nfts = new TestItem721[](10);
-        // uint256[] memory erc20Amounts = new uint256[](10);
+        // Ah crap this turns out to be only implemented for Seaport.
+        if (
+            _sameName(config.name(), x2y2Config.name())
+                || _sameName(config.name(), looksRareConfig.name())
+        ) {
+            for (uint256 i = 0; i < contexts.length; i++) {
+                contexts[i].fulfiller = address(contexts[i].sidecar);
+            }
+        }
 
-        // for (uint256 i = 0; i < 10; i++) {
-        //     test721_1.mint(alice, i + 1);
-        //     nfts[i] = TestItem721(_test721Address, i + 1);
-        //     contexts[i] = TestOrderContext(
-        //         true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        //     );
-        //     erc20Amounts[i] = 100 + i;
-        // }
+        for (uint256 i = 0; i < 10; i++) {
+            test721_1.mint(alice, i + 1);
+            nfts[i] = TestItem721(_test721Address, i + 1);
+            contexts[i] = TestOrderContext(
+                true, true, alice, bob, flashloanOfferer, adapter, sidecar
+            );
+            erc20Amounts[i] = 100 + i;
+        }
 
-        // try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        //     contexts, _test20Address, nfts, erc20Amounts
-        // ) returns (TestOrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
+        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+            contexts, _test20Address, nfts, erc20Amounts
+        ) returns (TestOrderPayload memory payload) {
+            for (uint256 i = 0; i < contexts.length; i++) {
+                contexts[i].fulfiller = bob;
+            }
 
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
 
-        //     for (uint256 i = 1; i <= 10; i++) {
-        //         assertEq(test721_1.ownerOf(i), bob);
-        //     }
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+
+            uint256 totalERC20Amount;
+
+            for (uint256 i = 0; i < contexts.length; i++) {
+                totalERC20Amount += erc20Amounts[i];
+            }
+
+            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
+                "standardERC20ConsiderationItem"
+            ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
+
+            payload.executeOrder = payload
+                .executeOrder
+                .createSeaportWrappedTestCallParameters(
+                stdCastOfCharacters,
+                new Flashloan[](0),
+                adapterOrderConsideration,
+                nfts
+            );
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            for (uint256 i = 1; i <= 10; i++) {
+                assertEq(test721_1.ownerOf(i), bob);
+            }
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
     }
 
     function buyTenOfferedERC721WithWETHDistinctOrders(BaseMarketConfig config)
@@ -4072,26 +4011,24 @@ contract GenericMarketplaceTest is
                 totalWethAmount += wethAmounts[i];
             }
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.empty()
-                .withItemType(ItemType.ERC20).withToken(wethAddress)
-                .withIdentifierOrCriteria(0).withStartAmount(totalWethAmount)
-                .withEndAmount(totalWethAmount).withRecipient(address(0));
-
             TestItem20[] memory erc20s;
             erc20s = new TestItem20[](0);
 
             vm.prank(sidecar);
             weth.approve(sidecar, type(uint256).max);
 
+            ConsiderationItem[] memory considerationArray =
+                new ConsiderationItem[](1);
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardWethConsiderationItem"
+            ).withStartAmount(totalWethAmount).withEndAmount(totalWethAmount);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 new Flashloan[](0),
-                adapterOrderConsideration,
+                considerationArray,
                 erc20s,
                 nfts
             );
@@ -4284,6 +4221,7 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(benchmark_MatchOrders_ABCA_Adapter)";
 
+        // Seaport only.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
@@ -4534,6 +4472,11 @@ contract GenericMarketplaceTest is
 
         vm.deal(flashloanOfferer, type(uint128).max);
 
+        vm.startPrank(sidecar);
+        test20.approve(sidecar, type(uint256).max);
+        weth.approve(sidecar, type(uint256).max);
+        vm.stopPrank();
+
         stdCastOfCharacters = CastOfCharacters({
             offerer: alice,
             fulfiller: bob,
@@ -4542,6 +4485,54 @@ contract GenericMarketplaceTest is
             adapter: adapter,
             sidecar: sidecar
         });
+
+        ConsiderationItem memory standardWethConsideration =
+        ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
+            wethAddress
+        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+            .withRecipient(address(0)).saveDefault("standardWethConsiderationItem");
+        ConsiderationItem memory standardERC20Consideration =
+        ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
+            _test20Address
+        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+            .withRecipient(address(0)).saveDefault("standardERC20ConsiderationItem");
+        ConsiderationItem memory standardERC721Consideration =
+        ConsiderationItemLib.empty().withItemType(ItemType.ERC721).withToken(
+            _test721Address
+        ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+            .withRecipient(address(0)).saveDefault("standard721ConsiderationItem");
+        ConsiderationItem memory standardERC1155Consideration =
+        ConsiderationItemLib.empty().withItemType(ItemType.ERC1155).withToken(
+            _test1155Address
+        ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+            .withRecipient(address(0)).saveDefault("standard1155ConsiderationItem");
+
+        ConsiderationItem[] memory adapterOrderConsideration =
+            new ConsiderationItem[](1);
+
+        adapterOrderConsideration[0] = standardWethConsideration;
+
+        adapterOrderConsideration.saveDefaultMany(
+            "standardWethConsiderationArray"
+        );
+
+        adapterOrderConsideration[0] = standardERC20Consideration;
+
+        adapterOrderConsideration.saveDefaultMany(
+            "standardERC20ConsiderationArray"
+        );
+
+        adapterOrderConsideration[0] = standardERC721Consideration;
+
+        adapterOrderConsideration.saveDefaultMany(
+            "standardERC721ConsiderationArray"
+        );
+
+        adapterOrderConsideration[0] = standardERC1155Consideration;
+
+        adapterOrderConsideration.saveDefaultMany(
+            "standardERC1155ConsiderationArray"
+        );
     }
 
     function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
