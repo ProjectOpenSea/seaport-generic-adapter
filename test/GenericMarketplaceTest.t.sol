@@ -98,6 +98,8 @@ contract GenericMarketplaceTest is
     using ConsiderationItemLib for ConsiderationItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
+    using AdapterHelperLib for TestCallParameters;
+    using AdapterHelperLib for TestCallParameters[];
 
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
@@ -181,6 +183,115 @@ contract GenericMarketplaceTest is
 
     function testBlur() external {
         benchmarkMarket(blurConfig);
+    }
+
+    function benchmarkMarket(BaseMarketConfig config) public {
+        // This is kind of a weird spot for this setup, but the benchmarking
+        // repo that this is cribbed from relies on recording logs to wipe them
+        // out between function calls. So it's important to be careful where
+        // you record logs, because it seems that they collide.
+        _doSetup();
+
+        beforeAllPrepareMarketplaceTest(config);
+
+        buyOfferedERC1155WithERC20_ListOnChain(config);
+        buyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
+
+        buyOfferedERC1155WithERC20(config);
+        buyOfferedERC1155WithERC20_Adapter(config);
+
+        buyOfferedERC1155WithERC721_ListOnChain(config);
+        buyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
+
+        buyOfferedERC1155WithERC721(config);
+        buyOfferedERC1155WithERC721_Adapter(config);
+
+        buyOfferedERC1155WithEther_ListOnChain(config);
+        buyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+
+        buyOfferedERC1155WithEther(config);
+        buyOfferedERC1155WithEther_Adapter(config);
+
+        buyOfferedERC20WithERC1155_ListOnChain(config);
+        buyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
+
+        buyOfferedERC20WithERC1155(config);
+        buyOfferedERC20WithERC1155_Adapter(config);
+
+        buyOfferedERC20WithERC721_ListOnChain(config);
+        buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
+
+        buyOfferedERC20WithERC721(config);
+        buyOfferedERC20WithERC721_Adapter(config);
+
+        buyOfferedERC721WithERC1155_ListOnChain(config);
+        buyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
+
+        buyOfferedERC721WithERC1155(config);
+        buyOfferedERC721WithERC1155_Adapter(config);
+
+        buyOfferedERC721WithERC20_ListOnChain(config);
+        buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
+
+        buyOfferedERC721WithERC20(config);
+        buyOfferedERC721WithERC20_Adapter(config);
+
+        buyOfferedERC721WithEther(config);
+        buyOfferedERC721WithEther_Adapter(config);
+
+        buyOfferedERC721WithEther_ListOnChain(config);
+        buyOfferedERC721WithEther_ListOnChain_Adapter(config);
+
+        buyOfferedERC721WithEtherFee(config);
+        buyOfferedERC721WithEtherFee_Adapter(config);
+
+        buyOfferedERC721WithEtherFee_ListOnChain(config);
+        buyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
+
+        buyOfferedERC721WithEtherFeeTwoRecipients(config);
+        buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
+
+        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
+        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(config);
+
+        buyOfferedERC721WithWETH(config);
+        buyOfferedERC721WithWETH_Adapter(config);
+
+        buyOfferedERC721WithWETH_ListOnChain(config);
+        buyOfferedERC721WithWETH_ListOnChain_Adapter(config);
+
+        buyOfferedWETHWithERC721_ListOnChain(config);
+        buyOfferedWETHWithERC721_ListOnChain_Adapter(config);
+
+        buyOfferedWETHWithERC721(config);
+        buyOfferedWETHWithERC721_Adapter(config);
+
+        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
+        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
+
+        buyTenOfferedERC721WithErc20DistinctOrders(config);
+        buyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+
+        buyTenOfferedERC721WithEther(config);
+        buyTenOfferedERC721WithEther_Adapter(config);
+
+        buyTenOfferedERC721WithEther_ListOnChain(config);
+        buyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
+
+        buyTenOfferedERC721WithEtherDistinctOrders(config);
+        buyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+
+        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
+        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(config);
+
+        buyTenOfferedERC721WithWETHDistinctOrders(config);
+        buyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
+
+        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
+        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(config);
+
+        benchmark_MatchOrders_ABCA(config);
+        benchmark_MatchOrders_ABCA_Adapter(config);
     }
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -418,7 +529,7 @@ contract GenericMarketplaceTest is
         );
 
         AdvancedOrder memory orderOffer1155;
-        AdvancedOrder memory orderConsider155;
+        AdvancedOrder memory orderConsider1155;
 
         {
             BasicOrderParameters memory params = configs[3]
@@ -432,7 +543,7 @@ contract GenericMarketplaceTest is
                 bob, standardERC20, TestItem1155(test1155Address, 2, 1)
             );
 
-            orderConsider155 = _createSeaportOrder(params);
+            orderConsider1155 = _createSeaportOrder(params);
         }
 
         {
@@ -440,7 +551,7 @@ contract GenericMarketplaceTest is
             infra.finalOrders[1] = infra.adapterOrders[1];
             infra.finalOrders[2] = infra.adapterOrders[2];
             infra.finalOrders[3] = orderOffer1155;
-            infra.finalOrders[4] = orderConsider155;
+            infra.finalOrders[4] = orderConsider1155;
         }
 
         FulfillmentComponent[] memory offerComponentsPrime =
@@ -531,208 +642,6 @@ contract GenericMarketplaceTest is
         assertEq(test20.balanceOf(alice), 100, "Alice did not get the test20");
 
         return gasUsed;
-    }
-
-    function _createSeaportOrder(BasicOrderParameters memory basicParams)
-        internal
-        returns (AdvancedOrder memory)
-    {
-        OrderParameters memory params = OrderParameters({
-            offerer: basicParams.offerer,
-            zone: basicParams.zone,
-            offer: new OfferItem[](1),
-            consideration: new ConsiderationItem[](1),
-            orderType: OrderType.FULL_OPEN,
-            startTime: basicParams.startTime,
-            endTime: basicParams.endTime,
-            zoneHash: basicParams.zoneHash,
-            salt: basicParams.salt + gasleft(),
-            conduitKey: basicParams.offererConduitKey,
-            totalOriginalConsiderationItems: 1
-        });
-
-        uint256 basicOrderType = uint256(basicParams.basicOrderType);
-
-        OfferItem memory offerItem;
-        offerItem.itemType = basicOrderType > 15
-            ? ItemType.ERC20
-            : basicOrderType > 11
-                ? ItemType.ERC1155
-                : basicOrderType > 7
-                    ? ItemType.ERC721
-                    : basicOrderType > 3 ? ItemType.ERC1155 : ItemType.ERC721;
-        offerItem.token = basicParams.offerToken;
-        offerItem.identifierOrCriteria = basicParams.offerIdentifier;
-        offerItem.startAmount = basicParams.offerAmount;
-        offerItem.endAmount = basicParams.offerAmount;
-
-        params.offer[0] = offerItem;
-
-        ConsiderationItem memory considerationItem;
-
-        considerationItem.itemType = basicOrderType < 8
-            ? ItemType.NATIVE
-            : basicOrderType < 16
-                ? ItemType.ERC20
-                : basicOrderType < 20 ? ItemType.ERC721 : ItemType.ERC1155;
-        considerationItem.token = basicParams.considerationToken;
-        considerationItem.identifierOrCriteria =
-            basicParams.considerationIdentifier;
-        considerationItem.startAmount = basicParams.considerationAmount;
-        considerationItem.endAmount = basicParams.considerationAmount;
-        considerationItem.recipient = basicParams.offerer;
-
-        params.consideration[0] = considerationItem;
-
-        bytes32 digest = _deriveEIP712Digest(_deriveOrderHash(params, 0));
-
-        (uint8 v, bytes32 r, bytes32 s) =
-            _signDigest(basicParams.offerer, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
-
-        AdvancedOrder memory advancedOrder = AdvancedOrder({
-            parameters: params,
-            numerator: 1,
-            denominator: 1,
-            signature: signature,
-            extraData: new bytes(0)
-        });
-
-        return advancedOrder;
-    }
-
-    // TODO: GO back and make sure the gas calculations are correct.
-
-    function benchmarkMarket(BaseMarketConfig config) public {
-        // This is kind of a weird spot for this setup, but the benchmarking
-        // repo that this is cribbed from relies on recording logs to wipe them
-        // out between function calls. So it's important to be careful where
-        // you record logs, because it seems that they collide.
-        _doSetup();
-
-        beforeAllPrepareMarketplaceTest(config);
-
-        buyOfferedERC1155WithERC20_ListOnChain(config);
-        buyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithERC20(config);
-        buyOfferedERC1155WithERC20_Adapter(config);
-
-        buyOfferedERC1155WithERC721_ListOnChain(config);
-        buyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithERC721(config);
-        buyOfferedERC1155WithERC721_Adapter(config);
-
-        buyOfferedERC1155WithEther_ListOnChain(config);
-        buyOfferedERC1155WithEther_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithEther(config);
-        buyOfferedERC1155WithEther_Adapter(config);
-
-        buyOfferedERC20WithERC1155_ListOnChain(config);
-        buyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
-
-        buyOfferedERC20WithERC1155(config);
-        buyOfferedERC20WithERC1155_Adapter(config);
-
-        buyOfferedERC20WithERC721_ListOnChain(config);
-        buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedERC20WithERC721(config);
-        buyOfferedERC20WithERC721_Adapter(config);
-
-        buyOfferedERC721WithERC1155_ListOnChain(config);
-        buyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithERC1155(config);
-        buyOfferedERC721WithERC1155_Adapter(config);
-
-        buyOfferedERC721WithERC20_ListOnChain(config);
-        buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithERC20(config);
-        buyOfferedERC721WithERC20_Adapter(config);
-
-        buyOfferedERC721WithEther(config);
-        buyOfferedERC721WithEther_Adapter(config);
-
-        buyOfferedERC721WithEther_ListOnChain(config);
-        buyOfferedERC721WithEther_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithEtherFee(config);
-        buyOfferedERC721WithEtherFee_Adapter(config);
-
-        buyOfferedERC721WithEtherFee_ListOnChain(config);
-        buyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithEtherFeeTwoRecipients(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
-
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithWETH(config);
-        buyOfferedERC721WithWETH_Adapter(config);
-
-        buyOfferedERC721WithWETH_ListOnChain(config);
-        buyOfferedERC721WithWETH_ListOnChain_Adapter(config);
-
-        buyOfferedWETHWithERC721_ListOnChain(config);
-        buyOfferedWETHWithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedWETHWithERC721(config);
-        buyOfferedWETHWithERC721_Adapter(config);
-
-        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithErc20DistinctOrders(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithEther(config);
-        buyTenOfferedERC721WithEther_Adapter(config);
-
-        buyTenOfferedERC721WithEther_ListOnChain(config);
-        buyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithEtherDistinctOrders(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithWETHDistinctOrders(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(config);
-
-        benchmark_MatchOrders_ABCA(config);
-        benchmark_MatchOrders_ABCA_Adapter(config);
-    }
-
-    function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
-        internal
-    {
-        // Get requested call from marketplace. Needed by Wyvern to deploy proxy
-        SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
-            alice, bob, erc20Addresses, erc721Addresses
-        );
-
-        for (uint256 i = 0; i < setupCalls.length; i++) {
-            hevm.startPrank(setupCalls[i].sender);
-            (bool avoidWarning, bytes memory data) =
-                (setupCalls[i].target).call(setupCalls[i].data);
-            if (!avoidWarning || data.length != 0) {
-                uint256 stopPlease;
-                stopPlease += 1;
-            }
-            hevm.stopPrank();
-        }
-
-        // Do any final setup within config
-        config.beforeAllPrepareMarketplace(alice, bob);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -833,9 +742,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -927,9 +836,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -1029,9 +938,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -1121,9 +1030,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -1254,9 +1163,9 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -1368,9 +1277,9 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             test20.approve(sidecar, 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -1490,9 +1399,9 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -1565,9 +1474,9 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -1711,9 +1620,9 @@ contract GenericMarketplaceTest is
                 .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
                 .withRecipient(address(0));
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -1795,9 +1704,8 @@ contract GenericMarketplaceTest is
             context, standardERC1155, standardERC20
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            if (_sameName(config.name(), looksRareConfig.name())) {
-                context.fulfiller = bob;
-            }
+            context.fulfiller = bob;
+
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -1810,9 +1718,9 @@ contract GenericMarketplaceTest is
                 .withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
                 .withRecipient(address(0));
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -1938,9 +1846,9 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             test20.approve(sidecar, 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -2025,12 +1933,7 @@ contract GenericMarketplaceTest is
             context, standardERC20, standardERC721
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            if (
-                _sameName(config.name(), looksRareConfig.name())
-                    || _sameName(config.name(), x2y2Config.name())
-            ) {
-                context.fulfiller = bob;
-            }
+            context.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
@@ -2051,9 +1954,9 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             test20.approve(sidecar, 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -2173,9 +2076,9 @@ contract GenericMarketplaceTest is
             );
             assertEq(weth.balanceOf(bob), 0);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -2270,9 +2173,9 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -2382,9 +2285,9 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             test20.approve(sidecar, 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -2465,9 +2368,7 @@ contract GenericMarketplaceTest is
             context, standardERC20, standardERC1155
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            if (_sameName(config.name(), looksRareConfig.name())) {
-                context.fulfiller = bob;
-            }
+            context.fulfiller = bob;
 
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
@@ -2488,9 +2389,9 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             test20.approve(sidecar, 100);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -2943,9 +2844,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3044,9 +2945,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3168,9 +3069,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3269,9 +3170,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3407,9 +3308,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3517,9 +3418,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3638,9 +3539,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3764,9 +3665,9 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
@@ -3898,9 +3799,9 @@ contract GenericMarketplaceTest is
             vm.prank(contexts[0].sidecar);
             test20.approve(contexts[0].sidecar, totalERC20Amount);
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
@@ -4109,9 +4010,9 @@ contract GenericMarketplaceTest is
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -4221,9 +4122,9 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
-            payload.executeOrder = AdapterHelperLib
+            payload.executeOrder = payload
+                .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                payload.executeOrder,
                 stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
@@ -4566,6 +4467,29 @@ contract GenericMarketplaceTest is
         });
     }
 
+    function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
+        internal
+    {
+        // Get requested call from marketplace. Needed by Wyvern to deploy proxy
+        SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
+            alice, bob, erc20Addresses, erc721Addresses
+        );
+
+        for (uint256 i = 0; i < setupCalls.length; i++) {
+            hevm.startPrank(setupCalls[i].sender);
+            (bool avoidWarning, bytes memory data) =
+                (setupCalls[i].target).call(setupCalls[i].data);
+            if (!avoidWarning || data.length != 0) {
+                uint256 stopPlease;
+                stopPlease += 1;
+            }
+            hevm.stopPrank();
+        }
+
+        // Do any final setup within config
+        config.beforeAllPrepareMarketplace(alice, bob);
+    }
+
     function _prepareMarketplaces(BaseMarketConfig[] memory configs) public {
         for (uint256 i; i < configs.length; i++) {
             beforeAllPrepareMarketplaceTest(configs[i]);
@@ -4628,6 +4552,74 @@ contract GenericMarketplaceTest is
         //         abi.encodePacked("[", name, "] ", label, " -- NOT SUPPORTED")
         //     )
         // );
+    }
+
+    function _createSeaportOrder(BasicOrderParameters memory basicParams)
+        internal
+        returns (AdvancedOrder memory)
+    {
+        OrderParameters memory params = OrderParameters({
+            offerer: basicParams.offerer,
+            zone: basicParams.zone,
+            offer: new OfferItem[](1),
+            consideration: new ConsiderationItem[](1),
+            orderType: OrderType.FULL_OPEN,
+            startTime: basicParams.startTime,
+            endTime: basicParams.endTime,
+            zoneHash: basicParams.zoneHash,
+            salt: basicParams.salt + gasleft(),
+            conduitKey: basicParams.offererConduitKey,
+            totalOriginalConsiderationItems: 1
+        });
+
+        uint256 basicOrderType = uint256(basicParams.basicOrderType);
+
+        OfferItem memory offerItem;
+        offerItem.itemType = basicOrderType > 15
+            ? ItemType.ERC20
+            : basicOrderType > 11
+                ? ItemType.ERC1155
+                : basicOrderType > 7
+                    ? ItemType.ERC721
+                    : basicOrderType > 3 ? ItemType.ERC1155 : ItemType.ERC721;
+        offerItem.token = basicParams.offerToken;
+        offerItem.identifierOrCriteria = basicParams.offerIdentifier;
+        offerItem.startAmount = basicParams.offerAmount;
+        offerItem.endAmount = basicParams.offerAmount;
+
+        params.offer[0] = offerItem;
+
+        ConsiderationItem memory considerationItem;
+
+        considerationItem.itemType = basicOrderType < 8
+            ? ItemType.NATIVE
+            : basicOrderType < 16
+                ? ItemType.ERC20
+                : basicOrderType < 20 ? ItemType.ERC721 : ItemType.ERC1155;
+        considerationItem.token = basicParams.considerationToken;
+        considerationItem.identifierOrCriteria =
+            basicParams.considerationIdentifier;
+        considerationItem.startAmount = basicParams.considerationAmount;
+        considerationItem.endAmount = basicParams.considerationAmount;
+        considerationItem.recipient = basicParams.offerer;
+
+        params.consideration[0] = considerationItem;
+
+        bytes32 digest = _deriveEIP712Digest(_deriveOrderHash(params, 0));
+
+        (uint8 v, bytes32 r, bytes32 s) =
+            _signDigest(basicParams.offerer, digest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        AdvancedOrder memory advancedOrder = AdvancedOrder({
+            parameters: params,
+            numerator: 1,
+            denominator: 1,
+            signature: signature,
+            extraData: new bytes(0)
+        });
+
+        return advancedOrder;
     }
 
     function _benchmarkCallWithParams(
