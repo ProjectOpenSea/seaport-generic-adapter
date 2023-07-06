@@ -2,6 +2,7 @@
 src = "src"
 out = "out"
 libs = ["lib"]
+evm_version='shanghai'
 
 remappings = [
     '@rari-capital/solmate/=lib/solmate/',
@@ -16,5 +17,3 @@ remappings = [
 line_length = 80
 tab_width = 4
 bracket_spacing = true
-
-# See more config options https://github.com/foundry-rs/foundry/tree/master/config

@@ -52,7 +52,7 @@ contract TestTokenMinter is
     address payable internal bob = payable(vm.addr(bobPk));
     address payable internal cal = payable(vm.addr(calPk));
 
-    TestERC20 internal token1;
+    TestERC20 internal test20;
     TestERC20 internal token2;
     TestERC20 internal token3;
 
@@ -113,7 +113,7 @@ contract TestTokenMinter is
         vm.label(cal, "cal");
 
         _deployTestTokenContracts();
-        erc20s = [token1, token2, token3];
+        erc20s = [test20, token2, token3];
         erc721s = [test721_1, test721_2, test721_3];
         erc1155s = [test1155_1, test1155_2, test1155_3];
 
@@ -200,7 +200,7 @@ contract TestTokenMinter is
     }
 
     function mintErc20TokensTo(address to, uint256 amount) internal {
-        mintErc20TokensTo(to, token1, amount);
+        mintErc20TokensTo(to, test20, amount);
     }
 
     function mintErc20TokensTo(address to, TestERC20 token, uint256 amount)
@@ -213,7 +213,7 @@ contract TestTokenMinter is
      * @dev deploy test token contracts
      */
     function _deployTestTokenContracts() internal {
-        token1 = new TestERC20();
+        test20 = new TestERC20();
         token2 = new TestERC20();
         token3 = new TestERC20();
         test721_1 = new TestERC721();
@@ -224,7 +224,7 @@ contract TestTokenMinter is
         test1155_3 = new TestERC1155();
         preapproved721 = new PreapprovedERC721(preapprovals);
 
-        vm.label(address(token1), "token1");
+        vm.label(address(test20), "test20");
         vm.label(address(test721_1), "test721_1");
         vm.label(address(test1155_1), "test1155_1");
         vm.label(address(preapproved721), "preapproved721");

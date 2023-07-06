@@ -380,7 +380,7 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         // Put back the type but mess up the token.
         spentItemMinReceived =
-            SpentItem(ItemType.ERC20, address(token1), 0, 1 ether);
+            SpentItem(ItemType.ERC20, address(test20), 0, 1 ether);
         minimumReceived[0] = spentItemMinReceived;
 
         vm.expectRevert(

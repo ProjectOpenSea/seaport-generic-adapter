@@ -113,7 +113,7 @@ contract BaseOrderTest is OrderBuilder, AmountDeriver {
         vm.label(address(this), "testContract");
 
         _deployTestTokenContracts();
-        erc20s = [token1, token2, token3];
+        erc20s = [test20, token2, token3];
         erc721s = [test721_1, test721_2, test721_3];
         erc1155s = [test1155_1, test1155_2, test1155_3];
 
