@@ -388,6 +388,7 @@ contract GenericMarketplaceTest is
         Fulfillment[] adapterFulfillments;
         CastOfCharacters castOfCharacters;
         Flashloan[] flashloans;
+        ConsiderationItem[] considerationArray;
         TestItem721[] erc721s;
         TestItem1155[] erc1155s;
         TestItem1155 item1155;
@@ -408,6 +409,7 @@ contract GenericMarketplaceTest is
             new Fulfillment[](2),
             stdCastOfCharacters,
             new Flashloan[](1),
+            new ConsiderationItem[](1),
             new TestItem721[](1),
             new TestItem1155[](2),
             standardERC1155,
@@ -516,13 +518,17 @@ contract GenericMarketplaceTest is
         infra.erc721s[0] = standardERC721;
         infra.erc1155s[0] = standardERC1155;
 
+        infra.considerationArray[0] = ConsiderationItemLib.fromDefault(
+            "standardNativeConsiderationItem"
+        ).withStartAmount(605).withEndAmount(605);
+
         // This should provide all the info required for the aggregated orders.
         (infra.adapterOrders, infra.adapterFulfillments) = AdapterHelperLib
             .createSeaportWrappedTestCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
             infra.flashloans,
-            new ConsiderationItem[](0),
+            infra.considerationArray,
             new TestItem20[](0),
             infra.erc721s,
             infra.erc1155s
@@ -745,7 +751,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 items
             );
 
@@ -839,7 +847,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 standardERC721
             );
 
@@ -941,7 +951,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 standardERC1155
             );
 
@@ -1033,7 +1045,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 standardERC1155
             );
 
@@ -1153,10 +1167,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            TestItem20[] memory erc20s;
             TestItem721[] memory erc721s;
 
-            erc20s = new TestItem20[](0);
             erc721s = new TestItem721[](1);
 
             if (_sameName(config.name(), sudoswapConfig.name())) {
@@ -1169,11 +1181,9 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                erc20s,
                 erc721s
             );
 
@@ -1264,10 +1274,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            TestItem20[] memory erc20s;
             TestItem721[] memory erc721s;
 
-            erc20s = new TestItem20[](0);
             erc721s = new TestItem721[](1);
             erc721s[0] = standardERC721;
 
@@ -1275,11 +1283,9 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                erc20s,
                 erc721s
             );
 
@@ -1403,10 +1409,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                adapterOrderConsideration,
-                erc721s
+                stdCastOfCharacters, adapterOrderConsideration, erc721s
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1490,10 +1493,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                adapterOrderConsideration,
-                erc721s
+                stdCastOfCharacters, adapterOrderConsideration, erc721s
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1629,7 +1629,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -1721,7 +1720,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -1839,7 +1837,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -1937,7 +1934,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -2058,7 +2054,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -2156,7 +2151,6 @@ contract GenericMarketplaceTest is
                     .executeOrder
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
-                    new Flashloan[](0),
                     new ConsiderationItem[](0),
                     new TestItem721[](0)
                 );
@@ -2172,7 +2166,6 @@ contract GenericMarketplaceTest is
                     .executeOrder
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
-                    new Flashloan[](0),
                     ConsiderationItemLib.fromDefaultMany(
                         "standardERC721ConsiderationArray"
                     ),
@@ -2275,7 +2268,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
@@ -2369,7 +2361,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                new Flashloan[](0),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
@@ -2700,7 +2691,7 @@ contract GenericMarketplaceTest is
         //         address(context.flashloanOfferer),
         //         address(context.adapter),
         //         sidecar,
-        //         new Flashloan[](0),
+        //
         //         standardERC721
         //     );
 
@@ -2812,12 +2803,20 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(505).withEndAmount(505);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                considerationArray,
                 standardERC721
             );
 
@@ -2908,12 +2907,20 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(105).withEndAmount(105);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                considerationArray,
                 standardERC721
             );
 
@@ -3024,12 +3031,20 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(110).withEndAmount(110);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                considerationArray,
                 standardERC721
             );
 
@@ -3122,12 +3137,20 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(110).withEndAmount(110);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                considerationArray,
                 standardERC721
             );
 
@@ -3256,7 +3279,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 items
             );
 
@@ -3362,7 +3387,9 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
                 flashloanArray,
-                new ConsiderationItem[](0),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardNativeConsiderationArray"
+                ),
                 items
             );
 
@@ -3482,13 +3509,18 @@ contract GenericMarketplaceTest is
             Flashloan[] memory flashloanArray = new Flashloan[](1);
             flashloanArray[0] = flashloan;
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                new ConsiderationItem[](0),
-                items
+                stdCastOfCharacters, flashloanArray, considerationArray, items
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3614,22 +3646,21 @@ contract GenericMarketplaceTest is
             // Sudo does the transfers.
             if (_sameName(config.name(), sudoswapConfig.name())) {
                 items = new TestItem721[](0);
-                // payload.executeOrder.value = flashloanAmount;
             }
+
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                new ConsiderationItem[](0),
-                items
+                stdCastOfCharacters, flashloanArray, considerationArray, items
             );
-
-            // Tack on the value manually here?
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                payload.executeOrder.value = flashloanAmount;
-            }
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3750,10 +3781,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                adapterOrderConsideration,
-                nfts
+                stdCastOfCharacters, adapterOrderConsideration, nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3885,10 +3913,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                adapterOrderConsideration,
-                nfts
+                stdCastOfCharacters, adapterOrderConsideration, nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -4011,9 +4036,6 @@ contract GenericMarketplaceTest is
                 totalWethAmount += wethAmounts[i];
             }
 
-            TestItem20[] memory erc20s;
-            erc20s = new TestItem20[](0);
-
             vm.prank(sidecar);
             weth.approve(sidecar, type(uint256).max);
 
@@ -4026,11 +4048,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                considerationArray,
-                erc20s,
-                nfts
+                stdCastOfCharacters, considerationArray, nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -4136,13 +4154,18 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
+            ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](
+                1
+            );
+            considerationArray[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            ).withStartAmount(0).withEndAmount(0);
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                new ConsiderationItem[](0),
-                new TestItem721[](0)
+                stdCastOfCharacters, considerationArray, new TestItem721[](0)
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -4486,6 +4509,13 @@ contract GenericMarketplaceTest is
             sidecar: sidecar
         });
 
+        ConsiderationItem memory standardNativeConsideration =
+        ConsiderationItemLib.empty().withItemType(ItemType.NATIVE).withToken(
+            address(0)
+        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
+            .withRecipient(address(0)).saveDefault(
+            "standardNativeConsiderationItem"
+        );
         ConsiderationItem memory standardWethConsideration =
         ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
             wethAddress
@@ -4510,26 +4540,27 @@ contract GenericMarketplaceTest is
         ConsiderationItem[] memory adapterOrderConsideration =
             new ConsiderationItem[](1);
 
-        adapterOrderConsideration[0] = standardWethConsideration;
+        adapterOrderConsideration[0] = standardNativeConsideration;
+        adapterOrderConsideration.saveDefaultMany(
+            "standardNativeConsiderationArray"
+        );
 
+        adapterOrderConsideration[0] = standardWethConsideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardWethConsiderationArray"
         );
 
         adapterOrderConsideration[0] = standardERC20Consideration;
-
         adapterOrderConsideration.saveDefaultMany(
             "standardERC20ConsiderationArray"
         );
 
         adapterOrderConsideration[0] = standardERC721Consideration;
-
         adapterOrderConsideration.saveDefaultMany(
             "standardERC721ConsiderationArray"
         );
 
         adapterOrderConsideration[0] = standardERC1155Consideration;
-
         adapterOrderConsideration.saveDefaultMany(
             "standardERC1155ConsiderationArray"
         );

@@ -211,11 +211,38 @@ library AdapterHelperLib {
         }
     }
 
+    // TODO: Make all of this less deranged.
+
+    ////////////////////////////////////////////////////////////////////////////
+    //                      A bunch of different interfaces.                  //
+    //                  The meat is at the bottom of all these.               //
+    ////////////////////////////////////////////////////////////////////////////
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        CastOfCharacters memory castOfCharacters,
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem721 memory nft
+    ) public view returns (TestCallParameters memory) {
+        TestItem721[] memory erc721s = new TestItem721[](1);
+        erc721s[0] = nft;
+        Flashloan[] memory flashloans = new Flashloan[](0);
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParameters,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
+            erc721s,
+            new TestItem1155[](0)
+        );
+    }
+
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem721 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](1);
@@ -225,7 +252,7 @@ library AdapterHelperLib {
             testCallParameters,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             erc721s,
             new TestItem1155[](0)
         );
@@ -234,15 +261,16 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem721[] memory nfts
     ) public view returns (TestCallParameters memory) {
+        Flashloan[] memory flashloans = new Flashloan[](0);
+
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             nfts,
             new TestItem1155[](0)
         );
@@ -252,7 +280,44 @@ library AdapterHelperLib {
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem721[] memory nfts
+    ) public view returns (TestCallParameters memory) {
+        return createSeaportWrappedTestCallParameters(
+            testCallParameters,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
+            nfts,
+            new TestItem1155[](0)
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        CastOfCharacters memory castOfCharacters,
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem1155 memory nft
+    ) public view returns (TestCallParameters memory) {
+        TestItem1155[] memory erc1155s = new TestItem1155[](1);
+        erc1155s[0] = nft;
+        Flashloan[] memory flashloans = new Flashloan[](0);
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParameters,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
+            new TestItem721[](0),
+            erc1155s
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        CastOfCharacters memory castOfCharacters,
+        Flashloan[] memory flashloans,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem1155 memory nft
     ) public view returns (TestCallParameters memory) {
         TestItem1155[] memory erc1155s = new TestItem1155[](1);
@@ -262,7 +327,7 @@ library AdapterHelperLib {
             testCallParameters,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             new TestItem721[](0),
             erc1155s
         );
@@ -271,17 +336,17 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem1155[] memory nfts
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](0);
+        Flashloan[] memory flashloans = new Flashloan[](0);
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             erc721s,
             nfts
         );
@@ -291,14 +356,29 @@ library AdapterHelperLib {
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem1155[] memory nfts
+    ) public view returns (TestCallParameters memory) {
+        TestItem721[] memory erc721s = new TestItem721[](0);
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParameters,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
+            erc721s,
+            nfts
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        CastOfCharacters memory castOfCharacters,
+        Flashloan[] memory flashloans,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
-    )
-        public
-        view
-        returns (TestCallParameters memory wrappedTestCallParameter)
-    {
+    ) public view returns (TestCallParameters memory) {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
@@ -307,7 +387,7 @@ library AdapterHelperLib {
             testCallParametersArray,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             new TestItem20[](0),
             erc721s,
             erc1155s
@@ -318,19 +398,15 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
-    )
-        public
-        view
-        returns (TestCallParameters memory wrappedTestCallParameter)
-    {
+    ) public view returns (TestCallParameters memory) {
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             new TestItem20[](0),
             erc721s,
             erc1155s
@@ -340,23 +416,19 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem20[] memory erc20s
-    )
-        public
-        view
-        returns (TestCallParameters memory wrappedTestCallParameter)
-    {
+    ) public view returns (TestCallParameters memory) {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
+        Flashloan[] memory flashloans = new Flashloan[](0);
 
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             erc20s,
             new TestItem721[](0),
             new TestItem1155[](0)
@@ -367,14 +439,9 @@ library AdapterHelperLib {
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
-        TestItem20[] memory erc20s,
-        TestItem721[] memory nfts
-    )
-        public
-        view
-        returns (TestCallParameters memory wrappedTestCallParameter)
-    {
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem20[] memory erc20s
+    ) public view returns (TestCallParameters memory) {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
@@ -383,7 +450,30 @@ library AdapterHelperLib {
             testCallParametersArray,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
+            erc20s,
+            new TestItem721[](0),
+            new TestItem1155[](0)
+        );
+    }
+
+    function createSeaportWrappedTestCallParameters(
+        TestCallParameters memory testCallParameters,
+        CastOfCharacters memory castOfCharacters,
+        Flashloan[] memory flashloans,
+        ConsiderationItem[] memory adapterConsideration,
+        TestItem20[] memory erc20s,
+        TestItem721[] memory nfts
+    ) public view returns (TestCallParameters memory) {
+        TestCallParameters[] memory testCallParametersArray =
+            new TestCallParameters[](1);
+        testCallParametersArray[0] = testCallParameters;
+
+        return createSeaportWrappedTestCallParameters(
+            testCallParametersArray,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
             erc20s,
             nfts,
             new TestItem1155[](0)
@@ -394,14 +484,14 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem20[] memory erc20s,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
     )
         public
         view
-        returns (TestCallParameters memory wrappedTestCallParameter)
+        returns (TestCallParameters memory wrappedTestCallParameters)
     {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
@@ -410,13 +500,13 @@ library AdapterHelperLib {
             testCallParametersArray,
             castOfCharacters,
             flashloans,
-            considerationArray,
+            adapterConsideration,
             erc20s,
             erc721s,
             erc1155s
         );
 
-        wrappedTestCallParameter.data = abi.encodeWithSelector(
+        wrappedTestCallParameters.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,
             orders,
             new CriteriaResolver[](0),
@@ -430,12 +520,12 @@ library AdapterHelperLib {
             value += testCallParametersArray[i].value;
         }
 
-        wrappedTestCallParameter.value = value;
-        wrappedTestCallParameter.target = castOfCharacters.seaport;
+        wrappedTestCallParameters.value = value;
+        wrappedTestCallParameters.target = castOfCharacters.seaport;
     }
 
     struct AdapterWrapperInfra {
-        ConsiderationItem[] considerationArray;
+        ConsiderationItem[] adapterConsideration;
         OrderParameters orderParameters;
         AdvancedOrder order;
         AdvancedOrder[] orders;
@@ -453,7 +543,7 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
-        ConsiderationItem[] memory considerationArray,
+        ConsiderationItem[] memory adapterConsideration,
         TestItem20[] memory erc20s,
         TestItem721[] memory erc721s,
         TestItem1155[] memory erc1155s
@@ -466,9 +556,7 @@ library AdapterHelperLib {
         )
     {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra(
-            considerationArray.length == 0
-                ? new ConsiderationItem[](1)
-                : considerationArray,
+            adapterConsideration,
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
             new AdvancedOrder[](3),
@@ -491,17 +579,6 @@ library AdapterHelperLib {
             infra.order =
                 AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
-            // Default to this consideration array.
-            if (
-                keccak256(abi.encode(infra.considerationArray[0]))
-                    == keccak256(abi.encode(ConsiderationItemLib.empty()))
-            ) {
-                infra.considerationArray[0] = ConsiderationItemLib.empty()
-                    .withItemType(ItemType.NATIVE).withToken(address(0))
-                    .withIdentifierOrCriteria(0).withStartAmount(infra.value)
-                    .withEndAmount(infra.value).withRecipient(address(0));
-            }
-
             {
                 infra.orderParameters = OrderParametersLib.empty().withOrderType(
                     OrderType.FULL_OPEN
@@ -516,9 +593,9 @@ library AdapterHelperLib {
                     infra.orderParameters.withOrderType(OrderType.CONTRACT);
                 infra.orderParameters = infra.orderParameters.withOffer(
                     new OfferItem[](0)
-                ).withConsideration(infra.considerationArray)
+                ).withConsideration(infra.adapterConsideration)
                     .withTotalOriginalConsiderationItems(
-                    infra.considerationArray.length
+                    infra.adapterConsideration.length
                 );
 
                 infra.order = infra.order.withParameters(infra.orderParameters);
@@ -574,11 +651,11 @@ library AdapterHelperLib {
                         infra.flashloans[i].amount;
                 }
 
-                infra.considerationArray = new ConsiderationItem[](1);
+                infra.adapterConsideration = new ConsiderationItem[](1);
 
                 // Come back and think about the case where multiple flashloans
                 // of different types are required.
-                infra.considerationArray[0] = ConsiderationItemLib.empty()
+                infra.adapterConsideration[0] = ConsiderationItemLib.empty()
                     .withItemType(infra.flashloans[0].itemType).withToken(
                     address(0)
                 ).withIdentifierOrCriteria(0).withStartAmount(
@@ -609,7 +686,7 @@ library AdapterHelperLib {
                 infra.orderParameters =
                     infra.orderParameters.withOffer(new OfferItem[](0));
                 infra.orderParameters = infra.orderParameters.withConsideration(
-                    infra.considerationArray
+                    infra.adapterConsideration
                 );
                 infra.orderParameters =
                     infra.orderParameters.withTotalOriginalConsiderationItems(1);
