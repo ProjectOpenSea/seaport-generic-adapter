@@ -117,6 +117,8 @@ contract GenericMarketplaceTest is
     ISeaport internal constant seaport =
         ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
+    CastOfCharacters stdCastOfCharacters;
+
     constructor() {
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
@@ -265,7 +267,16 @@ contract GenericMarketplaceTest is
             address(this), new SpentItem[](0), new SpentItem[](0), contextArg
         );
 
-        vm.deal(address(flashloanOfferer), type(uint128).max);
+        vm.deal(flashloanOfferer, type(uint128).max);
+
+        stdCastOfCharacters = CastOfCharacters({
+            offerer: alice,
+            fulfiller: bob,
+            seaport: address(seaport),
+            flashloanOfferer: flashloanOfferer,
+            adapter: adapter,
+            sidecar: sidecar
+        });
     }
 
     function _prepareMarketplaces(BaseMarketConfig[] memory configs) public {
@@ -387,7 +398,7 @@ contract GenericMarketplaceTest is
             new AdvancedOrder[](3),
             new Fulfillment[](2),
             CastOfCharacters(
-                bob, address(seaport), flashloanOfferer, adapter, sidecar
+                alice, bob, address(seaport), flashloanOfferer, adapter, sidecar
             ),
             new Flashloan[](1),
             new TestItem721[](1),
@@ -942,11 +953,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -1039,11 +1046,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -1145,11 +1148,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 item
@@ -1241,11 +1240,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 item
@@ -1377,11 +1372,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -1494,11 +1485,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 erc20s,
@@ -1619,11 +1606,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -1698,11 +1681,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -1849,11 +1828,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 TestItem1155(address(test1155_1), 1, 1)
@@ -1953,11 +1928,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 TestItem1155(address(test1155_1), 1, 1)
@@ -2084,11 +2055,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 erc20s
@@ -2200,11 +2167,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 erc20s
@@ -2325,11 +2288,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -2426,11 +2385,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -2545,11 +2500,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 erc20s
@@ -2658,11 +2609,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 erc20s
@@ -3113,11 +3060,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -3217,11 +3160,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -3345,11 +3284,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -3449,11 +3384,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 standardERC721
@@ -3590,11 +3521,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 items
@@ -3685,9 +3612,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            context,
             items,
             100
         ) returns (TestOrderPayload memory payload) {
@@ -3708,11 +3633,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(context.fulfiller),
-                address(seaport),
-                address(context.flashloanOfferer),
-                address(context.adapter),
-                address(context.sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 items
@@ -3832,11 +3753,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(contexts[0].fulfiller),
-                address(seaport),
-                address(contexts[0].flashloanOfferer),
-                address(contexts[0].adapter),
-                address(contexts[0].sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 items
@@ -3962,11 +3879,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(contexts[0].fulfiller),
-                address(seaport),
-                address(contexts[0].flashloanOfferer),
-                address(contexts[0].adapter),
-                address(contexts[0].sidecar),
+                stdCastOfCharacters,
                 flashloanArray,
                 new ConsiderationItem[](0),
                 items
@@ -4099,11 +4012,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(contexts[0].fulfiller),
-                address(seaport),
-                address(contexts[0].flashloanOfferer),
-                address(contexts[0].adapter),
-                address(contexts[0].sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderConsideration,
                 nfts
@@ -4313,11 +4222,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(contexts[0].fulfiller),
-                address(seaport),
-                address(contexts[0].flashloanOfferer),
-                address(contexts[0].adapter),
-                address(contexts[0].sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)
@@ -4429,11 +4334,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
                 payload.executeOrder,
-                address(contexts[0].fulfiller),
-                address(seaport),
-                address(contexts[0].flashloanOfferer),
-                address(contexts[0].adapter),
-                address(contexts[0].sidecar),
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 new ConsiderationItem[](0),
                 new TestItem721[](0)

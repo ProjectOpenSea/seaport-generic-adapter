@@ -67,6 +67,7 @@ struct Approval {
 }
 
 struct CastOfCharacters {
+    address offerer;
     address fulfiller;
     address seaport;
     address flashloanOfferer;
@@ -225,11 +226,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem721 memory nft
@@ -239,11 +236,7 @@ library AdapterHelperLib {
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
-            fulfiller,
-            seaport,
-            flashloanOfferer,
-            adapter,
-            sidecar,
+            castOfCharacters,
             flashloans,
             considerationArray,
             erc721s,
@@ -253,22 +246,14 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem721[] memory nfts
     ) public view returns (TestCallParameters memory) {
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
-            fulfiller,
-            seaport,
-            flashloanOfferer,
-            adapter,
-            sidecar,
+            castOfCharacters,
             flashloans,
             considerationArray,
             nfts,
@@ -278,11 +263,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem1155 memory nft
@@ -292,11 +273,7 @@ library AdapterHelperLib {
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
-            fulfiller,
-            seaport,
-            flashloanOfferer,
-            adapter,
-            sidecar,
+            castOfCharacters,
             flashloans,
             considerationArray,
             new TestItem721[](0),
@@ -306,11 +283,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem1155[] memory nfts
@@ -319,11 +292,7 @@ library AdapterHelperLib {
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
-            fulfiller,
-            seaport,
-            flashloanOfferer,
-            adapter,
-            sidecar,
+            castOfCharacters,
             flashloans,
             considerationArray,
             erc721s,
@@ -333,11 +302,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
@@ -350,9 +315,6 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
-        CastOfCharacters memory castOfCharacters = CastOfCharacters(
-            fulfiller, seaport, flashloanOfferer, adapter, sidecar
-        );
 
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
@@ -367,11 +329,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters[] memory testCallParametersArray,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem721[] memory erc721s,
@@ -381,10 +339,6 @@ library AdapterHelperLib {
         view
         returns (TestCallParameters memory wrappedTestCallParameter)
     {
-        CastOfCharacters memory castOfCharacters = CastOfCharacters(
-            fulfiller, seaport, flashloanOfferer, adapter, sidecar
-        );
-
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
             castOfCharacters,
@@ -398,11 +352,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem20[] memory erc20s
@@ -414,10 +364,6 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
-
-        CastOfCharacters memory castOfCharacters = CastOfCharacters(
-            fulfiller, seaport, flashloanOfferer, adapter, sidecar
-        );
 
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
@@ -432,11 +378,7 @@ library AdapterHelperLib {
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
-        address fulfiller,
-        address seaport,
-        address flashloanOfferer,
-        address adapter,
-        address sidecar,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory considerationArray,
         TestItem20[] memory erc20s,
@@ -449,10 +391,6 @@ library AdapterHelperLib {
         TestCallParameters[] memory testCallParametersArray =
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
-
-        CastOfCharacters memory castOfCharacters = CastOfCharacters(
-            fulfiller, seaport, flashloanOfferer, adapter, sidecar
-        );
 
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
