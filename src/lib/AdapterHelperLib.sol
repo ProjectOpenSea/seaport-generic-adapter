@@ -43,16 +43,6 @@ import {
 
 import "forge-std/console.sol";
 
-interface IWETH {
-    function deposit() external payable;
-
-    function withdraw(uint256) external;
-
-    function balanceOf(address) external view returns (uint256);
-
-    function approve(address, uint256) external returns (bool);
-}
-
 // TODO: Think about maybe just putting a SpentItem in here.
 struct Flashloan {
     uint88 amount;
@@ -220,9 +210,6 @@ library AdapterHelperLib {
             extraData[i] = bytes32(extraDataSize)[i];
         }
     }
-
-    // TODO: think about whether the sidecar should be transferring these
-    // directly or waiting for Seaport to do its optimized executions.
 
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
@@ -495,13 +482,8 @@ library AdapterHelperLib {
             0
         );
 
-        {
-            for (uint256 i; i < testCallParametersArray.length; ++i) {
-                infra.value += testCallParametersArray[i].value;
-            }
-
-            // wrappedTestCallParameter.target = castOfCharacters.seaport;
-            // wrappedTestCallParameter.value = infra.value;
+        for (uint256 i; i < testCallParametersArray.length; ++i) {
+            infra.value += testCallParametersArray[i].value;
         }
 
         {

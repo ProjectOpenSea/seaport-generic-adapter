@@ -26,7 +26,7 @@ contract BaseMarketplaceTest is DSTestPlus {
     address payable internal feeReciever1 = payable(hevm.addr(feeReciever1Pk));
     address payable internal feeReciever2 = payable(hevm.addr(feeReciever2Pk));
 
-    TestERC20 internal token1;
+    TestERC20 internal test20;
     TestERC20 internal token2;
     TestERC20 internal token3;
 
@@ -79,15 +79,15 @@ contract BaseMarketplaceTest is DSTestPlus {
 
         _deployTestTokenContracts();
         accounts = [alice, bob, cal, address(this)];
-        erc20s = [token1, token2, token3];
+        erc20s = [test20, token2, token3];
         erc20Addresses =
-            [address(token1), address(token2), address(token3), address(weth)];
+            [address(test20), address(token2), address(token3), address(weth)];
         erc721s = [test721_1, test721_2, test721_3];
         erc721Addresses =
             [address(test721_1), address(test721_2), address(test721_3)];
         erc1155s = [test1155_1, test1155_2, test1155_3];
         allTokens = [
-            address(token1),
+            address(test20),
             address(token2),
             address(token3),
             address(weth),
@@ -104,7 +104,7 @@ contract BaseMarketplaceTest is DSTestPlus {
      * @dev deploy test token contracts
      */
     function _deployTestTokenContracts() internal {
-        token1 = new TestERC20();
+        test20 = new TestERC20();
         token2 = new TestERC20();
         token3 = new TestERC20();
         test721_1 = new TestERC721();
@@ -113,7 +113,7 @@ contract BaseMarketplaceTest is DSTestPlus {
         test1155_1 = new TestERC1155();
         test1155_2 = new TestERC1155();
         test1155_3 = new TestERC1155();
-        hevm.label(address(token1), "token1");
+        hevm.label(address(test20), "test20");
         hevm.label(address(weth), "weth");
         hevm.label(address(test721_1), "test721_1");
         hevm.label(address(test1155_1), "test1155_1");
