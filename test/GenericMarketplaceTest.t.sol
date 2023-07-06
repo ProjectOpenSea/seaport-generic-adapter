@@ -108,6 +108,8 @@ contract GenericMarketplaceTest is
     address public flashloanOfferer;
     address public adapter;
     address public sidecar;
+    address public test20Address;
+    address public test721Address;
 
     uint256 public costOfLastCall;
 
@@ -177,7 +179,7 @@ contract GenericMarketplaceTest is
         testFlashloanOfferer = FlashloanOffererInterface(
             deployCode(
                 "out/FlashloanOfferer.sol/FlashloanOfferer.json",
-                abi.encode(address(seaport))
+                abi.encode(seaportAddress)
             )
         );
 
@@ -186,7 +188,7 @@ contract GenericMarketplaceTest is
         testAdapter = GenericAdapterInterface(
             deployCode(
                 "out/GenericAdapter.sol/GenericAdapter.json",
-                abi.encode(address(seaport), address(testFlashloanOfferer))
+                abi.encode(seaportAddress, address(testFlashloanOfferer))
             )
         );
 
@@ -262,7 +264,7 @@ contract GenericMarketplaceTest is
         );
 
         // Prank seaport to allow hitting the adapter directly.
-        vm.prank(address(seaport));
+        vm.prank(seaportAddress);
         testAdapter.generateOrder(
             address(this), new SpentItem[](0), new SpentItem[](0), contextArg
         );
@@ -272,7 +274,7 @@ contract GenericMarketplaceTest is
         stdCastOfCharacters = CastOfCharacters({
             offerer: alice,
             fulfiller: bob,
-            seaport: address(seaport),
+            seaport: seaportAddress,
             flashloanOfferer: flashloanOfferer,
             adapter: adapter,
             sidecar: sidecar
@@ -398,7 +400,7 @@ contract GenericMarketplaceTest is
             new AdvancedOrder[](3),
             new Fulfillment[](2),
             CastOfCharacters(
-                alice, bob, address(seaport), flashloanOfferer, adapter, sidecar
+                alice, bob, seaportAddress, flashloanOfferer, adapter, sidecar
             ),
             new Flashloan[](1),
             new TestItem721[](1),
@@ -505,7 +507,7 @@ contract GenericMarketplaceTest is
             amount: 605,
             itemType: ItemType.NATIVE,
             shouldCallback: true,
-            recipient: address(adapter)
+            recipient: adapter
         });
 
         infra.erc721s[0] = TestItem721(address(test721_1), 1);
@@ -588,7 +590,7 @@ contract GenericMarketplaceTest is
 
         {
             finalCallParams = TestCallParameters(
-                address(seaport), // target will definitely be seaport
+                seaportAddress, // target will definitely be seaport
                 605, // value will be sum of all the values
                 abi.encodeWithSelector(
                     ISeaport.matchAdvancedOrders.selector,
@@ -944,7 +946,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -1037,7 +1039,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -1139,7 +1141,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -1231,7 +1233,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -2932,7 +2934,7 @@ contract GenericMarketplaceTest is
         //         .createSeaportWrappedTestCallParameters(
         //         payload.executeOrder,
         //         address(context.fulfiller),
-        //         address(seaport),
+        //         seaportAddress,
         //         address(context.flashloanOfferer),
         //         address(context.adapter),
         //         address(context.sidecar),
@@ -3051,7 +3053,7 @@ contract GenericMarketplaceTest is
                 amount: 505,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3151,7 +3153,7 @@ contract GenericMarketplaceTest is
                 amount: 105,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3275,7 +3277,7 @@ contract GenericMarketplaceTest is
                 amount: 110,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3375,7 +3377,7 @@ contract GenericMarketplaceTest is
                 amount: 110,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3512,7 +3514,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3611,11 +3613,8 @@ contract GenericMarketplaceTest is
             items[i] = TestItem721(address(test721_1), i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
-            context,
-            items,
-            100
-        ) returns (TestOrderPayload memory payload) {
+        try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
+        returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
@@ -3624,7 +3623,7 @@ contract GenericMarketplaceTest is
                 amount: 100,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3744,7 +3743,7 @@ contract GenericMarketplaceTest is
                 amount: uint88(flashloanAmount),
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -3870,7 +3869,7 @@ contract GenericMarketplaceTest is
                 amount: 0xfffffffffff,
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: address(adapter)
+                recipient: adapter
             });
 
             Flashloan[] memory flashloanArray = new Flashloan[](1);
@@ -4006,8 +4005,8 @@ contract GenericMarketplaceTest is
                 .withIdentifierOrCriteria(0).withStartAmount(totalERC20Amount)
                 .withEndAmount(totalERC20Amount).withRecipient(address(0));
 
-            vm.prank(address(contexts[0].sidecar));
-            token1.approve(address(contexts[0].sidecar), totalERC20Amount);
+            vm.prank(contexts[0].sidecar);
+            token1.approve(contexts[0].sidecar, totalERC20Amount);
 
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedTestCallParameters(
