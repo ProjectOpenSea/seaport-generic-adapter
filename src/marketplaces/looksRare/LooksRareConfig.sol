@@ -7,12 +7,12 @@ import { ILooksRareExchange } from "./interfaces/ILooksRareExchange.sol";
 import { ICurrencyManager } from "./interfaces/ICurrencyManager.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import {
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20,
+    Item721,
+    Item1155,
+    Item20,
     SetupCall
 } from "../../../test/utils/Types.sol";
 
@@ -142,7 +142,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
@@ -154,7 +154,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         if (context.listOnChain) {
             _notImplemented();
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             ethAmount,
             abi.encodeWithSelector(
@@ -167,7 +167,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC1155WithEther(
         TestOrderContext calldata context,
-        TestItem1155 calldata nft,
+        Item1155 calldata nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
@@ -185,7 +185,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         if (context.listOnChain) {
             _notImplemented();
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             ethAmount,
             abi.encodeWithSelector(
@@ -198,8 +198,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
+        Item721 calldata nft,
+        Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
@@ -217,7 +217,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(
@@ -230,8 +230,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
+        Item721 calldata nft,
+        Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
@@ -249,7 +249,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(
@@ -262,8 +262,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC1155WithERC20(
         TestOrderContext calldata context,
-        TestItem1155 calldata nft,
-        TestItem20 calldata erc20
+        Item1155 calldata nft,
+        Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
@@ -281,7 +281,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(
@@ -294,8 +294,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem721 calldata nft
+        Item20 calldata erc20,
+        Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
@@ -313,7 +313,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(
@@ -326,8 +326,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem721 calldata nft
+        Item20 calldata erc20,
+        Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
@@ -345,7 +345,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(
@@ -358,8 +358,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function getPayload_BuyOfferedERC20WithERC1155(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem1155 calldata nft
+        Item20 calldata erc20,
+        Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
@@ -377,7 +377,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(looksRare),
             0,
             abi.encodeWithSelector(

@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.7;
 
-struct TestItem721 {
+struct Item721 {
     address token;
     uint256 identifier;
 }
 
-struct TestItem1155 {
+struct Item1155 {
     address token;
     uint256 identifier;
     uint256 amount;
 }
 
-struct TestItem20 {
+struct Item20 {
     address token;
     uint256 amount;
 }
 
-struct TestCallParameters {
+struct CallParameters {
     address target;
     uint256 value;
     bytes data;
@@ -41,7 +41,7 @@ struct TestOrderContext {
 
 struct TestOrderPayload {
     // Call needed to submit order on-chain without signature
-    TestCallParameters submitOrder;
+    CallParameters submitOrder;
     // Call needed to actually execute the order
-    TestCallParameters executeOrder;
+    CallParameters executeOrder;
 }

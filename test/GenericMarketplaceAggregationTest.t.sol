@@ -50,10 +50,10 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
 import {
-    TestCallParameters,
-    TestItem20,
-    TestItem721,
-    TestItem1155,
+    CallParameters,
+    Item20,
+    Item721,
+    Item1155,
     TestOrderContext,
     TestOrderPayload
 } from "./utils/Types.sol";
@@ -69,8 +69,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     using ConsiderationItemLib for ConsiderationItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
-    using AdapterHelperLib for TestCallParameters;
-    using AdapterHelperLib for TestCallParameters[];
+    using AdapterHelperLib for CallParameters;
+    using AdapterHelperLib for CallParameters[];
 
     constructor() {
         blurConfig = BaseMarketConfig(new BlurConfig());
@@ -182,15 +182,15 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     struct BenchmarkAggregatedInfra {
         string testLabel;
         TestOrderContext context;
-        TestCallParameters[] executionPayloads;
+        CallParameters[] executionPayloads;
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
         CastOfCharacters castOfCharacters;
         Flashloan[] flashloans;
         ConsiderationItem[] considerationArray;
-        TestItem721[] erc721s;
-        TestItem1155[] erc1155s;
-        TestItem1155 item1155;
+        Item721[] erc721s;
+        Item1155[] erc1155s;
+        Item1155 item1155;
         AdvancedOrder[] finalOrders;
         Fulfillment[] finalFulfillments;
     }
@@ -203,14 +203,14 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             ),
-            new TestCallParameters[](3),
+            new CallParameters[](3),
             new AdvancedOrder[](3),
             new Fulfillment[](2),
             stdCastOfCharacters,
             new Flashloan[](1),
             new ConsiderationItem[](1),
-            new TestItem721[](1),
-            new TestItem1155[](2),
+            new Item721[](1),
+            new Item1155[](2),
             standardERC1155,
             new AdvancedOrder[](5),
             new Fulfillment[](4)
@@ -328,7 +328,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             infra.castOfCharacters,
             infra.flashloans,
             infra.considerationArray,
-            new TestItem20[](0),
+            new Item20[](0),
             infra.erc721s,
             infra.erc1155s
         );
@@ -339,13 +339,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         {
             BasicOrderParameters memory params = configs[3]
                 .getComponents_BuyOfferedERC1155WithERC20(
-                alice, TestItem1155(_test1155Address, 2, 1), standardERC20
+                alice, Item1155(_test1155Address, 2, 1), standardERC20
             );
 
             orderOffer1155 = _createSeaportOrder(params);
 
             params = configs[3].getComponents_BuyOfferedERC20WithERC1155(
-                bob, standardERC20, TestItem1155(_test1155Address, 2, 1)
+                bob, standardERC20, Item1155(_test1155Address, 2, 1)
             );
 
             orderConsider1155 = _createSeaportOrder(params);
@@ -390,10 +390,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         infra.finalFulfillments[2] = primeFulfillment;
         infra.finalFulfillments[3] = mirrorFulfillment;
 
-        TestCallParameters memory finalCallParams;
+        CallParameters memory finalCallParams;
 
         {
-            finalCallParams = TestCallParameters(
+            finalCallParams = CallParameters(
                 seaportAddress, // target will definitely be seaport
                 605, // value will be sum of all the values
                 abi.encodeWithSelector(

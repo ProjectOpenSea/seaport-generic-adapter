@@ -6,12 +6,12 @@ import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import { IFoundation } from "./interfaces/IFoundation.sol";
 
 import {
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20
+    Item721,
+    Item1155,
+    Item20
 } from "../../../test/utils/Types.sol";
 
 import { AdapterHelperLib } from "../../lib/AdapterHelperLib.sol";
@@ -38,14 +38,14 @@ contract FoundationConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
+        Item721 calldata nft,
         uint256 ethAmount
     ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
 
-        execution.submitOrder = TestCallParameters(
+        execution.submitOrder = CallParameters(
             address(foundation),
             0,
             abi.encodeWithSelector(
@@ -55,7 +55,7 @@ contract FoundationConfig is BaseMarketConfig {
                 ethAmount
             )
         );
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(foundation),
             ethAmount,
             abi.encodeWithSelector(
@@ -70,7 +70,7 @@ contract FoundationConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
         uint256
@@ -79,7 +79,7 @@ contract FoundationConfig is BaseMarketConfig {
             _notImplemented();
         }
 
-        execution.submitOrder = TestCallParameters(
+        execution.submitOrder = CallParameters(
             address(foundation),
             0,
             abi.encodeWithSelector(
@@ -89,7 +89,7 @@ contract FoundationConfig is BaseMarketConfig {
                 priceEthAmount
             )
         );
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(foundation),
             priceEthAmount,
             abi.encodeWithSelector(
@@ -104,7 +104,7 @@ contract FoundationConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory,
+        Item721 memory,
         uint256,
         address,
         uint256,

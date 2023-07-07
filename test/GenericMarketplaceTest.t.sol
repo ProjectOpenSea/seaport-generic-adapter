@@ -59,10 +59,10 @@ import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
 import {
     SetupCall,
-    TestCallParameters,
-    TestItem20,
-    TestItem721,
-    TestItem1155,
+    CallParameters,
+    Item20,
+    Item721,
+    Item1155,
     TestOrderContext,
     TestOrderPayload
 } from "./utils/Types.sol";
@@ -87,8 +87,8 @@ contract GenericMarketplaceTest is
     using ConsiderationItemLib for ConsiderationItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
-    using AdapterHelperLib for TestCallParameters;
-    using AdapterHelperLib for TestCallParameters[];
+    using AdapterHelperLib for CallParameters;
+    using AdapterHelperLib for CallParameters[];
 
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
@@ -112,11 +112,11 @@ contract GenericMarketplaceTest is
 
     uint256 public costOfLastCall;
 
-    TestItem20 standardWeth;
-    TestItem20 standardERC20;
-    TestItem721 standardERC721;
-    TestItem721 standardERC721Two;
-    TestItem1155 standardERC1155;
+    Item20 standardWeth;
+    Item20 standardERC20;
+    Item721 standardERC721;
+    Item721 standardERC721Two;
+    Item1155 standardERC1155;
 
     ISeaport internal constant seaport =
         ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
@@ -362,22 +362,12 @@ contract GenericMarketplaceTest is
                     || test721_1.ownerOf(1) == config.market()
             );
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
-            TestItem721[] memory items;
+            Item721[] memory items;
 
             if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new TestItem721[](0);
+                items = new Item721[](0);
             } else {
-                items = new TestItem721[](1);
+                items = new Item721[](1);
                 items[0] = standardERC721;
             }
 
@@ -385,7 +375,6 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -467,21 +456,10 @@ contract GenericMarketplaceTest is
 
             assertEq(test721_1.ownerOf(1), alice);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -571,21 +549,10 @@ contract GenericMarketplaceTest is
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -665,21 +632,10 @@ contract GenericMarketplaceTest is
             context.fulfiller = bob;
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -795,12 +751,12 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            TestItem721[] memory erc721s;
+            Item721[] memory erc721s;
 
-            erc721s = new TestItem721[](1);
+            erc721s = new Item721[](1);
 
             if (_sameName(config.name(), sudoswapConfig.name())) {
-                erc721s = new TestItem721[](0);
+                erc721s = new Item721[](0);
             } else {
                 erc721s[0] = standardERC721;
             }
@@ -898,9 +854,9 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            TestItem721[] memory erc721s;
+            Item721[] memory erc721s;
 
-            erc721s = new TestItem721[](1);
+            erc721s = new Item721[](1);
             erc721s[0] = standardERC721;
 
             payload.executeOrder = payload
@@ -1019,12 +975,12 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            TestItem721[] memory erc721s = new TestItem721[](1);
+            Item721[] memory erc721s = new Item721[](1);
             erc721s[0] = standardERC721;
 
             if (_sameName(config.name(), blurConfig.name())) {
                 adapterOrderConsideration = new ConsiderationItem[](0);
-                erc721s = new TestItem721[](0);
+                erc721s = new Item721[](0);
             }
 
             vm.prank(sidecar);
@@ -1103,12 +1059,12 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            TestItem721[] memory erc721s = new TestItem721[](1);
+            Item721[] memory erc721s = new Item721[](1);
             erc721s[0] = standardERC721;
 
             if (_sameName(config.name(), blurConfig.name())) {
                 adapterOrderConsideration = new ConsiderationItem[](0);
-                erc721s = new TestItem721[](0);
+                erc721s = new Item721[](0);
             }
 
             vm.prank(sidecar);
@@ -1453,11 +1409,11 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(bob), 0);
 
-            TestItem20[] memory erc20s = new TestItem20[](1);
+            Item20[] memory erc20s = new Item20[](1);
             erc20s[0] = standardERC20;
 
             if (_sameName(config.name(), sudoswapConfig.name())) {
-                erc20s = new TestItem20[](0);
+                erc20s = new Item20[](0);
             }
 
             payload.executeOrder = payload
@@ -1554,7 +1510,7 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            TestItem20[] memory erc20s = new TestItem20[](1);
+            Item20[] memory erc20s = new Item20[](1);
             erc20s[0] = standardERC20;
 
             payload.executeOrder = payload
@@ -1670,7 +1626,7 @@ contract GenericMarketplaceTest is
             );
             assertEq(weth.balanceOf(bob), 0);
 
-            TestItem20[] memory erc20s = new TestItem20[](1);
+            Item20[] memory erc20s = new Item20[](1);
             erc20s[0] = standardWeth;
 
             // Look into why test20 requires an explicit approval lol.
@@ -1779,10 +1735,10 @@ contract GenericMarketplaceTest is
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
                     new ConsiderationItem[](0),
-                    new TestItem721[](0)
+                    new Item721[](0)
                 );
             } else {
-                TestItem20[] memory erc20s = new TestItem20[](1);
+                Item20[] memory erc20s = new Item20[](1);
                 erc20s[0] = standardWeth;
 
                 // Look into why test20 requires an explicit approval lol.
@@ -1888,7 +1844,7 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            TestItem20[] memory erc20s = new TestItem20[](1);
+            Item20[] memory erc20s = new Item20[](1);
             erc20s[0] = standardERC20;
 
             payload.executeOrder = payload
@@ -1981,7 +1937,7 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            TestItem20[] memory erc20s = new TestItem20[](1);
+            Item20[] memory erc20s = new Item20[](1);
             erc20s[0] = standardERC20;
 
             payload.executeOrder = payload
@@ -2420,16 +2376,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(feeReciever1.balance, 0);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 505,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -2438,17 +2384,15 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(505).withEndAmount(505);
 
+            // Increase the value to account for the fee. TODO: figure out why
+            // this is needed.
+            payload.executeOrder.value = 505;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                considerationArray,
-                standardERC721
+                stdCastOfCharacters, considerationArray, standardERC721
             );
-
-            // Increase the value to account for the fee.
-            payload.executeOrder.value = 505;
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2524,16 +2468,6 @@ contract GenericMarketplaceTest is
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 105,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -2545,10 +2479,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                considerationArray,
-                standardERC721
+                stdCastOfCharacters, considerationArray, standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2648,16 +2579,6 @@ contract GenericMarketplaceTest is
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 110,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -2669,10 +2590,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                considerationArray,
-                standardERC721
+                stdCastOfCharacters, considerationArray, standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2754,16 +2672,6 @@ contract GenericMarketplaceTest is
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 110,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -2775,10 +2683,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters,
-                flashloanArray,
-                considerationArray,
-                standardERC721
+                stdCastOfCharacters, considerationArray, standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2805,10 +2710,10 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyTenOfferedERC721WithEther_ListOnChain)";
 
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
@@ -2862,10 +2767,10 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        TestItem721[] memory items = new TestItem721[](10);
+        Item721[] memory items = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = TestItem721(_test721Address, i + 1);
+            items[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
@@ -2887,25 +2792,14 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new TestItem721[](0);
+                items = new Item721[](0);
             }
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -2936,10 +2830,10 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyTenOfferedERC721WithEther)";
 
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
@@ -2985,10 +2879,10 @@ contract GenericMarketplaceTest is
             context.fulfiller = sidecar;
         }
 
-        TestItem721[] memory items = new TestItem721[](10);
+        Item721[] memory items = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = TestItem721(_test721Address, i + 1);
+            items[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
@@ -2999,21 +2893,10 @@ contract GenericMarketplaceTest is
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
-            Flashloan memory flashloan = Flashloan({
-                amount: 100,
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
-                flashloanArray,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -3045,12 +2928,12 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyTenOfferedERC721WithEtherDistinctOrders)";
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3091,12 +2974,12 @@ contract GenericMarketplaceTest is
             || _sameName(config.name(), blurConfig.name());
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory items = new TestItem721[](10);
+        Item721[] memory items = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = TestItem721(_test721Address, i + 1);
+            items[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false,
                 true,
@@ -3126,16 +3009,6 @@ contract GenericMarketplaceTest is
                 flashloanAmount += ethAmounts[i];
             }
 
-            Flashloan memory flashloan = Flashloan({
-                amount: uint88(flashloanAmount),
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -3147,7 +3020,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, flashloanArray, considerationArray, items
+                stdCastOfCharacters, considerationArray, items
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3174,12 +3047,12 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3224,12 +3097,12 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory items = new TestItem721[](10);
+        Item721[] memory items = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = TestItem721(_test721Address, i + 1);
+            items[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3258,19 +3131,9 @@ contract GenericMarketplaceTest is
                 flashloanAmount += ethAmounts[i];
             }
 
-            Flashloan memory flashloan = Flashloan({
-                amount: uint88(flashloanAmount),
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: adapter
-            });
-
-            Flashloan[] memory flashloanArray = new Flashloan[](1);
-            flashloanArray[0] = flashloan;
-
             // Sudo does the transfers.
             if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new TestItem721[](0);
+                items = new Item721[](0);
             }
 
             ConsiderationItem[] memory considerationArray =
@@ -3284,7 +3147,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, flashloanArray, considerationArray, items
+                stdCastOfCharacters, considerationArray, items
             );
 
             payload.executeOrder.value = flashloanAmount;
@@ -3315,12 +3178,12 @@ contract GenericMarketplaceTest is
 
         test20.mint(bob, 1045);
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3360,12 +3223,12 @@ contract GenericMarketplaceTest is
 
         test20.mint(bob, 1045);
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3437,12 +3300,12 @@ contract GenericMarketplaceTest is
 
         test20.mint(bob, 1045);
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3486,7 +3349,7 @@ contract GenericMarketplaceTest is
 
         test20.mint(bob, 1045);
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         // Ah crap this turns out to be only implemented for Seaport.
@@ -3501,7 +3364,7 @@ contract GenericMarketplaceTest is
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3571,12 +3434,12 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3623,12 +3486,12 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3706,12 +3569,12 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, false, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3757,12 +3620,12 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        TestItem721[] memory nfts = new TestItem721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            nfts[i] = TestItem721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
@@ -3792,7 +3655,7 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, new TestItem721[](0)
+                stdCastOfCharacters, considerationArray, new Item721[](0)
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3824,7 +3687,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 3);
 
         TestOrderContext[] memory contexts = new TestOrderContext[](3);
-        TestItem721[] memory nfts = new TestItem721[](3);
+        Item721[] memory nfts = new Item721[](3);
 
         contexts[0] = TestOrderContext(
             false, false, alice, address(0), flashloanOfferer, adapter, sidecar
@@ -3838,7 +3701,7 @@ contract GenericMarketplaceTest is
 
         nfts[0] = standardERC721;
         nfts[1] = standardERC721Two;
-        nfts[2] = TestItem721(_test721Address, 3);
+        nfts[2] = Item721(_test721Address, 3);
 
         try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
             TestOrderPayload memory payload
@@ -3880,7 +3743,7 @@ contract GenericMarketplaceTest is
         // test721_1.mint(bob, 3);
 
         // TestOrderContext[] memory contexts = new TestOrderContext[](3);
-        // TestItem721[] memory nfts = new TestItem721[](3);
+        // Item721[] memory nfts = new Item721[](3);
 
         // contexts[0] = TestOrderContext(
         //     false, true, alice, address(0), flashloanOfferer, adapter, sidecar
@@ -3894,7 +3757,7 @@ contract GenericMarketplaceTest is
 
         // nfts[0] = standardERC721;
         // nfts[1] = standardERC721Two;
-        // nfts[2] = TestItem721(_test721Address, 3);
+        // nfts[2] = Item721(_test721Address, 3);
 
         // try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
         //     TestOrderPayload memory payload
@@ -4084,11 +3947,11 @@ contract GenericMarketplaceTest is
         _test721Address = address(test721_1);
         _test1155Address = address(test1155_1);
 
-        standardWeth = TestItem20(wethAddress, 100);
-        standardERC20 = TestItem20(_test20Address, 100);
-        standardERC721 = TestItem721(_test721Address, 1);
-        standardERC721Two = TestItem721(_test721Address, 2);
-        standardERC1155 = TestItem1155(_test1155Address, 1, 1);
+        standardWeth = Item20(wethAddress, 100);
+        standardERC20 = Item20(_test20Address, 100);
+        standardERC721 = Item721(_test721Address, 1);
+        standardERC721Two = Item721(_test721Address, 2);
+        standardERC1155 = Item1155(_test1155Address, 1, 1);
 
         vm.deal(flashloanOfferer, type(uint128).max);
 
@@ -4214,7 +4077,7 @@ contract GenericMarketplaceTest is
         bool shouldLog,
         bool shouldLogGasDelta,
         address sender,
-        TestCallParameters memory params
+        CallParameters memory params
     ) internal returns (uint256 gasUsed) {
         hevm.startPrank(sender);
         uint256 gasDelta;

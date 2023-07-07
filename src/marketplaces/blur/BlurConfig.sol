@@ -3,12 +3,12 @@ pragma solidity >=0.8.14;
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import {
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20,
+    Item721,
+    Item1155,
+    Item20,
     SetupCall
 } from "../../../test/utils/Types.sol";
 import "./lib/OrderStructs.sol";
@@ -213,7 +213,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
@@ -231,7 +231,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(blur),
             ethAmount,
             abi.encodeWithSelector(
@@ -248,7 +248,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     // https://etherscan.io/address/0x00000000006411739DA1c40B106F8511de5D1FAC#code#F1#L36.
     // function getPayload_BuyOfferedERC1155WithEther(
     //     TestOrderContext calldata context,
-    //     TestItem1155 memory nft,
+    //     Item1155 memory nft,
     //     uint256 ethAmount
     // ) external pure override returns (TestOrderPayload memory execution) {
     //     (Input memory makerInput, Input memory takerInput) = buildInputPair(
@@ -264,7 +264,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = TestCallParameters(
+    //     execution.executeOrder = CallParameters(
     //         address(blur),
     //         ethAmount,
     //         abi.encodeWithSelector(
@@ -280,8 +280,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     // See https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        TestItem20 memory erc20
+        Item721 memory nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
             context.offerer,
@@ -298,7 +298,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(blur),
             0,
             abi.encodeWithSelector(
@@ -309,8 +309,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem721 memory nft
+        Item20 memory erc20,
+        Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
             context.offerer,
@@ -327,7 +327,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(blur),
             0,
             abi.encodeWithSelector(
@@ -342,7 +342,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata,
-        TestItem721 memory,
+        Item721 memory,
         uint256,
         address,
         uint256
@@ -353,7 +353,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     // function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
     //     TestOrderContext calldata context,
-    //     TestItem721 memory nft,
+    //     Item721 memory nft,
     //     uint256 priceEthAmount,
     //     address feeRecipient,
     //     uint256 feeEthAmount
@@ -382,7 +382,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = TestCallParameters(
+    //     execution.executeOrder = CallParameters(
     //         address(blur),
     //         priceEthAmount + feeEthAmount,
     //         abi.encodeWithSelector(
@@ -393,7 +393,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata,
-        TestItem721 memory,
+        Item721 memory,
         uint256,
         address,
         uint256,
@@ -406,7 +406,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     // function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
     //     TestOrderContext calldata context,
-    //     TestItem721 memory nft,
+    //     Item721 memory nft,
     //     uint256 priceEthAmount,
     //     address feeRecipient1,
     //     uint256 feeEthAmount1,
@@ -439,7 +439,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = TestCallParameters(
+    //     execution.executeOrder = CallParameters(
     //         address(blur),
     //         priceEthAmount + feeEthAmount1 + feeEthAmount2,
     //         abi.encodeWithSelector(
@@ -450,7 +450,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -483,7 +483,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             sumEthAmount += ethAmounts[i];
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(blur),
             sumEthAmount,
             abi.encodeWithSelector(
@@ -495,7 +495,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -525,7 +525,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             executions[i] = _execution;
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(blur),
             0,
             abi.encodeWithSelector(
