@@ -43,7 +43,17 @@ import {
 
 import "forge-std/console.sol";
 
-// TODO: Think about maybe just putting a SpentItem in here.
+/**
+ * @dev A Flashloan is a struct that specifies the amount, type, and recipient
+ *      of a flashloan, and whether or not the cleanup function should be
+ *      called.  The amount is the amount of native tokens requested. The amount
+ *      requested has to be less than or equal to the amount offered in the
+ *      consideration. The type is the type of consideration that will be
+ *      provided. shouldCallback is a boolean that specifies whether the cleanup
+ *      function on the adapter should be called. The recipient is the address
+ *      that will receive the flashloan, e.g. the address of the adapter.
+ *
+ */
 struct Flashloan {
     uint88 amount;
     ItemType itemType;
@@ -51,11 +61,23 @@ struct Flashloan {
     address recipient;
 }
 
+/**
+ * @dev A Fulfillment is a struct that specifies the address and item type of
+ *      a token that needs to be approved.
+ *
+ */
 struct Approval {
     address token;
     ItemType itemType;
 }
 
+/**
+ * @dev The CastOfCharacters is a struct that specifies the addresses of the
+ *      participants in a given order. The offerer is the address that created
+ *      the liquidity that's being consumed. The fulfiller is the address that
+ *      is calling Seaport to consume the liquidity.
+ *
+ */
 struct CastOfCharacters {
     address offerer;
     address fulfiller;
@@ -79,14 +101,28 @@ library AdapterHelperLib {
     using OfferItemLib for OfferItem[];
     using OrderParametersLib for OrderParameters;
 
+    /**
+     * @dev Create the context/extraData argument that goes into an
+     *      AdvancedOrder. This function will encode the high level requirements
+     *      specified by the arguments into a single bytes field according to
+     *      the excpectations of the FlashloanOfferer. When the FlashloanOfferer
+     *      receives the call to its generateOrder function, it will decode the
+     *      extraData field into instructions for handling the flashloan.
+     *
+     * @param cleanupRecipient The address that should receive the leftover
+     *                         native tokens after the order has been processed.
+     * @param flashloans       An array of structs, each of which specifies the
+     *                         amount, type, and recipient of a flashloan, and
+     *                         whether or not the cleanup function should be
+     *                         called.
+     *
+     * @return extraData The extraData for the order that triggers a flashloan.
+     */
     function createFlashloanContext(
         address cleanupRecipient,
         Flashloan[] memory flashloans
     ) public pure returns (bytes memory extraData) {
-        // Create the value that will populate the extraData field.
-        // When the flashloan offerer receives the call to
-        // generateOrder, it will decode the extraData field into
-        // instructions for handling the flashloan.
+        // When the flashloan offerer receives the call to generateOrder, it will decode the extraData field into instructions for handling the flashloan.
 
         // A word for the encoding, a byte for the number of flashloans, 20
         // bytes for the cleanup recipient, and 32 bytes for each flashloan.
@@ -142,15 +178,26 @@ library AdapterHelperLib {
         return extraData;
     }
 
+    /**
+     * @dev Create the context/extraData argument that goes into an
+     *      AdvancedOrder. This function will encode the high level requirements
+     *      specified by the arguments into a single bytes field according to
+     *      the excpectations of the Generic Adapter. When the Generic Adapter
+     *      receives the call to its generateOrder function, it will decode the
+     *      extraData field into instructions for handling both approvals and
+     *      calls to be made by the sidecar.
+     *
+     * @param approvals An array of structs, each of which specifies the token
+     *                  and item type of an approval that needs to be made.
+     * @param calls     An array of structs, each of which specifies the target,
+     *                  value, and callData of a call that needs to be made.
+     *
+     */
     function createGenericAdapterContext(
         Approval[] memory approvals,
         Call[] memory calls
     ) public pure returns (bytes memory extraData) {
-        // Create the value that will populate the extraData field on a generic
-        // adapter call. When the generic adapter receives the call to
-        // generateOrder, it will decode the extraData field into instructions
-        // for handling both approvals and calls to be made by the sidecar.
-
+        // Set the length of the approvals array in the second word.
         uint256 secondWord = 0 | ((approvals.length) << 248);
 
         // The first word can be all zeros for now. The size will be added to
@@ -211,8 +258,6 @@ library AdapterHelperLib {
         }
     }
 
-    // TODO: Make all of this less deranged.
-
     ////////////////////////////////////////////////////////////////////////////
     //                      A bunch of different interfaces.                  //
     //                  The meat is at the bottom of all these.               //
@@ -228,6 +273,17 @@ library AdapterHelperLib {
         erc721s[0] = nft;
         Flashloan[] memory flashloans = new Flashloan[](0);
 
+        if (testCallParameters.value > 0) {
+            revert("testCallParameters has value");
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(testCallParameters.value),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+        }
+
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
             castOfCharacters,
@@ -238,6 +294,9 @@ library AdapterHelperLib {
         );
     }
 
+    // Leave this one in case something fancy needs to happen with the
+    // flashloans, e.g. using WETH as consideration, or changing the callback
+    // flag, recipient, etc.
     function createSeaportWrappedTestCallParameters(
         TestCallParameters memory testCallParameters,
         CastOfCharacters memory castOfCharacters,
@@ -265,6 +324,17 @@ library AdapterHelperLib {
         TestItem721[] memory nfts
     ) public view returns (TestCallParameters memory) {
         Flashloan[] memory flashloans = new Flashloan[](0);
+
+        if (testCallParameters.value > 0) {
+            revert("testCallParameters has value");
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(testCallParameters.value),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+        }
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
@@ -341,6 +411,17 @@ library AdapterHelperLib {
     ) public view returns (TestCallParameters memory) {
         TestItem721[] memory erc721s = new TestItem721[](0);
         Flashloan[] memory flashloans = new Flashloan[](0);
+
+        if (testCallParameters.value > 0) {
+            revert("testCallParameters has value");
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(testCallParameters.value),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+        }
 
         return createSeaportWrappedTestCallParameters(
             testCallParameters,
@@ -423,6 +504,17 @@ library AdapterHelperLib {
             new TestCallParameters[](1);
         testCallParametersArray[0] = testCallParameters;
         Flashloan[] memory flashloans = new Flashloan[](0);
+
+        if (testCallParameters.value > 0) {
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(testCallParameters.value),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+            revert("testCallParameters has value");
+        }
 
         return createSeaportWrappedTestCallParameters(
             testCallParametersArray,
@@ -539,6 +631,46 @@ library AdapterHelperLib {
         uint256 totalFlashloanValueRequested;
     }
 
+    /**
+     * @dev This function is used to create a set of orders and fulfillments
+     *      that can be passed into matchAdvancedOrders to fulfill an arbitrary
+     *      number of orders on external marketplaces. It expects that the calls
+     *      to external marketplaces are pre-rolled into the testCallParameters
+     *      array. This function will wrap up those calls into an order that
+     *      hits the generic adapter, which passes them along to the sidecar. It
+     *      also creates a single pair of orders for an arbitrary number of
+     *      flashloans, if any are passed in. It returns the orders and
+     *      fulfillments separately.
+     *
+     * @param testCallParametersArray An array of TestCallParameters structs
+     *                                that contain the target, value, and
+     *                                calldata for the calls to external
+     *                                marketplaces.
+     * @param castOfCharacters        A CastOfCharacters struct that contains
+     *                                the addresses of the relevant
+     *                                participants.
+     * @param flashloans              An array of Flashloan structs that contain
+     *                                the flashloan parameters.
+     * @param adapterConsideration    An array of ConsiderationItem structs that
+     *                                contain the consideration for the generic
+     *                                adapter order. The consideration will be
+     *                                passed along to the sidecar, where it's
+     *                                used to fulfill the orders on external
+     *                                marketplaces.
+     * @param erc20s                  An array of TestItem20 structs that
+     *                                contain the ERC20s that need to be
+     *                                manually transferred by the sidecar to
+     *                                their final recipients.
+     * @param erc721s                 An array of TestItem721 structs that
+     *                                contain the ERC721s that need to be
+     *                                manually transferred by the sidecar to
+     *                                their final recipients.
+     * @param erc1155s                An array of TestItem1155 structs that
+     *                                contain the ERC1155s that need to be
+     *                                manually transferred by the sidecar to
+     *                                their final recipients.
+     *
+     */
     function createSeaportWrappedTestCallParametersReturnGranular(
         TestCallParameters[] memory testCallParametersArray,
         CastOfCharacters memory castOfCharacters,

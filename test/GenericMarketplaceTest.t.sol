@@ -9,17 +9,10 @@ import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
 import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
-import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {
-    AdvancedOrder,
-    BasicOrderParameters,
     ConsiderationItem,
-    CriteriaResolver,
-    Fulfillment,
-    FulfillmentComponent,
-    OfferItem,
-    OrderComponents,
     OrderParameters,
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
@@ -73,10 +66,6 @@ import {
     TestOrderContext,
     TestOrderPayload
 } from "./utils/Types.sol";
-
-import { TestERC20 } from "../src/contracts/test/TestERC20.sol";
-import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
-import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
 
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 

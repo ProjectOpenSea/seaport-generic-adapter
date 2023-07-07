@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import { StdCheats } from "forge-std/StdCheats.sol";
-
 import { Vm } from "forge-std/Vm.sol";
 
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
@@ -19,9 +17,7 @@ import {
     Fulfillment,
     FulfillmentComponent,
     OfferItem,
-    OrderComponents,
-    OrderParameters,
-    SpentItem
+    OrderParameters
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import {
@@ -30,17 +26,6 @@ import {
     CastOfCharacters,
     Flashloan
 } from "../src/lib/AdapterHelperLib.sol";
-
-import { FlashloanOffererInterface } from
-    "../src/interfaces/FlashloanOffererInterface.sol";
-
-import { GenericAdapterInterface } from
-    "../src/interfaces/GenericAdapterInterface.sol";
-
-import {
-    GenericAdapterSidecarInterface,
-    Call
-} from "../src/interfaces/GenericAdapterSidecarInterface.sol";
 
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
@@ -65,7 +50,6 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
 import {
-    SetupCall,
     TestCallParameters,
     TestItem20,
     TestItem721,
@@ -74,18 +58,7 @@ import {
     TestOrderPayload
 } from "./utils/Types.sol";
 
-import { TestERC20 } from "../src/contracts/test/TestERC20.sol";
-import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
-import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
-
-import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
-
-import { ConsiderationTypeHashes } from
-    "../src/marketplaces/seaport-1.4/lib/ConsiderationTypeHashes.sol";
-
 import { GenericMarketplaceTest } from "./GenericMarketplaceTest.t.sol";
-
-import "forge-std/console.sol";
 
 address constant VM_ADDRESS =
     address(uint160(uint256(keccak256("hevm cheat code"))));
