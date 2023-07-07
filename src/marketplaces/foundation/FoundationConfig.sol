@@ -73,7 +73,7 @@ contract FoundationConfig is BaseMarketConfig {
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
-        uint256
+        uint256 feeEthAmount
     ) external pure override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
@@ -91,7 +91,7 @@ contract FoundationConfig is BaseMarketConfig {
         );
         execution.executeOrder = CallParameters(
             address(foundation),
-            priceEthAmount,
+            priceEthAmount + feeEthAmount,
             abi.encodeWithSelector(
                 IFoundation.buyV2.selector,
                 nft.token,

@@ -2384,10 +2384,6 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(505).withEndAmount(505);
 
-            // Increase the value to account for the fee. TODO: figure out why
-            // this is needed.
-            payload.executeOrder.value = 505;
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(

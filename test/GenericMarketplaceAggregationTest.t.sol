@@ -23,8 +23,7 @@ import {
 import {
     AdapterHelperLib,
     Approval,
-    CastOfCharacters,
-    Flashloan
+    CastOfCharacters
 } from "../src/lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from
@@ -186,7 +185,6 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
         CastOfCharacters castOfCharacters;
-        Flashloan[] flashloans;
         ConsiderationItem[] considerationArray;
         Item721[] erc721s;
         Item1155[] erc1155s;
@@ -207,7 +205,6 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             new AdvancedOrder[](3),
             new Fulfillment[](2),
             stdCastOfCharacters,
-            new Flashloan[](1),
             new ConsiderationItem[](1),
             new Item721[](1),
             new Item1155[](2),
@@ -307,13 +304,6 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         assertEq(test20.balanceOf(bob), 100);
         assertEq(test20.balanceOf(alice), 0);
 
-        infra.flashloans[0] = Flashloan({
-            amount: 605,
-            itemType: ItemType.NATIVE,
-            shouldCallback: true,
-            recipient: adapter
-        });
-
         infra.erc721s[0] = standardERC721;
         infra.erc1155s[0] = standardERC1155;
 
@@ -326,9 +316,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             .createSeaportWrappedTestCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
-            infra.flashloans,
             infra.considerationArray,
-            new Item20[](0),
             infra.erc721s,
             infra.erc1155s
         );
