@@ -219,6 +219,11 @@ contract GenericMarketplaceTest is
         buyOfferedERC20WithERC1155_Adapter(config);
 
         buyOfferedERC20WithERC721_ListOnChain(config);
+        // There's an issue with resetting storage for sudo, to just reset
+        // here.
+        if (_sameName(config.name(), sudoswapConfig.name())) {
+            beforeAllPrepareMarketplaceTest(config);
+        }
         buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
 
         buyOfferedERC20WithERC721(config);
@@ -231,6 +236,11 @@ contract GenericMarketplaceTest is
         buyOfferedERC721WithERC1155_Adapter(config);
 
         buyOfferedERC721WithERC20_ListOnChain(config);
+        // There's an issue with resetting storage for sudo, to just reset
+        // here.
+        if (_sameName(config.name(), sudoswapConfig.name())) {
+            beforeAllPrepareMarketplaceTest(config);
+        }
         buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
 
         buyOfferedERC721WithERC20(config);
@@ -1125,13 +1135,6 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // TODO: Figure out why this fails for SudoSwap. For some reason the
-        //       ERC20s aren't being transferred to Alice.
-        if (_sameName(config.name(), sudoswapConfig.name())) {
-            _logNotSupported(config.name(), testLabel);
-            return 0;
-        }
-
         if (
             _sameName(config.name(), looksRareConfig.name())
                 || _sameName(config.name(), x2y2Config.name())
@@ -1195,10 +1198,6 @@ contract GenericMarketplaceTest is
                 bob,
                 payload.executeOrder
             );
-
-            if (test20.balanceOf(alice) != 100) {
-                revert();
-            }
 
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100, "Alice did not get paid");
@@ -1798,21 +1797,20 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
-        // TODO: Look into why Sudo is broken.
-        if (_sameName(config.name(), sudoswapConfig.name())) {
-            _logNotSupported(config.name(), testLabel);
-            return 0;
-        }
-
         TestOrderContext memory context = TestOrderContext(
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
+
+        if (_sameName(config.name(), x2y2Config.name())) {
+            context.fulfiller = sidecar;
+        }
 
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
         ) returns (TestOrderPayload memory payload) {
+            context.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1833,6 +1831,10 @@ contract GenericMarketplaceTest is
             TestItem20[] memory erc20s = new TestItem20[](1);
             erc20s[0] = standardERC20;
 
+            if (_sameName(config.name(), sudoswapConfig.name())) {
+                erc20s = new TestItem20[](0);
+            }
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
@@ -1852,9 +1854,9 @@ contract GenericMarketplaceTest is
                 payload.executeOrder
             );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(test20.balanceOf(alice), 0);
-            assertEq(test20.balanceOf(bob), 100);
+            assertEq(test721_1.ownerOf(1), alice, "Alice should own the NFT");
+            assertEq(test20.balanceOf(alice), 0, "Alice should have no ERC20");
+            assertEq(test20.balanceOf(bob), 100, "Bob should have the ERC20");
         } catch {
             _logNotSupported(config.name(), testLabel);
         }
@@ -3600,19 +3602,17 @@ contract GenericMarketplaceTest is
         TestItem721[] memory items = new TestItem721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
-        // TODO: Come back and debug why this is running out of funds.
-        if (_sameName(config.name(), sudoswapConfig.name())) {
-            _logNotSupported(config.name(), testLabel);
-            return 0;
-        }
-
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             items[i] = TestItem721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
-            ethAmounts[i] = 100 + i;
+            // There's something screwy with the ETH amounts here. For some
+            // reason, this needs to be 101 instead of 100 like it is in its
+            // sibling test. Only Sudo and Seaport are set up for this, and
+            // Seaport doesn't get tested. So, leaving it alone for now.
+            ethAmounts[i] = 101 + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
@@ -3634,7 +3634,7 @@ contract GenericMarketplaceTest is
             }
 
             Flashloan memory flashloan = Flashloan({
-                amount: uint88(flashloanAmount * 2),
+                amount: uint88(flashloanAmount),
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
                 recipient: adapter
@@ -3661,6 +3661,8 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters, flashloanArray, considerationArray, items
             );
+
+            payload.executeOrder.value = flashloanAmount;
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),

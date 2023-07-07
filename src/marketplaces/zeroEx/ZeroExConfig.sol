@@ -693,6 +693,11 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
 
+        // Not sure how best to do this, not implementing for now
+        if (contexts[0].listOnChain) {
+            _notImplemented();
+        }
+
         LibNFTOrder.ERC721Order[] memory orders = new LibNFTOrder.ERC721Order[](
             contexts.length
         );
@@ -732,11 +737,6 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 r: r,
                 s: s
             });
-        }
-
-        // Not sure how best to do this, not implementing for now
-        if (contexts[0].listOnChain) {
-            _notImplemented();
         }
 
         execution.executeOrder = TestCallParameters(
