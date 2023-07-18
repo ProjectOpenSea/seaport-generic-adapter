@@ -119,7 +119,6 @@ contract GenericAdapterTest is BaseOrderTest {
     GenericAdapterSidecarInterface testSidecarReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
-    WETH weth;
     Context optimizedContext;
     Context referenceContext;
     bool rejectReceive;
@@ -129,6 +128,9 @@ contract GenericAdapterTest is BaseOrderTest {
     uint256 nativeAction;
     uint256 wrappedAction;
 
+    WETH internal constant weth =
+        WETH(payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
+
     receive() external payable override {
         if (rejectReceive) {
             revert("rejectReceive");
@@ -137,6 +139,8 @@ contract GenericAdapterTest is BaseOrderTest {
 
     function setUp() public override {
         super.setUp();
+
+        vm.chainId(1);
 
         testFlashloanOfferer = FlashloanOffererInterface(
             deployCode(
@@ -183,7 +187,6 @@ contract GenericAdapterTest is BaseOrderTest {
 
         testERC721 = new TestERC721();
         testERC1155 = new TestERC1155();
-        weth = new WETH();
 
         ConsiderationItemLib.empty().withItemType(ItemType.NATIVE).withToken(
             address(0)

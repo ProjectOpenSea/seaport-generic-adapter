@@ -44,7 +44,14 @@ contract FlashloanOfferer is ContractOffererInterface {
     error SharedItemTypes(); // 0xc25bddad
     error UnacceptableTokenPairing(); // 0xdd55e6a8
     error MismatchedAddresses(); // 0x67306d70
-    error NoShitcoins();
+
+    /**
+     * @dev Revert with an error if the supplied maximumSpentItem is not WETH.
+     *
+     * @param item The invalid maximumSpentItem.
+     */
+    error InvalidMaximumSpentItem(SpentItem item);
+
     error UnsupportedChainId(uint256 chainId);
 
     constructor(address seaport) {
@@ -207,8 +214,8 @@ contract FlashloanOfferer is ContractOffererInterface {
 
         if (minimumReceived.length == 0) {
             // No minimumReceived items indicates to perform a flashloan.
-            if (_isShitcoins(maximumSpentItem)) {
-                revert NoShitcoins();
+            if (_isInvalidMaximumSpentItem(maximumSpentItem)) {
+                revert InvalidMaximumSpentItem(maximumSpentItem);
             }
             if (_processFlashloan(context) > maximumSpentAmount) {
                 revert InsufficientMaximumSpentAmount();
@@ -706,7 +713,7 @@ contract FlashloanOfferer is ContractOffererInterface {
         }
     }
 
-    function _isShitcoins(SpentItem memory maximumSpentItem)
+    function _isInvalidMaximumSpentItem(SpentItem memory maximumSpentItem)
         internal
         view
         returns (bool)

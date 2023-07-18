@@ -1024,7 +1024,7 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // TODO: Come back and see if there's a way to make this work.
+        // TODO: Come back and see if there's a way to make these work.
         if (
             _sameName(config.name(), looksRareConfig.name())
                 || _sameName(config.name(), x2y2Config.name())

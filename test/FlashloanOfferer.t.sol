@@ -699,7 +699,8 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.prank(address(consideration));
         vm.expectRevert(
             abi.encodeWithSelector(
-                FlashloanOffererInterface.NoShitcoins.selector
+                FlashloanOffererInterface.InvalidMaximumSpentItem.selector,
+                spentItemMaxSpent
             )
         );
         context.flashloanOfferer.generateOrder(
@@ -727,7 +728,8 @@ contract FlashloanOffererTest is BaseOrderTest {
         vm.prank(address(consideration));
         vm.expectRevert(
             abi.encodeWithSelector(
-                FlashloanOffererInterface.NoShitcoins.selector
+                FlashloanOffererInterface.InvalidMaximumSpentItem.selector,
+                spentItemMaxSpent
             )
         );
         context.flashloanOfferer.generateOrder(
