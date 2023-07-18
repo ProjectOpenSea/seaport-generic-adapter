@@ -35,15 +35,25 @@ import {
 } from "seaport-sol/SeaportStructs.sol";
 
 import {
-    TestCallParameters,
-    TestItem20,
-    TestItem721,
-    TestItem1155
+    CallParameters,
+    Item20,
+    Item721,
+    Item1155
 } from "../../test/utils/Types.sol";
 
 import "forge-std/console.sol";
 
-// TODO: Think about maybe just putting a SpentItem in here.
+/**
+ * @dev A Flashloan is a struct that specifies the amount, type, and recipient
+ *      of a flashloan, and whether or not the cleanup function should be
+ *      called.  The amount is the amount of native tokens requested. The amount
+ *      requested has to be less than or equal to the amount offered in the
+ *      consideration. The type is the type of consideration that will be
+ *      provided. shouldCallback is a boolean that specifies whether the cleanup
+ *      function on the adapter should be called. The recipient is the address
+ *      that will receive the flashloan, e.g. the address of the adapter.
+ *
+ */
 struct Flashloan {
     uint88 amount;
     ItemType itemType;
@@ -51,11 +61,23 @@ struct Flashloan {
     address recipient;
 }
 
+/**
+ * @dev A Fulfillment is a struct that specifies the address and item type of
+ *      a token that needs to be approved.
+ *
+ */
 struct Approval {
     address token;
     ItemType itemType;
 }
 
+/**
+ * @dev The CastOfCharacters is a struct that specifies the addresses of the
+ *      participants in a given order. The offerer is the address that created
+ *      the liquidity that's being consumed. The fulfiller is the address that
+ *      is calling Seaport to consume the liquidity.
+ *
+ */
 struct CastOfCharacters {
     address offerer;
     address fulfiller;
@@ -63,6 +85,15 @@ struct CastOfCharacters {
     address flashloanOfferer;
     address adapter;
     address sidecar;
+}
+
+struct ItemTransfer {
+    address from;
+    address to;
+    address token;
+    uint256 identifier;
+    uint256 amount;
+    ItemType itemType;
 }
 
 /**
@@ -79,14 +110,30 @@ library AdapterHelperLib {
     using OfferItemLib for OfferItem[];
     using OrderParametersLib for OrderParameters;
 
+    /**
+     * @dev Create the context/extraData argument that goes into an
+     *      AdvancedOrder. This function will encode the high level requirements
+     *      specified by the arguments into a single bytes field according to
+     *      the excpectations of the FlashloanOfferer. When the FlashloanOfferer
+     *      receives the call to its generateOrder function, it will decode the
+     *      extraData field into instructions for handling the flashloan.
+     *
+     * @param cleanupRecipient The address that should receive the leftover
+     *                         native tokens after the order has been processed.
+     * @param flashloans       An array of structs, each of which specifies the
+     *                         amount, type, and recipient of a flashloan, and
+     *                         whether or not the cleanup function should be
+     *                         called.
+     *
+     * @return extraData The extraData for the order that triggers a flashloan.
+     */
     function createFlashloanContext(
         address cleanupRecipient,
         Flashloan[] memory flashloans
     ) public pure returns (bytes memory extraData) {
-        // Create the value that will populate the extraData field.
-        // When the flashloan offerer receives the call to
-        // generateOrder, it will decode the extraData field into
-        // instructions for handling the flashloan.
+        // When the flashloan offerer receives the call to generateOrder, it
+        // will decode the extraData field into instructions for handling the
+        // flashloan.
 
         // A word for the encoding, a byte for the number of flashloans, 20
         // bytes for the cleanup recipient, and 32 bytes for each flashloan.
@@ -142,15 +189,26 @@ library AdapterHelperLib {
         return extraData;
     }
 
+    /**
+     * @dev Create the context/extraData argument that goes into an
+     *      AdvancedOrder. This function will encode the high level requirements
+     *      specified by the arguments into a single bytes field according to
+     *      the excpectations of the Generic Adapter. When the Generic Adapter
+     *      receives the call to its generateOrder function, it will decode the
+     *      extraData field into instructions for handling both approvals and
+     *      calls to be made by the sidecar.
+     *
+     * @param approvals An array of structs, each of which specifies the token
+     *                  and item type of an approval that needs to be made.
+     * @param calls     An array of structs, each of which specifies the target,
+     *                  value, and callData of a call that needs to be made.
+     *
+     */
     function createGenericAdapterContext(
         Approval[] memory approvals,
         Call[] memory calls
     ) public pure returns (bytes memory extraData) {
-        // Create the value that will populate the extraData field on a generic
-        // adapter call. When the generic adapter receives the call to
-        // generateOrder, it will decode the extraData field into instructions
-        // for handling both approvals and calls to be made by the sidecar.
-
+        // Set the length of the approvals array in the second word.
         uint256 secondWord = 0 | ((approvals.length) << 248);
 
         // The first word can be all zeros for now. The size will be added to
@@ -211,299 +269,198 @@ library AdapterHelperLib {
         }
     }
 
-    // TODO: Make all of this less deranged.
-
     ////////////////////////////////////////////////////////////////////////////
     //                      A bunch of different interfaces.                  //
     //                  The meat is at the bottom of all these.               //
     ////////////////////////////////////////////////////////////////////////////
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem721 memory nft
-    ) public view returns (TestCallParameters memory) {
-        TestItem721[] memory erc721s = new TestItem721[](1);
-        erc721s[0] = nft;
+        Item721 memory nft
+    ) public view returns (CallParameters memory) {
         Flashloan[] memory flashloans = new Flashloan[](0);
 
+        if (callParameters.value > 0) {
+            flashloans = _getFlashloanArrayFromParams(
+                uint88(callParameters.value),
+                ItemType.NATIVE,
+                true,
+                castOfCharacters.adapter
+            );
+        }
+
+        ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+        itemTransfers[0] = ItemTransfer({
+            from: castOfCharacters.sidecar,
+            to: castOfCharacters.fulfiller,
+            token: nft.token,
+            identifier: nft.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
         return createSeaportWrappedTestCallParameters(
-            testCallParameters,
+            callParameters,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            erc721s,
-            new TestItem1155[](0)
+            itemTransfers
         );
     }
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem721 memory nft
-    ) public view returns (TestCallParameters memory) {
-        TestItem721[] memory erc721s = new TestItem721[](1);
-        erc721s[0] = nft;
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParameters,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            erc721s,
-            new TestItem1155[](0)
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem721[] memory nfts
-    ) public view returns (TestCallParameters memory) {
+        Item721[] memory nfts
+    ) public view returns (CallParameters memory) {
         Flashloan[] memory flashloans = new Flashloan[](0);
 
+        if (callParameters.value > 0) {
+            flashloans = _getFlashloanArrayFromParams(
+                uint88(callParameters.value),
+                ItemType.NATIVE,
+                true,
+                castOfCharacters.adapter
+            );
+        }
+
+        ItemTransfer[] memory itemTransfers = new ItemTransfer[](nfts.length);
+        for (uint256 i; i < nfts.length; i++) {
+            itemTransfers[i] = ItemTransfer({
+                from: castOfCharacters.sidecar,
+                to: castOfCharacters.fulfiller,
+                token: nfts[i].token,
+                identifier: nfts[i].identifier,
+                amount: 1,
+                itemType: ItemType.ERC721
+            });
+        }
+
         return createSeaportWrappedTestCallParameters(
-            testCallParameters,
+            callParameters,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            nfts,
-            new TestItem1155[](0)
+            itemTransfers
         );
     }
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem721[] memory nfts
-    ) public view returns (TestCallParameters memory) {
-        return createSeaportWrappedTestCallParameters(
-            testCallParameters,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            nfts,
-            new TestItem1155[](0)
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem1155 memory nft
-    ) public view returns (TestCallParameters memory) {
-        TestItem1155[] memory erc1155s = new TestItem1155[](1);
-        erc1155s[0] = nft;
+        Item1155 memory nft
+    ) public view returns (CallParameters memory) {
         Flashloan[] memory flashloans = new Flashloan[](0);
 
+        if (callParameters.value > 0) {
+            flashloans = _getFlashloanArrayFromParams(
+                uint88(callParameters.value),
+                ItemType.NATIVE,
+                true,
+                castOfCharacters.adapter
+            );
+        }
+
+        ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+        itemTransfers[0] = ItemTransfer({
+            from: castOfCharacters.sidecar,
+            to: castOfCharacters.fulfiller,
+            token: nft.token,
+            identifier: nft.identifier,
+            amount: nft.amount,
+            itemType: ItemType.ERC1155
+        });
+
         return createSeaportWrappedTestCallParameters(
-            testCallParameters,
+            callParameters,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            new TestItem721[](0),
-            erc1155s
+            itemTransfers
         );
     }
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem1155 memory nft
-    ) public view returns (TestCallParameters memory) {
-        TestItem1155[] memory erc1155s = new TestItem1155[](1);
-        erc1155s[0] = nft;
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParameters,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            new TestItem721[](0),
-            erc1155s
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem1155[] memory nfts
-    ) public view returns (TestCallParameters memory) {
-        TestItem721[] memory erc721s = new TestItem721[](0);
+        Item20[] memory erc20s
+    ) public view returns (CallParameters memory) {
+        CallParameters[] memory callParametersArray = new CallParameters[](1);
+        callParametersArray[0] = callParameters;
         Flashloan[] memory flashloans = new Flashloan[](0);
 
+        if (callParameters.value > 0) {
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(callParameters.value),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+            flashloans[0] = flashloan;
+        }
+
+        ItemTransfer[] memory itemTransfers = new ItemTransfer[](erc20s.length);
+        for (uint256 i; i < erc20s.length; i++) {
+            itemTransfers[i] = ItemTransfer({
+                from: castOfCharacters.sidecar,
+                to: castOfCharacters.fulfiller,
+                token: erc20s[i].token,
+                identifier: 0,
+                amount: erc20s[i].amount,
+                itemType: ItemType.ERC20
+            });
+        }
+
         return createSeaportWrappedTestCallParameters(
-            testCallParameters,
+            callParametersArray,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            erc721s,
-            nfts
+            itemTransfers
         );
     }
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem1155[] memory nfts
-    ) public view returns (TestCallParameters memory) {
-        TestItem721[] memory erc721s = new TestItem721[](0);
+        ItemTransfer[] memory itemTransfers
+    ) public view returns (CallParameters memory) {
+        CallParameters[] memory callParametersArray = new CallParameters[](1);
+        callParametersArray[0] = callParameters;
 
         return createSeaportWrappedTestCallParameters(
-            testCallParameters,
+            callParametersArray,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            erc721s,
-            nfts
+            itemTransfers
         );
     }
 
     function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
+        CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem721[] memory erc721s,
-        TestItem1155[] memory erc1155s
-    ) public view returns (TestCallParameters memory) {
-        TestCallParameters[] memory testCallParametersArray =
-            new TestCallParameters[](1);
-        testCallParametersArray[0] = testCallParameters;
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            new TestItem20[](0),
-            erc721s,
-            erc1155s
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters[] memory testCallParametersArray,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem721[] memory erc721s,
-        TestItem1155[] memory erc1155s
-    ) public view returns (TestCallParameters memory) {
-        return createSeaportWrappedTestCallParameters(
-            testCallParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            new TestItem20[](0),
-            erc721s,
-            erc1155s
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem20[] memory erc20s
-    ) public view returns (TestCallParameters memory) {
-        TestCallParameters[] memory testCallParametersArray =
-            new TestCallParameters[](1);
-        testCallParametersArray[0] = testCallParameters;
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            erc20s,
-            new TestItem721[](0),
-            new TestItem1155[](0)
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem20[] memory erc20s
-    ) public view returns (TestCallParameters memory) {
-        TestCallParameters[] memory testCallParametersArray =
-            new TestCallParameters[](1);
-        testCallParametersArray[0] = testCallParameters;
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            erc20s,
-            new TestItem721[](0),
-            new TestItem1155[](0)
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters memory testCallParameters,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem20[] memory erc20s,
-        TestItem721[] memory nfts
-    ) public view returns (TestCallParameters memory) {
-        TestCallParameters[] memory testCallParametersArray =
-            new TestCallParameters[](1);
-        testCallParametersArray[0] = testCallParameters;
-
-        return createSeaportWrappedTestCallParameters(
-            testCallParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterConsideration,
-            erc20s,
-            nfts,
-            new TestItem1155[](0)
-        );
-    }
-
-    function createSeaportWrappedTestCallParameters(
-        TestCallParameters[] memory testCallParametersArray,
-        CastOfCharacters memory castOfCharacters,
-        Flashloan[] memory flashloans,
-        ConsiderationItem[] memory adapterConsideration,
-        TestItem20[] memory erc20s,
-        TestItem721[] memory erc721s,
-        TestItem1155[] memory erc1155s
-    )
-        public
-        view
-        returns (TestCallParameters memory wrappedTestCallParameters)
-    {
+        ItemTransfer[] memory itemTransfers
+    ) public view returns (CallParameters memory wrappedTestCallParameters) {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
         (orders, fulfillments) =
         createSeaportWrappedTestCallParametersReturnGranular(
-            testCallParametersArray,
+            callParametersArray,
             castOfCharacters,
             flashloans,
             adapterConsideration,
-            erc20s,
-            erc721s,
-            erc1155s
+            itemTransfers
         );
 
         wrappedTestCallParameters.data = abi.encodeWithSelector(
@@ -516,8 +473,8 @@ library AdapterHelperLib {
 
         uint256 value;
 
-        for (uint256 i; i < testCallParametersArray.length; ++i) {
-            value += testCallParametersArray[i].value;
+        for (uint256 i; i < callParametersArray.length; ++i) {
+            value += callParametersArray[i].value;
         }
 
         wrappedTestCallParameters.value = value;
@@ -540,13 +497,108 @@ library AdapterHelperLib {
     }
 
     function createSeaportWrappedTestCallParametersReturnGranular(
-        TestCallParameters[] memory testCallParametersArray,
+        CallParameters[] memory callParametersArray,
+        CastOfCharacters memory castOfCharacters,
+        ConsiderationItem[] memory adapterConsideration,
+        Item721[] memory erc721s,
+        Item1155[] memory erc1155s
+    )
+        public
+        view
+        returns (
+            AdvancedOrder[] memory orders,
+            Fulfillment[] memory fulfillments
+        )
+    {
+        uint256 totalValue;
+
+        for (uint256 i; i < callParametersArray.length; ++i) {
+            totalValue += callParametersArray[i].value;
+        }
+
+        Flashloan[] memory flashloans = new Flashloan[](0);
+
+        if (totalValue > 0) {
+            flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(totalValue),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+            flashloans[0] = flashloan;
+        }
+
+        ItemTransfer[] memory itemTransfers =
+            new ItemTransfer[](erc721s.length + erc1155s.length);
+        for (uint256 i; i < erc721s.length; i++) {
+            itemTransfers[i] = ItemTransfer({
+                from: castOfCharacters.sidecar,
+                to: castOfCharacters.fulfiller,
+                token: erc721s[i].token,
+                identifier: erc721s[i].identifier,
+                amount: 1,
+                itemType: ItemType.ERC721
+            });
+        }
+
+        for (uint256 i; i < erc1155s.length; i++) {
+            itemTransfers[erc721s.length + i] = ItemTransfer({
+                from: castOfCharacters.sidecar,
+                to: castOfCharacters.fulfiller,
+                token: erc1155s[i].token,
+                identifier: erc1155s[i].identifier,
+                amount: erc1155s[i].amount,
+                itemType: ItemType.ERC1155
+            });
+        }
+
+        return createSeaportWrappedTestCallParametersReturnGranular(
+            callParametersArray,
+            castOfCharacters,
+            flashloans,
+            adapterConsideration,
+            itemTransfers
+        );
+    }
+
+    /**
+     * @dev This function is used to create a set of orders and fulfillments
+     *      that can be passed into matchAdvancedOrders to fulfill an arbitrary
+     *      number of orders on external marketplaces. It expects that the calls
+     *      to external marketplaces are pre-rolled into the callParameters
+     *      array. This function will wrap up those calls into an order that
+     *      hits the generic adapter, which passes them along to the sidecar. It
+     *      also creates a single pair of orders for an arbitrary number of
+     *      flashloans, if any are passed in. It returns the orders and
+     *      fulfillments separately.
+     *
+     * @param callParametersArray An array of CallParameters structs
+     *                                that contain the target, value, and
+     *                                calldata for the calls to external
+     *                                marketplaces.
+     * @param castOfCharacters        A CastOfCharacters struct that contains
+     *                                the addresses of the relevant
+     *                                participants.
+     * @param flashloans              An array of Flashloan structs that contain
+     *                                the flashloan parameters.
+     * @param adapterConsideration    An array of ConsiderationItem structs that
+     *                                contain the consideration for the generic
+     *                                adapter order. The consideration will be
+     *                                passed along to the sidecar, where it's
+     *                                used to fulfill the orders on external
+     *                                marketplaces.
+     * @param itemTransfers           An array of itemTransfer structs that
+     *                                contain the info for instructing the
+     *                                sidecar to transfer an item.
+     *
+     */
+    function createSeaportWrappedTestCallParametersReturnGranular(
+        CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         ConsiderationItem[] memory adapterConsideration,
-        TestItem20[] memory erc20s,
-        TestItem721[] memory erc721s,
-        TestItem1155[] memory erc1155s
+        ItemTransfer[] memory itemTransfers
     )
         public
         view
@@ -570,8 +622,8 @@ library AdapterHelperLib {
             0
         );
 
-        for (uint256 i; i < testCallParametersArray.length; ++i) {
-            infra.value += testCallParametersArray[i].value;
+        for (uint256 i; i < callParametersArray.length; ++i) {
+            infra.value += callParametersArray[i].value;
         }
 
         {
@@ -602,31 +654,25 @@ library AdapterHelperLib {
             }
 
             infra.calls =
-            new Call[](testCallParametersArray.length + erc20s.length + erc721s.length + erc1155s.length);
+                new Call[](callParametersArray.length + itemTransfers.length);
 
             {
-                for (uint256 i = 0; i < testCallParametersArray.length; i++) {
+                for (uint256 i = 0; i < callParametersArray.length; i++) {
                     infra.calls[i] = Call(
-                        address(testCallParametersArray[i].target),
+                        address(callParametersArray[i].target),
                         false,
-                        testCallParametersArray[i].value,
-                        testCallParametersArray[i].data
+                        callParametersArray[i].value,
+                        callParametersArray[i].data
                     );
                 }
 
-                Call[] memory tokenCalls = _createTokenTransferCalls(
-                    address(castOfCharacters.sidecar),
-                    address(castOfCharacters.fulfiller),
-                    erc20s,
-                    erc721s,
-                    erc1155s
-                );
+                Call[] memory tokenCalls =
+                    _createTokenTransferCalls(itemTransfers);
 
                 // Populate the calls array with the NFT transfer calls from the
                 // helper.
                 for (uint256 i = 0; i < tokenCalls.length; i++) {
-                    infra.calls[testCallParametersArray.length + i] =
-                        tokenCalls[i];
+                    infra.calls[callParametersArray.length + i] = tokenCalls[i];
                 }
             }
 
@@ -778,64 +824,75 @@ library AdapterHelperLib {
         return (infra.orders, infra.fulfillments);
     }
 
-    function _createTokenTransferCalls(
-        address from,
-        address to,
-        TestItem20[] memory test20s,
-        TestItem721[] memory test721s,
-        TestItem1155[] memory test1155s
-    ) public pure returns (Call[] memory calls) {
+    function _createTokenTransferCalls(ItemTransfer[] memory itemTransfers)
+        public
+        pure
+        returns (Call[] memory calls)
+    {
         Call memory call;
-        calls = new Call[](test20s.length + test721s.length + test1155s.length);
+        calls = new Call[](itemTransfers.length);
 
-        for (uint256 i; i < test20s.length; ++i) {
-            call = Call(
-                address(test20s[i].token),
-                false,
-                0,
-                abi.encodeWithSelector(
-                    ERC20.transferFrom.selector,
-                    address(from),
-                    address(to),
-                    test20s[i].amount
-                )
-            );
+        for (uint256 i; i < itemTransfers.length; ++i) {
+            if (itemTransfers[i].itemType == ItemType.ERC20) {
+                call = Call(
+                    address(itemTransfers[i].token),
+                    false,
+                    0,
+                    abi.encodeWithSelector(
+                        ERC20.transferFrom.selector,
+                        itemTransfers[i].from,
+                        itemTransfers[i].to,
+                        itemTransfers[i].amount
+                    )
+                );
 
-            calls[i] = call;
+                calls[i] = call;
+            } else if (itemTransfers[i].itemType == ItemType.ERC721) {
+                call = Call(
+                    address(itemTransfers[i].token),
+                    false,
+                    0,
+                    abi.encodeWithSelector(
+                        ERC721.transferFrom.selector,
+                        itemTransfers[i].from,
+                        itemTransfers[i].to,
+                        itemTransfers[i].identifier
+                    )
+                );
+
+                calls[i] = call;
+            } else if (itemTransfers[i].itemType == ItemType.ERC1155) {
+                call = Call(
+                    address(itemTransfers[i].token),
+                    false,
+                    0,
+                    abi.encodeWithSelector(
+                        ERC1155.safeTransferFrom.selector,
+                        itemTransfers[i].from,
+                        itemTransfers[i].to,
+                        itemTransfers[i].identifier,
+                        itemTransfers[i].amount,
+                        bytes("")
+                    )
+                );
+
+                calls[i] = call;
+            }
         }
+    }
 
-        for (uint256 i; i < test721s.length; ++i) {
-            call = Call(
-                address(test721s[i].token),
-                false,
-                0,
-                abi.encodeWithSelector(
-                    ERC721.transferFrom.selector,
-                    address(from),
-                    address(to),
-                    test721s[i].identifier
-                )
-            );
-
-            calls[i + test20s.length] = call;
-        }
-
-        for (uint256 i; i < test1155s.length; ++i) {
-            call = Call(
-                address(test1155s[i].token),
-                false,
-                0,
-                abi.encodeWithSelector(
-                    ERC1155.safeTransferFrom.selector,
-                    address(from),
-                    address(to),
-                    test1155s[i].identifier,
-                    test1155s[i].amount,
-                    bytes("")
-                )
-            );
-
-            calls[i + test20s.length + test721s.length] = call;
-        }
+    function _getFlashloanArrayFromParams(
+        uint256 value,
+        ItemType itemType,
+        bool shouldCallback,
+        address recipient
+    ) internal pure returns (Flashloan[] memory flashloans) {
+        flashloans = new Flashloan[](1);
+        flashloans[0] = Flashloan({
+            amount: uint88(value),
+            itemType: itemType,
+            shouldCallback: shouldCallback,
+            recipient: recipient
+        });
     }
 }

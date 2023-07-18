@@ -7,12 +7,12 @@ import "forge-std/Test.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import {
     SetupCall,
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20
+    Item721,
+    Item1155,
+    Item20
 } from "../../../test/utils/Types.sol";
 import { IZeroEx } from "./interfaces/IZeroEx.sol";
 import "./lib/LibNFTOrder.sol";
@@ -49,7 +49,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
@@ -88,7 +88,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -98,7 +98,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             ethAmount,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -107,7 +107,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC1155WithEther(
         TestOrderContext calldata context,
-        TestItem1155 memory nft,
+        Item1155 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
@@ -147,7 +147,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -157,7 +157,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             ethAmount,
             abi.encodeWithSelector(
@@ -168,8 +168,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        TestItem20 memory erc20
+        Item721 memory nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
@@ -207,7 +207,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -217,7 +217,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -226,8 +226,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        TestItem20 memory erc20
+        Item721 memory nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
@@ -265,7 +265,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -275,7 +275,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -284,8 +284,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC1155WithERC20(
         TestOrderContext calldata context,
-        TestItem1155 calldata nft,
-        TestItem20 memory erc20
+        Item1155 calldata nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
@@ -324,7 +324,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -334,7 +334,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(
@@ -345,8 +345,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem721 memory nft
+        Item20 memory erc20,
+        Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
@@ -384,7 +384,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -394,7 +394,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(
@@ -410,8 +410,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem721 memory nft
+        Item20 memory erc20,
+        Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
@@ -449,7 +449,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -459,7 +459,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(
@@ -475,8 +475,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC20WithERC1155(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem1155 calldata nft
+        Item20 memory erc20,
+        Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
@@ -515,7 +515,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -525,7 +525,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(
@@ -542,7 +542,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
@@ -591,7 +591,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -601,7 +601,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             priceEthAmount + feeEthAmount, // pay the maker and pay the fee
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -610,7 +610,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
         uint256 feeEthAmount1,
@@ -666,7 +666,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(zeroEx),
                 0,
                 abi.encodeWithSelector(
@@ -676,7 +676,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             priceEthAmount + feeEthAmount1 + feeEthAmount2, // pay the maker and pay the fees
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -685,7 +685,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -739,7 +739,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             });
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             sumEth,
             abi.encodeWithSelector(
@@ -751,7 +751,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -800,7 +800,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(
@@ -812,7 +812,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -861,7 +861,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             _notImplemented();
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(zeroEx),
             0,
             abi.encodeWithSelector(

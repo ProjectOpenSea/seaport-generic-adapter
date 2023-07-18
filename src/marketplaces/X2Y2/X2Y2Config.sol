@@ -7,12 +7,12 @@ import { Market } from "./interfaces/MarketConstants.sol";
 import { X2Y2TypeHashes } from "./lib/X2Y2TypeHashes.sol";
 import {
     SetupCall,
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20
+    Item721,
+    Item1155,
+    Item20
 } from "../../../test/utils/Types.sol";
 
 contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
@@ -70,7 +70,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
     function encodeFillOrderDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] memory nfts,
+        Item721[] memory nfts,
         uint256[] memory prices,
         address currency,
         uint256 intent
@@ -134,7 +134,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     function encodeFillOrder(
         address offerer,
         address fulfiller,
-        TestItem721[] memory nfts,
+        Item721[] memory nfts,
         uint256 price,
         address currency,
         uint256 intent,
@@ -191,14 +191,14 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
+        Item721 calldata nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](0);
@@ -214,19 +214,19 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
 
         execution.executeOrder =
-            TestCallParameters(address(X2Y2), ethAmount, payload);
+            CallParameters(address(X2Y2), ethAmount, payload);
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
+        Item721 calldata nft,
+        Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](0);
@@ -241,19 +241,19 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
+        Item721 calldata nft,
+        Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](0);
@@ -268,19 +268,19 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem721 calldata nft
+        Item20 calldata erc20,
+        Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](0);
@@ -295,19 +295,19 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem721 calldata nft
+        Item20 calldata erc20,
+        Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](0);
@@ -322,12 +322,12 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
@@ -336,7 +336,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](1);
@@ -355,14 +355,14 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(X2Y2), priceEthAmount + feeEthAmount, payload
         );
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
         uint256 feeEthAmount1,
@@ -373,7 +373,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             _notImplemented();
         }
 
-        TestItem721[] memory nfts = new TestItem721[](1);
+        Item721[] memory nfts = new Item721[](1);
         nfts[0] = nft;
 
         Market.Fee[] memory fees = new Market.Fee[](2);
@@ -398,7 +398,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(X2Y2),
             priceEthAmount + feeEthAmount1 + feeEthAmount2,
             payload
@@ -407,7 +407,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         if (context.listOnChain) {
@@ -427,12 +427,12 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
 
         execution.executeOrder =
-            TestCallParameters(address(X2Y2), ethAmount, payload);
+            CallParameters(address(X2Y2), ethAmount, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
         if (contexts[0].listOnChain) {
@@ -443,14 +443,13 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, ethAmounts, address(0), Market.INTENT_SELL
         );
 
-        execution.executeOrder =
-            TestCallParameters(address(X2Y2), ethSum, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), ethSum, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         if (contexts[0].listOnChain) {
@@ -461,13 +460,13 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, erc20Amounts, erc20Address, Market.INTENT_SELL
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         if (contexts[0].listOnChain) {
@@ -478,6 +477,6 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, erc20Amounts, erc20Address, Market.INTENT_SELL
         );
 
-        execution.executeOrder = TestCallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
     }
 }

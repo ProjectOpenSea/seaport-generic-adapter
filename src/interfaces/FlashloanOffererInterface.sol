@@ -26,6 +26,15 @@ interface FlashloanOffererInterface is ContractOffererInterface {
     error UnacceptableTokenPairing(); // 0xdd55e6a8
     error MismatchedAddresses(); // 0x67306d70
 
+    /**
+     * @dev Revert with an error if the supplied maximumSpentItem is not WETH.
+     *
+     * @param item The invalid maximumSpentItem.
+     */
+    error InvalidMaximumSpentItem(SpentItem item);
+
+    error UnsupportedChainId(uint256 chainId);
+
     function generateOrder(
         address fulfiller,
         SpentItem[] calldata minimumReceived,

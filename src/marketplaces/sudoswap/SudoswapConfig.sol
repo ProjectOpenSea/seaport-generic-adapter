@@ -6,12 +6,12 @@ import "solmate/tokens/ERC20.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import {
     SetupCall,
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20
+    Item721,
+    Item1155,
+    Item20
 } from "../../../test/utils/Types.sol";
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
@@ -140,7 +140,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 ethAmount
     ) external override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain || nft.token != erc721Address) {
@@ -152,7 +152,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC721 to ethNftPool
-        execution.submitOrder = TestCallParameters({
+        execution.submitOrder = CallParameters({
             target: nft.token,
             value: 0,
             data: abi.encodeWithSignature(
@@ -167,7 +167,7 @@ contract SudoswapConfig is BaseMarketConfig {
         // fulfiller calls pair directly to swap
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = nft.identifier;
-        execution.executeOrder = TestCallParameters({
+        execution.executeOrder = CallParameters({
             target: address(ethNftPool),
             value: ethAmount,
             data: abi.encodeWithSelector(
@@ -183,8 +183,8 @@ contract SudoswapConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
-        TestItem721 calldata nft,
-        TestItem20 calldata erc20
+        Item721 calldata nft,
+        Item20 calldata erc20
     ) external override returns (TestOrderPayload memory execution) {
         if (
             !context.listOnChain || nft.token != erc721Address
@@ -196,7 +196,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC721 to erc20NftPool
-        execution.submitOrder = TestCallParameters({
+        execution.submitOrder = CallParameters({
             target: nft.token,
             value: 0,
             data: abi.encodeWithSignature(
@@ -218,7 +218,7 @@ contract SudoswapConfig is BaseMarketConfig {
             pair: address(erc20NftPool),
             nftIds: nftIds
         });
-        execution.executeOrder = TestCallParameters({
+        execution.executeOrder = CallParameters({
             target: address(ROUTER),
             value: 0,
             data: abi.encodeWithSelector(
@@ -233,8 +233,8 @@ contract SudoswapConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
-        TestItem20 calldata erc20,
-        TestItem721 calldata nft
+        Item20 calldata erc20,
+        Item721 calldata nft
     ) external override returns (TestOrderPayload memory execution) {
         if (
             !context.listOnChain || nft.token != erc721Address
@@ -246,7 +246,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC20 to erc20TokenPool
-        execution.submitOrder = TestCallParameters({
+        execution.submitOrder = CallParameters({
             target: erc20.token,
             value: 0,
             data: abi.encodeWithSelector(
@@ -265,7 +265,7 @@ contract SudoswapConfig is BaseMarketConfig {
             pair: address(erc20TokenPool),
             nftIds: nftIds
         });
-        execution.executeOrder = TestCallParameters({
+        execution.executeOrder = CallParameters({
             target: address(ROUTER),
             value: 0,
             data: abi.encodeWithSelector(
@@ -280,7 +280,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256 ethAmount
     ) external override returns (TestOrderPayload memory execution) {
         if (!context.listOnChain) _notImplemented();
@@ -297,7 +297,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers 10 ERC721s to ethNftPool
-        execution.submitOrder = TestCallParameters({
+        execution.submitOrder = CallParameters({
             target: address(ROUTER),
             value: 0,
             data: abi.encodeWithSignature(
@@ -310,7 +310,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct executeOrder payload
         // fulfiller calls pair directly to swap
-        execution.executeOrder = TestCallParameters({
+        execution.executeOrder = CallParameters({
             target: address(ethNftPool),
             value: ethAmount,
             data: abi.encodeWithSelector(
@@ -326,7 +326,7 @@ contract SudoswapConfig is BaseMarketConfig {
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
         if (!contexts[0].listOnChain) _notImplemented();
@@ -339,7 +339,7 @@ contract SudoswapConfig is BaseMarketConfig {
             ids[i] = nfts[i].identifier;
         }
 
-        execution.submitOrder = TestCallParameters({
+        execution.submitOrder = CallParameters({
             target: address(ROUTER),
             value: 0,
             data: abi.encodeWithSignature(
@@ -370,7 +370,7 @@ contract SudoswapConfig is BaseMarketConfig {
             totalEthAmount += ethAmounts[i];
         }
 
-        execution.executeOrder = TestCallParameters({
+        execution.executeOrder = CallParameters({
             target: address(ROUTER),
             value: totalEthAmount,
             data: abi.encodeWithSelector(

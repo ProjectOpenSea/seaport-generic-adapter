@@ -5,10 +5,10 @@ import {
     SetupCall,
     TestOrderPayload,
     TestOrderContext,
-    TestCallParameters,
-    TestItem20,
-    TestItem721,
-    TestItem1155
+    CallParameters,
+    Item20,
+    Item721,
+    Item1155
 } from "./utils/Types.sol";
 
 import { ConsiderationInterface as ISeaport } from
@@ -107,7 +107,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata,
-        TestItem721 calldata,
+        Item721 calldata,
         uint256
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -124,7 +124,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC1155WithEther(
         TestOrderContext calldata,
-        TestItem1155 calldata,
+        Item1155 calldata,
         uint256
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -141,8 +141,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata,
-        TestItem721 calldata,
-        TestItem20 calldata
+        Item721 calldata,
+        Item20 calldata
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -158,8 +158,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata,
-        TestItem721 calldata,
-        TestItem20 calldata
+        Item721 calldata,
+        Item20 calldata
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -175,8 +175,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC1155WithERC20(
         TestOrderContext calldata,
-        TestItem1155 calldata,
-        TestItem20 calldata
+        Item1155 calldata,
+        Item20 calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -192,8 +192,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata,
-        TestItem20 calldata,
-        TestItem721 calldata
+        Item20 calldata,
+        Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -209,8 +209,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata,
-        TestItem20 calldata,
-        TestItem721 calldata
+        Item20 calldata,
+        Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -226,8 +226,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC20WithERC1155(
         TestOrderContext calldata,
-        TestItem20 calldata,
-        TestItem1155 calldata
+        Item20 calldata,
+        Item1155 calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -243,8 +243,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithERC1155(
         TestOrderContext calldata,
-        TestItem721 calldata,
-        TestItem1155 calldata
+        Item721 calldata,
+        Item1155 calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -260,8 +260,8 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC1155WithERC721(
         TestOrderContext calldata,
-        TestItem1155 calldata,
-        TestItem721 calldata
+        Item1155 calldata,
+        Item721 calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
@@ -279,7 +279,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata,
-        TestItem721 memory,
+        Item721 memory,
         uint256,
         address,
         uint256
@@ -302,7 +302,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata,
-        TestItem721 memory,
+        Item721 memory,
         uint256,
         address,
         uint256,
@@ -323,7 +323,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata,
-        TestItem721[] calldata,
+        Item721[] calldata,
         uint256
     ) external virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -339,7 +339,7 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata,
-        TestItem721[] calldata,
+        Item721[] calldata,
         uint256[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -357,7 +357,7 @@ abstract contract BaseMarketConfig {
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         TestOrderContext[] calldata,
         address,
-        TestItem721[] calldata,
+        Item721[] calldata,
         uint256[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -375,7 +375,7 @@ abstract contract BaseMarketConfig {
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata,
         address,
-        TestItem721[] calldata,
+        Item721[] calldata,
         uint256[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
@@ -391,30 +391,30 @@ abstract contract BaseMarketConfig {
      */
     function getPayload_MatchOrders_ABCA(
         TestOrderContext[] calldata,
-        TestItem721[] calldata
+        Item721[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
 
     function getPayload_MatchOrders_Aggregate(
         TestOrderContext[] calldata,
-        TestItem721[] calldata
+        Item721[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
 
     function getComponents_BuyOfferedERC1155WithERC20(
         address,
-        TestItem1155 calldata,
-        TestItem20 memory
+        Item1155 calldata,
+        Item20 memory
     ) public view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
     }
 
     function getComponents_BuyOfferedERC20WithERC1155(
         address,
-        TestItem20 calldata,
-        TestItem1155 calldata
+        Item20 calldata,
+        Item1155 calldata
     ) external view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
     }

@@ -26,6 +26,8 @@ import {
 contract FlashloanOfferer is ContractOffererInterface {
     address private immutable _SEAPORT;
 
+    address private wrappedTokenAddress;
+
     mapping(address => uint256) public balanceOf;
 
     error InvalidCaller(address caller);
@@ -43,8 +45,77 @@ contract FlashloanOfferer is ContractOffererInterface {
     error UnacceptableTokenPairing(); // 0xdd55e6a8
     error MismatchedAddresses(); // 0x67306d70
 
+    /**
+     * @dev Revert with an error if the supplied maximumSpentItem is not WETH.
+     *
+     * @param item The invalid maximumSpentItem.
+     */
+    error InvalidMaximumSpentItem(SpentItem item);
+
+    error UnsupportedChainId(uint256 chainId);
+
     constructor(address seaport) {
         _SEAPORT = seaport;
+
+        // Set the wrapped token address based on chain id.
+        if (block.chainid == 1) {
+            // Mainnet
+            wrappedTokenAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+        } else if (block.chainid == 5) {
+            // Goerli
+            wrappedTokenAddress = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6;
+        } else if (block.chainid == 11155111) {
+            // Sepolia
+            wrappedTokenAddress = 0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9;
+        } else if (block.chainid == 137) {
+            // Polygon (WMATIC)
+            wrappedTokenAddress = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270;
+        } else if (block.chainid == 80001) {
+            // Mumbai (WMATIC)
+            wrappedTokenAddress = 0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889;
+        } else if (block.chainid == 10 || block.chainid == 420) {
+            // Optimism and Optimism Goerli
+            wrappedTokenAddress = 0x4200000000000000000000000000000000000006;
+        } else if (block.chainid == 42161) {
+            // Arbitrum One
+            wrappedTokenAddress = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+        } else if (block.chainid == 421613) {
+            // Arbitrum Goerli
+            wrappedTokenAddress = 0xEe01c0CD76354C383B8c7B4e65EA88D00B06f36f;
+        } else if (block.chainid == 42170) {
+            // Arbitrum Nova
+            wrappedTokenAddress = 0x722E8BdD2ce80A4422E880164f2079488e115365;
+        } else if (block.chainid == 43114) {
+            // Avalanche C-Chain (WAVAX)
+            wrappedTokenAddress = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
+        } else if (block.chainid == 43113) {
+            // Avalanche Fuji (WAVAX)
+            wrappedTokenAddress = 0x1D308089a2D1Ced3f1Ce36B1FcaF815b07217be3;
+        } else if (block.chainid == 56) {
+            // Binance Smart Chain (WBNB)
+            wrappedTokenAddress = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
+        } else if (block.chainid == 97) {
+            // Binance Smart Chain Testnet (WBNB)
+            wrappedTokenAddress = 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd;
+        } else if (block.chainid == 100) {
+            // Gnosis (WXDAI)
+            wrappedTokenAddress = 0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d;
+        } else if (block.chainid == 8217) {
+            // Klaytn (WKLAY)
+            wrappedTokenAddress = 0xfd844c2fcA5e595004b17615f891620d1cB9bBB2;
+        } else if (block.chainid == 1001) {
+            // Baobab (WKLAY)
+            wrappedTokenAddress = 0x9330dd6713c8328a8D82b14e3f60a0f0b4cc7Bfb;
+        } else if (block.chainid == 1284) {
+            // Moonbeam (WGLMR)
+            wrappedTokenAddress = 0xAcc15dC74880C9944775448304B263D191c6077F;
+        } else if (block.chainid == 1285) {
+            // Moonriver (WMOVR)
+            wrappedTokenAddress = 0x98878B06940aE243284CA214f92Bb71a2b032B8A;
+        } else {
+            // Revert if the chain ID is not supported.
+            revert UnsupportedChainId(block.chainid);
+        }
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -143,8 +214,9 @@ contract FlashloanOfferer is ContractOffererInterface {
 
         if (minimumReceived.length == 0) {
             // No minimumReceived items indicates to perform a flashloan.
-            // TODO: Ensure the maximumSpent item is native or wrapped and not a
-            // shitcoin.
+            if (_isInvalidMaximumSpentItem(maximumSpentItem)) {
+                revert InvalidMaximumSpentItem(maximumSpentItem);
+            }
             if (_processFlashloan(context) > maximumSpentAmount) {
                 revert InsufficientMaximumSpentAmount();
             }
@@ -639,6 +711,28 @@ contract FlashloanOfferer is ContractOffererInterface {
             calldatacopy(receivedItem, spentItem, 0x80)
             mstore(add(receivedItem, 0x80), address())
         }
+    }
+
+    function _isInvalidMaximumSpentItem(SpentItem memory maximumSpentItem)
+        internal
+        view
+        returns (bool)
+    {
+        if (
+            maximumSpentItem.itemType != ItemType.ERC20
+                && maximumSpentItem.itemType != ItemType.NATIVE
+        ) {
+            return true;
+        }
+
+        if (
+            maximumSpentItem.token == address(0)
+                || maximumSpentItem.token == wrappedTokenAddress
+        ) {
+            return false;
+        }
+
+        return true;
     }
 
     function getBalance(address account) external view returns (uint256) {

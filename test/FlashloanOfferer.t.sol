@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { WETH } from "solady/src/tokens/WETH.sol";
+
 import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
 
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
@@ -48,10 +50,15 @@ contract FlashloanOffererTest is BaseOrderTest {
     TestERC721 testERC721;
     TestERC1155 testERC1155;
 
+    WETH internal constant weth =
+        WETH(payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
+
     uint256 public flashloanValueReceived;
 
     function setUp() public override {
         super.setUp();
+
+        vm.chainId(1);
 
         testFlashloanOfferer = FlashloanOffererInterface(
             deployCode(
@@ -495,16 +502,16 @@ contract FlashloanOffererTest is BaseOrderTest {
         assertEq(context.flashloanOfferer.getBalance(address(this)), 0 ether);
     }
 
-    function testProvideFlashloanFunctionality() public {
+    function testProvideFlashloanFunctionalityNativeConsideration() public {
         test(
-            this.execProvideFlashloanFunctionality,
+            this.execProvideFlashloanFunctionalityNativeConsideration,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
                 isReference: false
             })
         );
         test(
-            this.execProvideFlashloanFunctionality,
+            this.execProvideFlashloanFunctionalityNativeConsideration,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
                 isReference: true
@@ -512,10 +519,9 @@ contract FlashloanOffererTest is BaseOrderTest {
         );
     }
 
-    function execProvideFlashloanFunctionality(Context memory context)
-        external
-        stateless
-    {
+    function execProvideFlashloanFunctionalityNativeConsideration(
+        Context memory context
+    ) external stateless {
         // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
         // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
         //
@@ -571,6 +577,164 @@ contract FlashloanOffererTest is BaseOrderTest {
         );
 
         assertEq(flashloanValueRequested, flashloanValueReceived);
+    }
+
+    function testProvideFlashloanFunctionalityWrappedConsideration() public {
+        test(
+            this.execProvideFlashloanFunctionalityWrappedConsideration,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
+        );
+        test(
+            this.execProvideFlashloanFunctionalityWrappedConsideration,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execProvideFlashloanFunctionalityWrappedConsideration(
+        Context memory context
+    ) external stateless {
+        // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        //
+        // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
+        // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
+
+        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte], [recipient, 20 bytes]
+
+        uint256 flashloanValueRequested = 0x3333333333333333333333;
+
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+        SpentItem memory spentItemMaxSpent =
+            SpentItem(ItemType.ERC20, address(weth), 0, flashloanValueRequested);
+        maximumSpent[0] = spentItemMaxSpent;
+
+        Flashloan memory flashloan = Flashloan(
+            uint88(flashloanValueRequested), ItemType.ERC20, true, address(this)
+        );
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
+
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
+
+        // For now, just assume that the flashloan offerer is sufficiently
+        // funded.
+        vm.deal(address(context.flashloanOfferer), 0x4444444444444444444444444);
+
+        uint256 receipientBalanceBefore = address(this).balance;
+        uint256 senderBalanceBefore = address(context.flashloanOfferer).balance;
+
+        vm.prank(address(consideration));
+        context.flashloanOfferer.generateOrder(
+            address(this), new SpentItem[](0), maximumSpent, extraData
+        );
+
+        uint256 receipientBalanceAfter = address(this).balance;
+        uint256 senderBalanceAfter = address(context.flashloanOfferer).balance;
+
+        assertEq(
+            receipientBalanceAfter,
+            receipientBalanceBefore + flashloanValueRequested,
+            "recipient balance incorrect"
+        );
+
+        assertEq(
+            senderBalanceAfter,
+            senderBalanceBefore - flashloanValueRequested,
+            "sender balance incorrect"
+        );
+
+        assertEq(flashloanValueRequested, flashloanValueReceived);
+    }
+
+    function testRejectFlashloanFunctionality() public {
+        test(
+            this.execRejectFlashloanFunctionality,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                isReference: false
+            })
+        );
+        test(
+            this.execRejectFlashloanFunctionality,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execRejectFlashloanFunctionality(Context memory context)
+        external
+        stateless
+    {
+        uint256 flashloanValueRequested = 0xffff;
+
+        SpentItem[] memory maximumSpent = new SpentItem[](1);
+
+        // This is an impermissible shitcoin.
+        SpentItem memory spentItemMaxSpent = SpentItem(
+            ItemType.ERC20, address(test20), 0, flashloanValueRequested
+        );
+        maximumSpent[0] = spentItemMaxSpent;
+
+        Flashloan memory flashloan = Flashloan(
+            uint88(flashloanValueRequested),
+            ItemType.NATIVE,
+            true,
+            address(this)
+        );
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
+
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
+
+        vm.prank(address(consideration));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidMaximumSpentItem.selector,
+                spentItemMaxSpent
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this), new SpentItem[](0), maximumSpent, extraData
+        );
+
+        // This is an impermissible shitcoin.
+        spentItemMaxSpent = SpentItem(
+            ItemType.ERC1155, address(weth), 0, flashloanValueRequested
+        );
+        maximumSpent[0] = spentItemMaxSpent;
+
+        flashloan = Flashloan(
+            uint88(flashloanValueRequested),
+            ItemType.NATIVE,
+            true,
+            address(this)
+        );
+        flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
+
+        extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
+
+        vm.prank(address(consideration));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                FlashloanOffererInterface.InvalidMaximumSpentItem.selector,
+                spentItemMaxSpent
+            )
+        );
+        context.flashloanOfferer.generateOrder(
+            address(this), new SpentItem[](0), maximumSpent, extraData
+        );
     }
 
     function testSeaportWrappedFlashloanFunctionality() public {

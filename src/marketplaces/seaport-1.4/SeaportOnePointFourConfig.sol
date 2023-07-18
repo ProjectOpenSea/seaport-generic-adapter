@@ -3,12 +3,12 @@ pragma solidity >=0.8.7;
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import {
-    TestCallParameters,
+    CallParameters,
     TestOrderContext,
     TestOrderPayload,
-    TestItem721,
-    TestItem1155,
-    TestItem20
+    Item721,
+    Item1155,
+    Item20
 } from "../../../test/utils/Types.sol";
 import "seaport-types/lib/ConsiderationStructs.sol";
 import "./lib/ConsiderationTypeHashes.sol";
@@ -187,7 +187,7 @@ contract SeaportOnePointFourConfig is
     function buildOrderAndFulfillmentManyDistinctOrders(
         TestOrderContext[] memory contexts,
         address paymentTokenAddress,
-        TestItem721[] memory nfts,
+        Item721[] memory nfts,
         uint256[] memory amounts
     ) internal view returns (Order[] memory, Fulfillment[] memory, uint256) {
         Order[] memory orders = new Order[](nfts.length + 1);
@@ -320,7 +320,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
@@ -343,13 +343,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             ethAmount,
             abi.encodeWithSelector(
@@ -361,7 +361,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC1155WithEther(
         TestOrderContext calldata context,
-        TestItem1155 memory nft,
+        Item1155 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
@@ -390,13 +390,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             ethAmount,
             abi.encodeWithSelector(
@@ -408,8 +408,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        TestItem20 memory erc20
+        Item721 memory nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -431,13 +431,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -449,8 +449,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
-        TestItem20 memory erc20
+        Item721 memory nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -472,13 +472,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -490,8 +490,8 @@ contract SeaportOnePointFourConfig is
 
     function getComponents_BuyOfferedERC1155WithERC20(
         address maker,
-        TestItem1155 calldata nft,
-        TestItem20 memory erc20
+        Item1155 calldata nft,
+        Item20 memory erc20
     ) public view override returns (BasicOrderParameters memory) {
         (, BasicOrderParameters memory basicComponents) = buildBasicOrder(
             BasicOrderRouteType.ERC20_TO_ERC1155,
@@ -518,8 +518,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC1155WithERC20(
         TestOrderContext calldata context,
-        TestItem1155 calldata nft,
-        TestItem20 memory erc20
+        Item1155 calldata nft,
+        Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -547,13 +547,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -565,8 +565,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC20WithERC721(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem721 memory nft
+        Item20 memory erc20,
+        Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -590,13 +590,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -608,8 +608,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedWETHWithERC721(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem721 memory nft
+        Item20 memory erc20,
+        Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -633,13 +633,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -651,8 +651,8 @@ contract SeaportOnePointFourConfig is
 
     function getComponents_BuyOfferedERC20WithERC1155(
         address maker,
-        TestItem20 calldata erc20,
-        TestItem1155 calldata nft
+        Item20 calldata erc20,
+        Item1155 calldata nft
     )
         external
         view
@@ -678,8 +678,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC20WithERC1155(
         TestOrderContext calldata context,
-        TestItem20 memory erc20,
-        TestItem1155 calldata nft
+        Item20 memory erc20,
+        Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -703,13 +703,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -721,8 +721,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithERC1155(
         TestOrderContext calldata context,
-        TestItem721 memory sellNft,
-        TestItem1155 calldata buyNft
+        Item721 memory sellNft,
+        Item1155 calldata buyNft
     ) external view override returns (TestOrderPayload memory execution) {
         OfferItem[] memory offerItems = new OfferItem[](1);
         ConsiderationItem[] memory considerationItems = new ConsiderationItem[](
@@ -748,13 +748,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
@@ -763,8 +763,8 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC1155WithERC721(
         TestOrderContext calldata context,
-        TestItem1155 memory sellNft,
-        TestItem721 calldata buyNft
+        Item1155 memory sellNft,
+        Item721 calldata buyNft
     ) external view override returns (TestOrderPayload memory execution) {
         OfferItem[] memory offerItems = new OfferItem[](1);
         ConsiderationItem[] memory considerationItems = new ConsiderationItem[](
@@ -795,13 +795,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
@@ -810,7 +810,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
@@ -840,13 +840,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             priceEthAmount + feeEthAmount,
             abi.encodeWithSelector(
@@ -858,7 +858,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
         TestOrderContext calldata context,
-        TestItem721 memory nft,
+        Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
         uint256 feeEthAmount1,
@@ -894,13 +894,13 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             priceEthAmount + feeEthAmount1 + feeEthAmount2,
             abi.encodeWithSelector(
@@ -912,7 +912,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedManyERC721WithEther(
         TestOrderContext calldata context,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         OfferItem[] memory offerItems = new OfferItem[](nfts.length);
@@ -944,14 +944,14 @@ contract SeaportOnePointFourConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             ethAmount,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
@@ -960,7 +960,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -984,7 +984,7 @@ contract SeaportOnePointFourConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(
@@ -993,7 +993,7 @@ contract SeaportOnePointFourConfig is
             );
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             sumEthAmount,
             abi.encodeWithSelector(
@@ -1005,7 +1005,7 @@ contract SeaportOnePointFourConfig is
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -1025,7 +1025,7 @@ contract SeaportOnePointFourConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(
@@ -1034,7 +1034,7 @@ contract SeaportOnePointFourConfig is
             );
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -1046,7 +1046,7 @@ contract SeaportOnePointFourConfig is
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata contexts,
         address erc20Address,
-        TestItem721[] calldata nfts,
+        Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
     ) external view override returns (TestOrderPayload memory execution) {
         require(
@@ -1066,7 +1066,7 @@ contract SeaportOnePointFourConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = TestCallParameters(
+            execution.submitOrder = CallParameters(
                 address(seaport),
                 0,
                 abi.encodeWithSelector(
@@ -1075,7 +1075,7 @@ contract SeaportOnePointFourConfig is
             );
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -1086,7 +1086,7 @@ contract SeaportOnePointFourConfig is
 
     function getPayload_MatchOrders_ABCA(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts
+        Item721[] calldata nfts
     ) external view override returns (TestOrderPayload memory execution) {
         require(contexts.length == nfts.length, "invalid input");
 
@@ -1137,7 +1137,7 @@ contract SeaportOnePointFourConfig is
             }
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
@@ -1152,7 +1152,7 @@ contract SeaportOnePointFourConfig is
     // the aggregated orders from other marketplaces.
     function getPayload_MatchOrders_Aggregate(
         TestOrderContext[] calldata contexts,
-        TestItem721[] calldata nfts
+        Item721[] calldata nfts
     ) external view override returns (TestOrderPayload memory execution) {
         require(contexts.length == nfts.length, "invalid input");
 
@@ -1203,7 +1203,7 @@ contract SeaportOnePointFourConfig is
             }
         }
 
-        execution.executeOrder = TestCallParameters(
+        execution.executeOrder = CallParameters(
             address(seaport),
             0,
             abi.encodeWithSelector(
