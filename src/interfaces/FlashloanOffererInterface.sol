@@ -25,6 +25,8 @@ interface FlashloanOffererInterface is ContractOffererInterface {
     error SharedItemTypes(); // 0xc25bddad
     error UnacceptableTokenPairing(); // 0xdd55e6a8
     error MismatchedAddresses(); // 0x67306d70
+    error NoShitcoins();
+    error UnsupportedChainId(uint256 chainId);
 
     function generateOrder(
         address fulfiller,
