@@ -493,25 +493,6 @@ library AdapterHelperLib {
         wrappedTestCallParameters.target = castOfCharacters.seaport;
     }
 
-    struct AdapterWrapperInfra {
-        CallParameters[] callParametersArray;
-        CastOfCharacters castOfCharacters;
-        ItemTransfer[] itemTransfers;
-        ConsiderationItem[] adapterConsideration;
-        OfferItem[] adapterOffer;
-        OrderParameters orderParameters;
-        AdvancedOrder order;
-        AdvancedOrder[] orders;
-        Flashloan flashloan;
-        Flashloan[] flashloans;
-        Call call;
-        Call[] calls;
-        bytes extraData;
-        Fulfillment[] fulfillments;
-        uint256 value;
-        uint256 totalFlashloanValueRequested;
-    }
-
     function createSeaportWrappedTestCallParametersReturnGranular(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
@@ -580,6 +561,25 @@ library AdapterHelperLib {
         );
     }
 
+    struct AdapterWrapperInfra {
+        CallParameters[] callParametersArray;
+        CastOfCharacters castOfCharacters;
+        ItemTransfer[] itemTransfers;
+        OfferItem[] adapterOffer;
+        ConsiderationItem[] adapterConsideration;
+        OrderParameters orderParameters;
+        AdvancedOrder order;
+        AdvancedOrder[] orders;
+        Flashloan flashloan;
+        Flashloan[] flashloans;
+        Call call;
+        Call[] calls;
+        bytes extraData;
+        Fulfillment[] fulfillments;
+        uint256 value;
+        uint256 totalFlashloanValueRequested;
+    }
+
     /**
      * @dev This function is used to create a set of orders and fulfillments
      *      that can be passed into matchAdvancedOrders to fulfill an arbitrary
@@ -626,24 +626,24 @@ library AdapterHelperLib {
             Fulfillment[] memory fulfillments
         )
     {
-        AdapterWrapperInfra memory infra = AdapterWrapperInfra(
-            callParametersArray,
-            castOfCharacters,
-            itemTransfers,
-            adapterConsideration,
-            adapterOffer,
-            OrderParametersLib.empty(),
-            AdvancedOrderLib.empty(),
-            new AdvancedOrder[](3),
-            Flashloan(0, ItemType.NATIVE, false, address(0)),
-            flashloans,
-            Call(address(0), false, 0, bytes("")),
-            new Call[](1),
-            new bytes(0),
-            new Fulfillment[](3),
-            0,
-            0
-        );
+        AdapterWrapperInfra memory infra = AdapterWrapperInfra({
+            callParametersArray: callParametersArray,
+            castOfCharacters: castOfCharacters,
+            itemTransfers: itemTransfers,
+            adapterOffer: adapterOffer,
+            adapterConsideration: adapterConsideration,
+            orderParameters: OrderParametersLib.empty(),
+            order: AdvancedOrderLib.empty(),
+            orders: new AdvancedOrder[](3),
+            flashloan: Flashloan(0, ItemType.NATIVE, false, address(0)),
+            flashloans: flashloans,
+            call: Call(address(0), false, 0, bytes("")),
+            calls: new Call[](1),
+            extraData: new bytes(0),
+            fulfillments: new Fulfillment[](3),
+            value: 0,
+            totalFlashloanValueRequested: 0
+        });
 
         // Set the value to send.
         for (uint256 i; i < callParametersArray.length; ++i) {
@@ -652,7 +652,11 @@ library AdapterHelperLib {
 
         _createAdapterOrder(infra);
 
-        _createFlashloanOrdersAndFulfillments(infra);
+        if (infra.flashloans.length > 0) {
+            _createFlashloanOrdersAndFulfillments(infra);
+        }
+
+        _createFulfillments(infra);
 
         return (infra.orders, infra.fulfillments);
     }
@@ -721,110 +725,111 @@ library AdapterHelperLib {
     function _createFlashloanOrdersAndFulfillments(
         AdapterWrapperInfra memory infra
     ) internal view {
-        if (infra.flashloans.length > 0) {
-            {
-                infra.order =
-                    AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+        {
+            infra.order =
+                AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+        }
+
+        {
+            for (uint256 i = 0; i < infra.flashloans.length; i++) {
+                infra.totalFlashloanValueRequested += infra.flashloans[i].amount;
             }
 
+            infra.adapterConsideration = new ConsiderationItem[](1);
+
+            // Come back and think about the case where multiple flashloans
+            // of different types are required.
+            infra.adapterConsideration[0] = ConsiderationItemLib.empty()
+                .withItemType(infra.flashloans[0].itemType).withToken(address(0))
+                .withIdentifierOrCriteria(0).withStartAmount(
+                infra.totalFlashloanValueRequested
+            ).withEndAmount(infra.totalFlashloanValueRequested).withRecipient(
+                address(0)
+            );
+        }
+
+        {
+            infra.orderParameters = OrderParametersLib.empty();
+            infra.orderParameters = infra.orderParameters.withSalt(gasleft());
+            infra.orderParameters = infra.orderParameters.withOfferer(
+                address(infra.castOfCharacters.fulfiller)
+            );
+            infra.orderParameters = infra.orderParameters.withOrderType(
+                OrderType.FULL_OPEN
+            ).withStartTime(block.timestamp);
+            infra.orderParameters =
+                infra.orderParameters.withEndTime(block.timestamp + 100);
+            infra.orderParameters =
+                infra.orderParameters.withTotalOriginalConsiderationItems(0);
+            infra.orderParameters = infra.orderParameters.withOfferer(
+                infra.castOfCharacters.flashloanOfferer
+            );
+            infra.orderParameters =
+                infra.orderParameters.withOrderType(OrderType.CONTRACT);
+            infra.orderParameters =
+                infra.orderParameters.withOffer(new OfferItem[](0));
+            infra.orderParameters = infra.orderParameters.withConsideration(
+                infra.adapterConsideration
+            );
+            infra.orderParameters =
+                infra.orderParameters.withTotalOriginalConsiderationItems(1);
+
+            infra.order.withParameters(infra.orderParameters);
+        }
+
+        {
+            infra.extraData = createFlashloanContext(
+                address(infra.castOfCharacters.fulfiller), infra.flashloans
+            );
+
+            // Add it all to the order.
+            infra.order.withExtraData(infra.extraData);
+            infra.orders[0] = infra.order;
+        }
+
+        // Build the mirror order.
+        {
+            infra.order =
+                AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            // Create the parameters for the order.
             {
-                for (uint256 i = 0; i < infra.flashloans.length; i++) {
-                    infra.totalFlashloanValueRequested +=
-                        infra.flashloans[i].amount;
-                }
+                OfferItem[] memory offerItems = new OfferItem[](1);
+                offerItems[0] = OfferItemLib.empty().withItemType(
+                    infra.flashloans[0].itemType
+                ).withToken(address(0)).withIdentifierOrCriteria(0)
+                    .withStartAmount(infra.totalFlashloanValueRequested)
+                    .withEndAmount(infra.totalFlashloanValueRequested);
 
-                infra.adapterConsideration = new ConsiderationItem[](1);
-
-                // Come back and think about the case where multiple flashloans
-                // of different types are required.
-                infra.adapterConsideration[0] = ConsiderationItemLib.empty()
-                    .withItemType(infra.flashloans[0].itemType).withToken(
-                    address(0)
-                ).withIdentifierOrCriteria(0).withStartAmount(
-                    infra.totalFlashloanValueRequested
-                ).withEndAmount(infra.totalFlashloanValueRequested)
-                    .withRecipient(address(0));
-            }
-
-            {
                 infra.orderParameters = OrderParametersLib.empty();
                 infra.orderParameters =
                     infra.orderParameters.withSalt(gasleft());
                 infra.orderParameters = infra.orderParameters.withOfferer(
                     address(infra.castOfCharacters.fulfiller)
                 );
-                infra.orderParameters = infra.orderParameters.withOrderType(
-                    OrderType.FULL_OPEN
-                ).withStartTime(block.timestamp);
+                infra.orderParameters =
+                    infra.orderParameters.withOrderType(OrderType.FULL_OPEN);
+                infra.orderParameters =
+                    infra.orderParameters.withStartTime(block.timestamp);
                 infra.orderParameters =
                     infra.orderParameters.withEndTime(block.timestamp + 100);
+                infra.orderParameters = infra.orderParameters.withConsideration(
+                    new ConsiderationItem[](0)
+                );
                 infra.orderParameters =
                     infra.orderParameters.withTotalOriginalConsiderationItems(0);
-                infra.orderParameters = infra.orderParameters.withOfferer(
-                    infra.castOfCharacters.flashloanOfferer
-                );
                 infra.orderParameters =
-                    infra.orderParameters.withOrderType(OrderType.CONTRACT);
-                infra.orderParameters =
-                    infra.orderParameters.withOffer(new OfferItem[](0));
-                infra.orderParameters = infra.orderParameters.withConsideration(
-                    infra.adapterConsideration
-                );
-                infra.orderParameters =
-                    infra.orderParameters.withTotalOriginalConsiderationItems(1);
-
-                infra.order.withParameters(infra.orderParameters);
+                    infra.orderParameters.withOffer(offerItems);
+                infra.order = infra.order.withParameters(infra.orderParameters);
+                infra.orders[2] = infra.order;
             }
+        }
+    }
 
-            {
-                infra.extraData = createFlashloanContext(
-                    address(infra.castOfCharacters.fulfiller), infra.flashloans
-                );
-
-                // Add it all to the order.
-                infra.order.withExtraData(infra.extraData);
-                infra.orders[0] = infra.order;
-            }
-
-            // Build the mirror order.
-            {
-                infra.order =
-                    AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
-                // Create the parameters for the order.
-                {
-                    OfferItem[] memory offerItems = new OfferItem[](1);
-                    offerItems[0] = OfferItemLib.empty().withItemType(
-                        infra.flashloans[0].itemType
-                    ).withToken(address(0)).withIdentifierOrCriteria(0)
-                        .withStartAmount(infra.totalFlashloanValueRequested)
-                        .withEndAmount(infra.totalFlashloanValueRequested);
-
-                    infra.orderParameters = OrderParametersLib.empty();
-                    infra.orderParameters =
-                        infra.orderParameters.withSalt(gasleft());
-                    infra.orderParameters = infra.orderParameters.withOfferer(
-                        address(infra.castOfCharacters.fulfiller)
-                    );
-                    infra.orderParameters =
-                        infra.orderParameters.withOrderType(OrderType.FULL_OPEN);
-                    infra.orderParameters =
-                        infra.orderParameters.withStartTime(block.timestamp);
-                    infra.orderParameters =
-                        infra.orderParameters.withEndTime(block.timestamp + 100);
-                    infra.orderParameters = infra
-                        .orderParameters
-                        .withConsideration(new ConsiderationItem[](0));
-                    infra.orderParameters = infra
-                        .orderParameters
-                        .withTotalOriginalConsiderationItems(0);
-                    infra.orderParameters =
-                        infra.orderParameters.withOffer(offerItems);
-                    infra.order =
-                        infra.order.withParameters(infra.orderParameters);
-                    infra.orders[2] = infra.order;
-                }
-            }
-
+    function _createFulfillments(AdapterWrapperInfra memory infra)
+        internal
+        pure
+    {
+        if (infra.flashloans.length > 0) {
             // Create the fulfillments.
             infra.fulfillments = new Fulfillment[](2);
             {
