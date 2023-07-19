@@ -274,7 +274,7 @@ library AdapterHelperLib {
     //                  The meat is at the bottom of all these.               //
     ////////////////////////////////////////////////////////////////////////////
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         OfferItem[] memory adapterOffer,
@@ -302,7 +302,7 @@ library AdapterHelperLib {
             itemType: ItemType.ERC721
         });
 
-        return createSeaportWrappedTestCallParameters(
+        return createSeaportWrappedCallParameters(
             callParameters,
             castOfCharacters,
             flashloans,
@@ -312,7 +312,7 @@ library AdapterHelperLib {
         );
     }
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         OfferItem[] memory adapterOffer,
@@ -342,7 +342,7 @@ library AdapterHelperLib {
             });
         }
 
-        return createSeaportWrappedTestCallParameters(
+        return createSeaportWrappedCallParameters(
             callParameters,
             castOfCharacters,
             flashloans,
@@ -352,7 +352,7 @@ library AdapterHelperLib {
         );
     }
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         OfferItem[] memory adapterOffer,
@@ -380,7 +380,7 @@ library AdapterHelperLib {
             itemType: ItemType.ERC1155
         });
 
-        return createSeaportWrappedTestCallParameters(
+        return createSeaportWrappedCallParameters(
             callParameters,
             castOfCharacters,
             flashloans,
@@ -390,7 +390,7 @@ library AdapterHelperLib {
         );
     }
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         OfferItem[] memory adapterOffer,
@@ -424,7 +424,7 @@ library AdapterHelperLib {
             });
         }
 
-        return createSeaportWrappedTestCallParameters(
+        return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
             flashloans,
@@ -434,7 +434,7 @@ library AdapterHelperLib {
         );
     }
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
@@ -445,7 +445,7 @@ library AdapterHelperLib {
         CallParameters[] memory callParametersArray = new CallParameters[](1);
         callParametersArray[0] = callParameters;
 
-        return createSeaportWrappedTestCallParameters(
+        return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
             flashloans,
@@ -455,18 +455,18 @@ library AdapterHelperLib {
         );
     }
 
-    function createSeaportWrappedTestCallParameters(
+    function createSeaportWrappedCallParameters(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (CallParameters memory wrappedTestCallParameters) {
+    ) public view returns (CallParameters memory wrappedCallParameters) {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
         (orders, fulfillments) =
-        createSeaportWrappedTestCallParametersReturnGranular(
+        createSeaportWrappedCallParametersReturnGranular(
             callParametersArray,
             castOfCharacters,
             flashloans,
@@ -475,7 +475,7 @@ library AdapterHelperLib {
             itemTransfers
         );
 
-        wrappedTestCallParameters.data = abi.encodeWithSelector(
+        wrappedCallParameters.data = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,
             orders,
             new CriteriaResolver[](0),
@@ -489,76 +489,8 @@ library AdapterHelperLib {
             value += callParametersArray[i].value;
         }
 
-        wrappedTestCallParameters.value = value;
-        wrappedTestCallParameters.target = castOfCharacters.seaport;
-    }
-
-    function createSeaportWrappedTestCallParametersReturnGranular(
-        CallParameters[] memory callParametersArray,
-        CastOfCharacters memory castOfCharacters,
-        OfferItem[] memory adapterOffer,
-        ConsiderationItem[] memory adapterConsideration,
-        Item721[] memory erc721s,
-        Item1155[] memory erc1155s
-    )
-        public
-        view
-        returns (
-            AdvancedOrder[] memory orders,
-            Fulfillment[] memory fulfillments
-        )
-    {
-        uint256 totalValue;
-
-        for (uint256 i; i < callParametersArray.length; ++i) {
-            totalValue += callParametersArray[i].value;
-        }
-
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        if (totalValue > 0) {
-            flashloans = new Flashloan[](1);
-            Flashloan memory flashloan = Flashloan({
-                amount: uint88(totalValue),
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: castOfCharacters.adapter
-            });
-            flashloans[0] = flashloan;
-        }
-
-        ItemTransfer[] memory itemTransfers =
-            new ItemTransfer[](erc721s.length + erc1155s.length);
-        for (uint256 i; i < erc721s.length; i++) {
-            itemTransfers[i] = ItemTransfer({
-                from: castOfCharacters.sidecar,
-                to: castOfCharacters.fulfiller,
-                token: erc721s[i].token,
-                identifier: erc721s[i].identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
-        }
-
-        for (uint256 i; i < erc1155s.length; i++) {
-            itemTransfers[erc721s.length + i] = ItemTransfer({
-                from: castOfCharacters.sidecar,
-                to: castOfCharacters.fulfiller,
-                token: erc1155s[i].token,
-                identifier: erc1155s[i].identifier,
-                amount: erc1155s[i].amount,
-                itemType: ItemType.ERC1155
-            });
-        }
-
-        return createSeaportWrappedTestCallParametersReturnGranular(
-            callParametersArray,
-            castOfCharacters,
-            flashloans,
-            adapterOffer,
-            adapterConsideration,
-            itemTransfers
-        );
+        wrappedCallParameters.value = value;
+        wrappedCallParameters.target = castOfCharacters.seaport;
     }
 
     struct AdapterWrapperInfra {
@@ -600,6 +532,13 @@ library AdapterHelperLib {
      *                                participants.
      * @param flashloans              An array of Flashloan structs that contain
      *                                the flashloan parameters.
+     * @param adapterOffer            An array of OfferItem structs that
+     *                                contain the offer for the generic
+     *                                adapter order. A purchaser of NFTs from
+     *                                external marketplaces will put the stuff
+     *                                they expect to get from the function call
+     *                                in here and Seaport will ensure that they
+     *                                either get the stuff or the tx reverts.
      * @param adapterConsideration    An array of ConsiderationItem structs that
      *                                contain the consideration for the generic
      *                                adapter order. The consideration will be
@@ -611,7 +550,7 @@ library AdapterHelperLib {
      *                                sidecar to transfer an item.
      *
      */
-    function createSeaportWrappedTestCallParametersReturnGranular(
+    function createSeaportWrappedCallParametersReturnGranular(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
@@ -650,6 +589,19 @@ library AdapterHelperLib {
             infra.value += callParametersArray[i].value;
         }
 
+        // Only create a default flashloan if it's necessary and none is passed
+        // in explicitly.
+        if (infra.value > 0 && flashloans.length == 0) {
+            infra.flashloans = new Flashloan[](1);
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(infra.value),
+                itemType: ItemType.NATIVE, // TODO: make this flexible (weth)
+                shouldCallback: true,
+                recipient: castOfCharacters.adapter
+            });
+            infra.flashloans[0] = flashloan;
+        }
+
         _createAdapterOrder(infra);
 
         if (infra.flashloans.length > 0) {
@@ -680,7 +632,7 @@ library AdapterHelperLib {
             infra.orderParameters =
                 infra.orderParameters.withOrderType(OrderType.CONTRACT);
             infra.orderParameters = infra.orderParameters.withOffer(
-                new OfferItem[](0)
+                infra.adapterOffer
             ).withConsideration(infra.adapterConsideration)
                 .withTotalOriginalConsiderationItems(
                 infra.adapterConsideration.length

@@ -23,7 +23,9 @@ import {
 import {
     AdapterHelperLib,
     Approval,
-    CastOfCharacters
+    CastOfCharacters,
+    Flashloan,
+    ItemTransfer
 } from "../src/lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from
@@ -180,15 +182,15 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
     struct BenchmarkAggregatedInfra {
         string testLabel;
+        BaseMarketConfig[] configs;
         TestOrderContext context;
         CallParameters[] executionPayloads;
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
         CastOfCharacters castOfCharacters;
-        OfferItem[] offerArray;
-        ConsiderationItem[] considerationArray;
-        Item721[] erc721s;
-        Item1155[] erc1155s;
+        OfferItem[] adapterOfferArray;
+        ConsiderationItem[] adapterConsiderationArray;
+        ItemTransfer[] itemTransfers;
         Item1155 item1155;
         AdvancedOrder[] finalOrders;
         Fulfillment[] finalFulfillments;
@@ -199,6 +201,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     ) public prepareAggregationTest(configs) returns (uint256) {
         BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
             testLabel: "Mixed aggregated through Seaport",
+            configs: configs,
             context: TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
                 ),
@@ -206,10 +209,9 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             adapterOrders: new AdvancedOrder[](3),
             adapterFulfillments: new Fulfillment[](2),
             castOfCharacters: stdCastOfCharacters,
-            offerArray: new OfferItem[](1),
-            considerationArray: new ConsiderationItem[](1),
-            erc721s: new Item721[](1),
-            erc1155s: new Item1155[](2),
+            adapterOfferArray: new OfferItem[](2),
+            adapterConsiderationArray: new ConsiderationItem[](1),
+            itemTransfers: new ItemTransfer[](2),
             item1155: standardERC1155,
             finalOrders: new AdvancedOrder[](5),
             finalFulfillments: new Fulfillment[](4)
@@ -221,80 +223,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         vm.deal(alice, 0);
         test721_1.mint(alice, 1);
 
-        try configs[0].getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            infra.context,
-            standardERC721,
-            500, // increased so that the fee recipient recieves 1%
-            feeReciever1,
-            5
-        ) returns (TestOrderPayload memory payload) {
-            // Fire off the actual prep call to ready the order.
-            _benchmarkCallWithParams(
-                configs[0].name(),
-                string(abi.encodePacked(infra.testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == configs[0].market()
-            );
-            assertEq(feeReciever1.balance, 0);
-
-            infra.executionPayloads[0] = payload.executeOrder;
-        } catch {
-            _logNotSupported(configs[0].name(), infra.testLabel);
-        }
-
-        test1155_1.mint(alice, 1, 1);
-
-        try configs[1].getPayload_BuyOfferedERC1155WithEther(
-            infra.context, infra.item1155, 100
-        ) returns (TestOrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                configs[1].name(),
-                string(abi.encodePacked(infra.testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
-
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-            assertEq(test1155_1.balanceOf(bob, 1), 0);
-
-            infra.executionPayloads[1] = payload.executeOrder;
-        } catch {
-            _logNotSupported(configs[1].name(), infra.testLabel);
-        }
-
-        infra.context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
-
-        test721_1.mint(alice, 2);
-        hevm.deal(bob, 100);
-        hevm.prank(bob);
-        weth.deposit{ value: 100 }();
-
-        // Start with all buy offered NFT with X. But eventually test a mix of
-        // offered X for NFT. The helper will need more detail about each NFT
-        // transfer (sender, receiver, etc.)
-        try configs[2].getPayload_BuyOfferedERC721WithWETH(
-            infra.context, standardERC721Two, standardWeth
-        ) returns (TestOrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(2), alice);
-            assertEq(weth.balanceOf(bob), 100);
-            assertEq(weth.balanceOf(alice), 0);
-
-            infra.executionPayloads[2] = payload.executeOrder;
-        } catch {
-            _logNotSupported(configs[2].name(), infra.testLabel);
-        }
+        _prepareExternalCalls(infra);
 
         // Set up the aggregated orders.
         // Orders will be prime seaport order, flashloan, mirror, adapter.
@@ -306,22 +235,63 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         assertEq(test20.balanceOf(bob), 100);
         assertEq(test20.balanceOf(alice), 0);
 
-        infra.erc721s[0] = standardERC721;
-        infra.erc1155s[0] = standardERC1155;
-
-        infra.considerationArray[0] = ConsiderationItemLib.fromDefault(
+        infra.adapterConsiderationArray[0] = ConsiderationItemLib.fromDefault(
             "standardNativeConsiderationItem"
         ).withStartAmount(605).withEndAmount(605);
 
+        infra.adapterOfferArray[0] = OfferItem({
+            itemType: ItemType.ERC721,
+            token: standardERC721.token,
+            identifierOrCriteria: 1,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        // 721 2 goes straight from the marketplace to Bob.  Come back to this.
+        // infra.adapterOfferArray[0] = OfferItem({
+        //     itemType: ItemType.ERC721,
+        //     token: standardERC721.token,
+        //     identifierOrCriteria: 2,
+        //     startAmount: 1,
+        //     endAmount: 1
+        // });
+
+        infra.adapterOfferArray[1] = OfferItem({
+            itemType: ItemType.ERC1155,
+            token: standardERC1155.token,
+            identifierOrCriteria: 1,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        // Stick the items into the adapter so that seaport can yank them out lol.
+        infra.itemTransfers[0] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC721.token,
+            identifier: standardERC721.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
+        infra.itemTransfers[1] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC1155.token,
+            identifier: standardERC1155.identifier,
+            amount: 1,
+            itemType: ItemType.ERC1155
+        });
+
         // This should provide all the info required for the aggregated orders.
         (infra.adapterOrders, infra.adapterFulfillments) = AdapterHelperLib
-            .createSeaportWrappedTestCallParametersReturnGranular(
+            .createSeaportWrappedCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
-            infra.offerArray,
-            infra.considerationArray,
-            infra.erc721s,
-            infra.erc1155s
+            new Flashloan[](0), // The helper will automatically create one.
+            infra.adapterOfferArray,
+            infra.adapterConsiderationArray,
+            infra.itemTransfers
         );
 
         AdvancedOrder memory orderOffer1155;
@@ -333,13 +303,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
                 alice, Item1155(_test1155Address, 2, 1), standardERC20
             );
 
-            orderOffer1155 = _createSeaportOrder(params);
+            orderOffer1155 = _createSeaportOrderFromBasicParams(params);
 
             params = configs[3].getComponents_BuyOfferedERC20WithERC1155(
                 bob, standardERC20, Item1155(_test1155Address, 2, 1)
             );
 
-            orderConsider1155 = _createSeaportOrder(params);
+            orderConsider1155 = _createSeaportOrderFromBasicParams(params);
         }
 
         {
@@ -350,36 +320,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             infra.finalOrders[4] = orderConsider1155;
         }
 
-        FulfillmentComponent[] memory offerComponentsPrime =
-            new FulfillmentComponent[](1);
-        FulfillmentComponent[] memory considerationComponentsPrime =
-            new FulfillmentComponent[](1);
-
-        offerComponentsPrime[0] = FulfillmentComponent(3, 0);
-        considerationComponentsPrime[0] = FulfillmentComponent(4, 0);
-
-        Fulfillment memory primeFulfillment = Fulfillment({
-            offerComponents: offerComponentsPrime,
-            considerationComponents: considerationComponentsPrime
-        });
-
-        FulfillmentComponent[] memory offerComponentsMirror =
-            new FulfillmentComponent[](1);
-        FulfillmentComponent[] memory considerationComponentsMirror =
-            new FulfillmentComponent[](1);
-
-        offerComponentsMirror[0] = FulfillmentComponent(4, 0);
-        considerationComponentsMirror[0] = FulfillmentComponent(3, 0);
-
-        Fulfillment memory mirrorFulfillment = Fulfillment({
-            offerComponents: offerComponentsMirror,
-            considerationComponents: considerationComponentsMirror
-        });
-
-        infra.finalFulfillments[0] = infra.adapterFulfillments[0];
-        infra.finalFulfillments[1] = infra.adapterFulfillments[1];
-        infra.finalFulfillments[2] = primeFulfillment;
-        infra.finalFulfillments[3] = mirrorFulfillment;
+        _createFulfillmentsForAggregatedTest(infra);
 
         CallParameters memory finalCallParams;
 
@@ -409,13 +350,9 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         );
 
         // EXPECTED OUTCOMES
-        // Bob should get the 721, 1
-        // Bob should get the 721, 2
         assertEq(test721_1.ownerOf(1), bob, "Bob did not get the 721 1");
         assertEq(test721_1.ownerOf(2), bob, "Bob did not get the 721 2");
 
-        // Bob should get the 1155, 1, 1
-        // Bob should get the 1155, 2, 1
         assertEq(
             test1155_1.balanceOf(bob, 1), 1, "Bob did not get the 1155 1 1"
         );
@@ -423,18 +360,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             test1155_1.balanceOf(bob, 2), 1, "Bob did not get the 1155 2 1"
         );
 
-        // Alice gets 500 native
-        // Alice gets 100 native
         // 575 after fees.
         assertEq(alice.balance, 575, "Alice did not get the native");
 
-        // Fee reciever gets 5 native
         assertEq(feeReciever1.balance, 5);
 
-        // Alice gets 100 wrapped
         assertEq(weth.balanceOf(alice), 100, "Alice did not get the wrapped");
 
-        // Alice gets 100 test20
         assertEq(test20.balanceOf(alice), 100, "Alice did not get the test20");
 
         return gasUsed;
@@ -501,10 +433,123 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         }
     }
 
-    function _createSeaportOrder(BasicOrderParameters memory basicParams)
+    function _prepareExternalCalls(BenchmarkAggregatedInfra memory infra)
         internal
-        returns (AdvancedOrder memory)
     {
+        try infra.configs[0].getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
+            infra.context,
+            standardERC721,
+            500, // increased so that the fee recipient recieves 1%
+            feeReciever1,
+            5
+        ) returns (TestOrderPayload memory payload) {
+            // Fire off the actual prep call to ready the order.
+            _benchmarkCallWithParams(
+                infra.configs[0].name(),
+                string(abi.encodePacked(infra.testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
+
+            // Allow the market to escrow after listing
+            assert(
+                test721_1.ownerOf(1) == alice
+                    || test721_1.ownerOf(1) == infra.configs[0].market()
+            );
+            assertEq(feeReciever1.balance, 0);
+
+            infra.executionPayloads[0] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[0].name(), infra.testLabel);
+        }
+
+        test1155_1.mint(alice, 1, 1);
+
+        try infra.configs[1].getPayload_BuyOfferedERC1155WithEther(
+            infra.context, infra.item1155, 100
+        ) returns (TestOrderPayload memory payload) {
+            _benchmarkCallWithParams(
+                infra.configs[1].name(),
+                string(abi.encodePacked(infra.testLabel, " List")),
+                false,
+                false,
+                alice,
+                payload.submitOrder
+            );
+
+            assertEq(test1155_1.balanceOf(alice, 1), 1);
+            assertEq(test1155_1.balanceOf(bob, 1), 0);
+
+            infra.executionPayloads[1] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[1].name(), infra.testLabel);
+        }
+
+        infra.context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        test721_1.mint(alice, 2);
+        hevm.deal(bob, 100);
+        hevm.prank(bob);
+        weth.deposit{ value: 100 }();
+
+        // Start with all buy offered NFT with X. But eventually test a mix of
+        // offered X for NFT. The helper will need more detail about each NFT
+        // transfer (sender, receiver, etc.)
+        try infra.configs[2].getPayload_BuyOfferedERC721WithWETH(
+            infra.context, standardERC721Two, standardWeth
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(2), alice);
+            assertEq(weth.balanceOf(bob), 100);
+            assertEq(weth.balanceOf(alice), 0);
+
+            infra.executionPayloads[2] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[2].name(), infra.testLabel);
+        }
+    }
+
+    function _createFulfillmentsForAggregatedTest(
+        BenchmarkAggregatedInfra memory infra
+    ) internal pure {
+        FulfillmentComponent[] memory offerComponentsPrime =
+            new FulfillmentComponent[](1);
+        FulfillmentComponent[] memory considerationComponentsPrime =
+            new FulfillmentComponent[](1);
+
+        offerComponentsPrime[0] = FulfillmentComponent(3, 0);
+        considerationComponentsPrime[0] = FulfillmentComponent(4, 0);
+
+        Fulfillment memory primeFulfillment = Fulfillment({
+            offerComponents: offerComponentsPrime,
+            considerationComponents: considerationComponentsPrime
+        });
+
+        FulfillmentComponent[] memory offerComponentsMirror =
+            new FulfillmentComponent[](1);
+        FulfillmentComponent[] memory considerationComponentsMirror =
+            new FulfillmentComponent[](1);
+
+        offerComponentsMirror[0] = FulfillmentComponent(4, 0);
+        considerationComponentsMirror[0] = FulfillmentComponent(3, 0);
+
+        Fulfillment memory mirrorFulfillment = Fulfillment({
+            offerComponents: offerComponentsMirror,
+            considerationComponents: considerationComponentsMirror
+        });
+
+        infra.finalFulfillments[0] = infra.adapterFulfillments[0];
+        infra.finalFulfillments[1] = infra.adapterFulfillments[1];
+        infra.finalFulfillments[2] = primeFulfillment;
+        infra.finalFulfillments[3] = mirrorFulfillment;
+    }
+
+    function _createSeaportOrderFromBasicParams(
+        BasicOrderParameters memory basicParams
+    ) internal returns (AdvancedOrder memory) {
         OrderParameters memory params = OrderParameters({
             offerer: basicParams.offerer,
             zone: basicParams.zone,
