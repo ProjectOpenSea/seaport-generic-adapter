@@ -1191,9 +1191,62 @@ contract GenericAdapterTest is BaseOrderTest {
             );
         }
 
+        // // This address expects to get 3 ether out of this.
+        // {
+        //     AdvancedOrder memory safetyOrder =
+        //         AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        //     OfferItem[] memory offerItems = new OfferItem[](0);
+        //     ConsiderationItem[] memory considerationItems =
+        //         new ConsiderationItem[](1);
+        //     considerationItems[0] = ConsiderationItemLib.fromDefault(
+        //         "considerationItemNative"
+        //     ).withAmount(3 ether);
+
+        //     orderParameters = OrderParametersLib.empty().withOfferer(
+        //         address(this)
+        //     ).withOrderType(OrderType.FULL_OPEN).withStartTime(block.timestamp)
+        //         .withEndTime(block.timestamp + 100).withOffer(offerItems)
+        //         .withConsideration(considerationItems)
+        //         .withTotalOriginalConsiderationItems(considerationItems.length).withSalt(gasleft());
+
+        //     safetyOrder = safetyOrder.withParameters(orderParameters);
+        //     orders[3] = safetyOrder;
+        // }
+
+        // // The 3 ether will come from the sidecar.
+        // {
+        //     AdvancedOrder memory safetyOrderMirror =
+        //         AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
+        //     OfferItem[] memory offerItems = new OfferItem[](1);
+        //     OfferItem memory offerItem =
+        //         OfferItemLib.fromDefault("offerItemNative").withAmount(3 ether);
+        //     offerItems[0] = offerItem;
+
+        //     ConsiderationItem[] memory considerationItems =
+        //         new ConsiderationItem[](0);
+
+        //     Context memory _context = context;
+
+        //     orderParameters = OrderParametersLib.empty().withOfferer(
+        //         address(_context.sidecar)
+        //     ).withOrderType(OrderType.FULL_OPEN).withStartTime(block.timestamp)
+        //         .withEndTime(block.timestamp + 100).withOffer(offerItems)
+        //         .withConsideration(considerationItems)
+        //         .withTotalOriginalConsiderationItems(considerationItems.length).withSalt(gasleft());
+
+        //     safetyOrderMirror = safetyOrderMirror.withParameters(orderParameters);
+        //     orders[4] = safetyOrderMirror;
+        // }
+
+        uint256 thisBalanceBefore = address(this).balance;
+
         consideration.matchAdvancedOrders{ value: 3 ether }(
             orders, new CriteriaResolver[](0), fulfillments, address(0)
         );
+
+        uint256 thisBalanceAfter = address(this).balance;
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
 
@@ -1275,11 +1328,21 @@ contract GenericAdapterTest is BaseOrderTest {
             orders[2] = order;
         }
 
+        thisBalanceBefore = address(this).balance;
+
         consideration.matchAdvancedOrders(
             orders, new CriteriaResolver[](0), fulfillments, address(0)
         );
 
-        assertEq(nativeAction, 6 ether, "nativeAction should be 6 ether");
+        thisBalanceAfter = address(this).balance;
+
+        assertEq(
+            thisBalanceAfter - thisBalanceBefore,
+            3 ether,
+            "this should gain 3 ether"
+        );
+
+        assertEq(nativeAction, 6 ether, "total nativeAction should be 6 ether");
     }
 
     function incrementNativeAction(uint256 amount) external payable {

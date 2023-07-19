@@ -196,22 +196,22 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     function benchmarkMixedAggregatedThroughSeaport(
         BaseMarketConfig[] memory configs
     ) public prepareAggregationTest(configs) returns (uint256) {
-        BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra(
-            "Mixed aggregated through Seaport",
-            TestOrderContext(
+        BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
+            testLabel: "Mixed aggregated through Seaport",
+            context: TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             ),
-            new CallParameters[](3),
-            new AdvancedOrder[](3),
-            new Fulfillment[](2),
-            stdCastOfCharacters,
-            new ConsiderationItem[](1),
-            new Item721[](1),
-            new Item1155[](2),
-            standardERC1155,
-            new AdvancedOrder[](5),
-            new Fulfillment[](4)
-        );
+            executionPayloads: new CallParameters[](3),
+            adapterOrders: new AdvancedOrder[](3),
+            adapterFulfillments: new Fulfillment[](2),
+            castOfCharacters: stdCastOfCharacters,
+            considerationArray: new ConsiderationItem[](1),
+            erc721s: new Item721[](1),
+            erc1155s: new Item1155[](2),
+            item1155: standardERC1155,
+            finalOrders: new AdvancedOrder[](5),
+            finalFulfillments: new Fulfillment[](4)
+    });
 
         // Set up the orders. The Seaport order should be passed in normally,
         // and the rest will have to be put together in a big Call array.

@@ -482,6 +482,9 @@ library AdapterHelperLib {
     }
 
     struct AdapterWrapperInfra {
+        CallParameters[] callParametersArray;
+        CastOfCharacters castOfCharacters;
+        ItemTransfer[] itemTransfers;
         ConsiderationItem[] adapterConsideration;
         OrderParameters orderParameters;
         AdvancedOrder order;
@@ -608,6 +611,9 @@ library AdapterHelperLib {
         )
     {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra(
+            callParametersArray,
+            castOfCharacters,
+            itemTransfers,
             adapterConsideration,
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
@@ -622,77 +628,90 @@ library AdapterHelperLib {
             0
         );
 
+        // Set the value to send.
         for (uint256 i; i < callParametersArray.length; ++i) {
             infra.value += callParametersArray[i].value;
         }
 
+        _createAdapterOrder(infra);
+
+        _createFlashloanOrdersAndFulfillments(infra);
+
+        return (infra.orders, infra.fulfillments);
+    }
+
+    function _createAdapterOrder(AdapterWrapperInfra memory infra)
+        internal
+        view
+    {
+        // Create the adapter order.
+        infra.order =
+            AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+
         {
-            // Create the adapter order.
-            infra.order =
-                AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+            infra.orderParameters = OrderParametersLib.empty().withOrderType(
+                OrderType.FULL_OPEN
+            ).withStartTime(block.timestamp).withEndTime(block.timestamp + 100)
+                .withTotalOriginalConsiderationItems(0).withOfferer(
+                infra.castOfCharacters.adapter
+            );
+            infra.orderParameters = infra.orderParameters.withSalt(gasleft());
+            infra.orderParameters =
+                infra.orderParameters.withOrderType(OrderType.CONTRACT);
+            infra.orderParameters = infra.orderParameters.withOffer(
+                new OfferItem[](0)
+            ).withConsideration(infra.adapterConsideration)
+                .withTotalOriginalConsiderationItems(
+                infra.adapterConsideration.length
+            );
 
-            {
-                infra.orderParameters = OrderParametersLib.empty().withOrderType(
-                    OrderType.FULL_OPEN
-                ).withStartTime(block.timestamp).withEndTime(
-                    block.timestamp + 100
-                ).withTotalOriginalConsiderationItems(0).withOfferer(
-                    castOfCharacters.adapter
-                );
-                infra.orderParameters =
-                    infra.orderParameters.withSalt(gasleft());
-                infra.orderParameters =
-                    infra.orderParameters.withOrderType(OrderType.CONTRACT);
-                infra.orderParameters = infra.orderParameters.withOffer(
-                    new OfferItem[](0)
-                ).withConsideration(infra.adapterConsideration)
-                    .withTotalOriginalConsiderationItems(
-                    infra.adapterConsideration.length
-                );
-
-                infra.order = infra.order.withParameters(infra.orderParameters);
-            }
-
-            infra.calls =
-                new Call[](callParametersArray.length + itemTransfers.length);
-
-            {
-                for (uint256 i = 0; i < callParametersArray.length; i++) {
-                    infra.calls[i] = Call(
-                        address(callParametersArray[i].target),
-                        false,
-                        callParametersArray[i].value,
-                        callParametersArray[i].data
-                    );
-                }
-
-                Call[] memory tokenCalls =
-                    _createTokenTransferCalls(itemTransfers);
-
-                // Populate the calls array with the NFT transfer calls from the
-                // helper.
-                for (uint256 i = 0; i < tokenCalls.length; i++) {
-                    infra.calls[callParametersArray.length + i] = tokenCalls[i];
-                }
-            }
-
-            {
-                infra.extraData =
-                    createGenericAdapterContext(new Approval[](0), infra.calls);
-            }
-
-            infra.order = infra.order.withExtraData(infra.extraData);
-            infra.orders[1] = infra.order;
+            infra.order = infra.order.withParameters(infra.orderParameters);
         }
 
-        if (flashloans.length > 0) {
+        infra.calls =
+        new Call[](infra.callParametersArray.length + infra.itemTransfers.length);
+
+        {
+            for (uint256 i = 0; i < infra.callParametersArray.length; i++) {
+                infra.calls[i] = Call(
+                    address(infra.callParametersArray[i].target),
+                    false,
+                    infra.callParametersArray[i].value,
+                    infra.callParametersArray[i].data
+                );
+            }
+
+            Call[] memory tokenCalls =
+                _createTokenTransferCalls(infra.itemTransfers);
+
+            // Populate the calls array with the NFT transfer calls from the
+            // helper.
+            for (uint256 i = 0; i < tokenCalls.length; i++) {
+                infra.calls[infra.callParametersArray.length + i] =
+                    tokenCalls[i];
+            }
+        }
+
+        {
+            infra.extraData =
+                createGenericAdapterContext(new Approval[](0), infra.calls);
+        }
+
+        infra.order = infra.order.withExtraData(infra.extraData);
+        infra.orders[1] = infra.order;
+    }
+
+    function _createFlashloanOrdersAndFulfillments(
+        AdapterWrapperInfra memory infra
+    ) internal view {
+        if (infra.flashloans.length > 0) {
             {
                 infra.order =
                     AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
             }
 
             {
-                for (uint256 i = 0; i < flashloans.length; i++) {
+                for (uint256 i = 0; i < infra.flashloans.length; i++) {
                     infra.totalFlashloanValueRequested +=
                         infra.flashloans[i].amount;
                 }
@@ -715,7 +734,7 @@ library AdapterHelperLib {
                 infra.orderParameters =
                     infra.orderParameters.withSalt(gasleft());
                 infra.orderParameters = infra.orderParameters.withOfferer(
-                    address(castOfCharacters.fulfiller)
+                    address(infra.castOfCharacters.fulfiller)
                 );
                 infra.orderParameters = infra.orderParameters.withOrderType(
                     OrderType.FULL_OPEN
@@ -725,7 +744,7 @@ library AdapterHelperLib {
                 infra.orderParameters =
                     infra.orderParameters.withTotalOriginalConsiderationItems(0);
                 infra.orderParameters = infra.orderParameters.withOfferer(
-                    castOfCharacters.flashloanOfferer
+                    infra.castOfCharacters.flashloanOfferer
                 );
                 infra.orderParameters =
                     infra.orderParameters.withOrderType(OrderType.CONTRACT);
@@ -742,7 +761,7 @@ library AdapterHelperLib {
 
             {
                 infra.extraData = createFlashloanContext(
-                    address(castOfCharacters.fulfiller), flashloans
+                    address(infra.castOfCharacters.fulfiller), infra.flashloans
                 );
 
                 // Add it all to the order.
@@ -767,7 +786,7 @@ library AdapterHelperLib {
                     infra.orderParameters =
                         infra.orderParameters.withSalt(gasleft());
                     infra.orderParameters = infra.orderParameters.withOfferer(
-                        address(castOfCharacters.fulfiller)
+                        address(infra.castOfCharacters.fulfiller)
                     );
                     infra.orderParameters =
                         infra.orderParameters.withOrderType(OrderType.FULL_OPEN);
@@ -820,12 +839,10 @@ library AdapterHelperLib {
             // Create the fulfillments.
             infra.fulfillments = new Fulfillment[](0);
         }
-
-        return (infra.orders, infra.fulfillments);
     }
 
     function _createTokenTransferCalls(ItemTransfer[] memory itemTransfers)
-        public
+        internal
         pure
         returns (Call[] memory calls)
     {
