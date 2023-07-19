@@ -185,6 +185,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
         CastOfCharacters castOfCharacters;
+        OfferItem[] offerArray;
         ConsiderationItem[] considerationArray;
         Item721[] erc721s;
         Item1155[] erc1155s;
@@ -200,18 +201,19 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             testLabel: "Mixed aggregated through Seaport",
             context: TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+                ),
             executionPayloads: new CallParameters[](3),
             adapterOrders: new AdvancedOrder[](3),
             adapterFulfillments: new Fulfillment[](2),
             castOfCharacters: stdCastOfCharacters,
+            offerArray: new OfferItem[](1),
             considerationArray: new ConsiderationItem[](1),
             erc721s: new Item721[](1),
             erc1155s: new Item1155[](2),
             item1155: standardERC1155,
             finalOrders: new AdvancedOrder[](5),
             finalFulfillments: new Fulfillment[](4)
-    });
+        });
 
         // Set up the orders. The Seaport order should be passed in normally,
         // and the rest will have to be put together in a big Call array.
@@ -316,6 +318,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             .createSeaportWrappedTestCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
+            infra.offerArray,
             infra.considerationArray,
             infra.erc721s,
             infra.erc1155s

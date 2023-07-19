@@ -7,12 +7,15 @@ import { Vm } from "forge-std/Vm.sol";
 
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
+import { OfferItemLib } from "seaport-sol/lib/OfferItemLib.sol";
+
 import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
 import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import {
     ConsiderationItem,
+    OfferItem,
     OrderParameters,
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
@@ -85,6 +88,8 @@ contract GenericMarketplaceTest is
 {
     using ConsiderationItemLib for ConsiderationItem;
     using ConsiderationItemLib for ConsiderationItem[];
+    using OfferItemLib for OfferItem;
+    using OfferItemLib for OfferItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
     using AdapterHelperLib for CallParameters;
@@ -371,10 +376,12 @@ contract GenericMarketplaceTest is
                 items[0] = standardERC721;
             }
 
+            // Breadcrumb. This will probably need to be conditional.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -460,6 +467,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -553,6 +561,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -636,6 +645,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -761,10 +771,12 @@ contract GenericMarketplaceTest is
                 erc721s[0] = standardERC721;
             }
 
+            // Breadcrumb. This will probably need to be conditional.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -863,6 +875,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -989,7 +1002,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, adapterOrderConsideration, erc721s
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderConsideration,
+                erc721s
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1073,7 +1089,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, adapterOrderConsideration, erc721s
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderConsideration,
+                erc721s
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1209,6 +1228,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -1300,6 +1320,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -1420,6 +1441,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -1517,6 +1539,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -1637,6 +1660,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardWethOfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -1729,11 +1753,13 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
 
+            // BREADCRUMB.  THEORY TEST.
             if (_sameName(config.name(), blurConfig.name())) {
                 payload.executeOrder = payload
                     .executeOrder
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
+                    new OfferItem[](0),
                     new ConsiderationItem[](0),
                     new Item721[](0)
                 );
@@ -1749,6 +1775,7 @@ contract GenericMarketplaceTest is
                     .executeOrder
                     .createSeaportWrappedTestCallParameters(
                     stdCastOfCharacters,
+                    OfferItemLib.fromDefaultMany("standardWethOfferArray"),
                     ConsiderationItemLib.fromDefaultMany(
                         "standardERC721ConsiderationArray"
                     ),
@@ -1851,6 +1878,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
@@ -1944,6 +1972,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
@@ -2387,7 +2416,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, standardERC721
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2475,7 +2507,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, standardERC721
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2586,7 +2621,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, standardERC721
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2679,7 +2717,10 @@ contract GenericMarketplaceTest is
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, standardERC721
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                standardERC721
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2792,10 +2833,13 @@ contract GenericMarketplaceTest is
                 items = new Item721[](0);
             }
 
+            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            // Breadcrumb. Sudo will probably fail.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -2889,10 +2933,12 @@ contract GenericMarketplaceTest is
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
+            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
                 stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -3013,10 +3059,14 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
+            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, items
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                items
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3140,10 +3190,15 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
+            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            // BreadCrumb. Sudo will probably fail.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, items
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                items
             );
 
             payload.executeOrder.value = flashloanAmount;
@@ -3264,10 +3319,14 @@ contract GenericMarketplaceTest is
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
+            // BRADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, adapterOrderConsideration, nfts
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderConsideration,
+                nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3396,10 +3455,14 @@ contract GenericMarketplaceTest is
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
+            // BREACRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, adapterOrderConsideration, nfts
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderConsideration,
+                nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3531,10 +3594,14 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationItem"
             ).withStartAmount(totalWethAmount).withEndAmount(totalWethAmount);
 
+            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, nfts
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                considerationArray,
+                nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3648,10 +3715,14 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(0).withEndAmount(0);
 
+            // BREADCRUMB. THEORY TEST.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedTestCallParameters(
-                stdCastOfCharacters, considerationArray, new Item721[](0)
+                stdCastOfCharacters,
+                new OfferItem[](0),
+                considerationArray,
+                new Item721[](0)
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3960,6 +4031,10 @@ contract GenericMarketplaceTest is
             sidecar: sidecar
         });
 
+        OfferItem memory standardNativeOffer = OfferItemLib.empty().withItemType(
+            ItemType.NATIVE
+        ).withToken(address(0)).withIdentifierOrCriteria(0).withStartAmount(100)
+            .withEndAmount(100).saveDefault("standardNativeOfferItem");
         ConsiderationItem memory standardNativeConsideration =
         ConsiderationItemLib.empty().withItemType(ItemType.NATIVE).withToken(
             address(0)
@@ -3967,50 +4042,85 @@ contract GenericMarketplaceTest is
             .withRecipient(address(0)).saveDefault(
             "standardNativeConsiderationItem"
         );
+
+        OfferItem memory standardWethOffer = OfferItemLib.empty().withItemType(
+            ItemType.ERC20
+        ).withToken(wethAddress).withIdentifierOrCriteria(0).withStartAmount(
+            100
+        ).withEndAmount(100).saveDefault("standardWethOfferItem");
         ConsiderationItem memory standardWethConsideration =
         ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
             wethAddress
         ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
             .withRecipient(address(0)).saveDefault("standardWethConsiderationItem");
+
+        OfferItem memory standardERC20Offer = OfferItemLib.empty().withItemType(
+            ItemType.ERC20
+        ).withToken(_test20Address).withIdentifierOrCriteria(0).withStartAmount(
+            100
+        ).withEndAmount(100).saveDefault("standardERC20OfferItem");
         ConsiderationItem memory standardERC20Consideration =
         ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
             _test20Address
         ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
             .withRecipient(address(0)).saveDefault("standardERC20ConsiderationItem");
+
+        OfferItem memory standardERC721Offer = OfferItemLib.empty().withItemType(
+            ItemType.ERC721
+        ).withToken(_test721Address).withIdentifierOrCriteria(1).withStartAmount(
+            1
+        ).withEndAmount(1).saveDefault("standardERC721OfferItem");
         ConsiderationItem memory standardERC721Consideration =
         ConsiderationItemLib.empty().withItemType(ItemType.ERC721).withToken(
             _test721Address
         ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
             .withRecipient(address(0)).saveDefault("standard721ConsiderationItem");
+
+        OfferItem memory standardERC1155Offer = OfferItemLib.empty()
+            .withItemType(ItemType.ERC1155).withToken(_test1155Address)
+            .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
+            .saveDefault("standard1155OfferItem");
+
         ConsiderationItem memory standardERC1155Consideration =
         ConsiderationItemLib.empty().withItemType(ItemType.ERC1155).withToken(
             _test1155Address
         ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
             .withRecipient(address(0)).saveDefault("standard1155ConsiderationItem");
 
+        OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
         ConsiderationItem[] memory adapterOrderConsideration =
             new ConsiderationItem[](1);
 
+        adapterOrderOffer[0] = standardNativeOffer;
+        adapterOrderOffer.saveDefaultMany("standardNativeOfferArray");
         adapterOrderConsideration[0] = standardNativeConsideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardNativeConsiderationArray"
         );
 
+        adapterOrderOffer[0] = standardWethOffer;
+        adapterOrderOffer.saveDefaultMany("standardWethOfferArray");
         adapterOrderConsideration[0] = standardWethConsideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardWethConsiderationArray"
         );
 
+        adapterOrderOffer[0] = standardERC20Offer;
+        adapterOrderOffer.saveDefaultMany("standardERC20OfferArray");
         adapterOrderConsideration[0] = standardERC20Consideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardERC20ConsiderationArray"
         );
 
+        adapterOrderOffer[0] = standardERC721Offer;
+        adapterOrderOffer.saveDefaultMany("standardERC721OfferArray");
         adapterOrderConsideration[0] = standardERC721Consideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardERC721ConsiderationArray"
         );
 
+        adapterOrderOffer[0] = standardERC1155Offer;
+        adapterOrderOffer.saveDefaultMany("standardERC1155OfferArray");
         adapterOrderConsideration[0] = standardERC1155Consideration;
         adapterOrderConsideration.saveDefaultMany(
             "standardERC1155ConsiderationArray"

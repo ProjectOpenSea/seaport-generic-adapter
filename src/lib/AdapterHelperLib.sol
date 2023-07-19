@@ -277,6 +277,7 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         Item721 memory nft
     ) public view returns (CallParameters memory) {
@@ -305,6 +306,7 @@ library AdapterHelperLib {
             callParameters,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -313,6 +315,7 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         Item721[] memory nfts
     ) public view returns (CallParameters memory) {
@@ -343,6 +346,7 @@ library AdapterHelperLib {
             callParameters,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -351,6 +355,7 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         Item1155 memory nft
     ) public view returns (CallParameters memory) {
@@ -379,6 +384,7 @@ library AdapterHelperLib {
             callParameters,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -387,6 +393,7 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         Item20[] memory erc20s
     ) public view returns (CallParameters memory) {
@@ -421,6 +428,7 @@ library AdapterHelperLib {
             callParametersArray,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -430,6 +438,7 @@ library AdapterHelperLib {
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
     ) public view returns (CallParameters memory) {
@@ -440,6 +449,7 @@ library AdapterHelperLib {
             callParametersArray,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -449,6 +459,7 @@ library AdapterHelperLib {
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
     ) public view returns (CallParameters memory wrappedTestCallParameters) {
@@ -459,6 +470,7 @@ library AdapterHelperLib {
             callParametersArray,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -486,6 +498,7 @@ library AdapterHelperLib {
         CastOfCharacters castOfCharacters;
         ItemTransfer[] itemTransfers;
         ConsiderationItem[] adapterConsideration;
+        OfferItem[] adapterOffer;
         OrderParameters orderParameters;
         AdvancedOrder order;
         AdvancedOrder[] orders;
@@ -502,6 +515,7 @@ library AdapterHelperLib {
     function createSeaportWrappedTestCallParametersReturnGranular(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         Item721[] memory erc721s,
         Item1155[] memory erc1155s
@@ -560,6 +574,7 @@ library AdapterHelperLib {
             callParametersArray,
             castOfCharacters,
             flashloans,
+            adapterOffer,
             adapterConsideration,
             itemTransfers
         );
@@ -600,6 +615,7 @@ library AdapterHelperLib {
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
+        OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
     )
@@ -615,6 +631,7 @@ library AdapterHelperLib {
             castOfCharacters,
             itemTransfers,
             adapterConsideration,
+            adapterOffer,
             OrderParametersLib.empty(),
             AdvancedOrderLib.empty(),
             new AdvancedOrder[](3),
