@@ -24,7 +24,8 @@ import {
     AdapterHelperLib,
     Approval,
     CastOfCharacters,
-    Flashloan
+    Flashloan,
+    ItemTransfer
 } from "../src/lib/AdapterHelperLib.sol";
 
 import { FlashloanOffererInterface } from
@@ -123,6 +124,11 @@ contract GenericMarketplaceTest is
     Item721 standardERC721Two;
     Item1155 standardERC1155;
 
+    ItemTransfer standardWethTransfer;
+    ItemTransfer standard20Transfer;
+    ItemTransfer standard721Transfer;
+    ItemTransfer standard1155Transfer;
+
     ISeaport internal constant seaport =
         ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
 
@@ -207,7 +213,7 @@ contract GenericMarketplaceTest is
         buyOfferedERC20WithERC721_ListOnChain(config);
         // There's an issue with resetting storage for sudo, to just reset
         // here.
-        if (_sameName(config.name(), sudoswapConfig.name())) {
+        if (_isSudo(config)) {
             beforeAllPrepareMarketplaceTest(config);
         }
         buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
@@ -224,7 +230,7 @@ contract GenericMarketplaceTest is
         buyOfferedERC721WithERC20_ListOnChain(config);
         // There's an issue with resetting storage for sudo, to just reset
         // here.
-        if (_sameName(config.name(), sudoswapConfig.name())) {
+        if (_isSudo(config)) {
             beforeAllPrepareMarketplaceTest(config);
         }
         buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
@@ -367,13 +373,15 @@ contract GenericMarketplaceTest is
                     || test721_1.ownerOf(1) == config.market()
             );
 
-            Item721[] memory items;
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
 
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new Item721[](0);
-            } else {
-                items = new Item721[](1);
-                items[0] = standardERC721;
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
+            if (_isSudo(config)) {
+                itemTransfers = new ItemTransfer[](0);
+                adapterOrderOffer = new OfferItem[](0);
             }
 
             // Breadcrumb. This will probably need to be conditional.
@@ -381,11 +389,11 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                items
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -448,11 +456,10 @@ contract GenericMarketplaceTest is
 
         // LR and X2Y2 require that the msg.sender is also the taker.
         // This just causes Blur to fail silently instead of loudly.
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), blurConfig.name())
-        ) {
+        bool requiresTakesIsSender =
+            _isLooksRare(config) || _isX2y2(config) || _isBlur(config);
+
+        if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -463,15 +470,25 @@ contract GenericMarketplaceTest is
 
             assertEq(test721_1.ownerOf(1), alice);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
+
+            // if (_isX2y2(config)) {
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                standardERC721
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -557,6 +574,9 @@ contract GenericMarketplaceTest is
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard1155Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
@@ -565,7 +585,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                standardERC1155
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -628,10 +648,9 @@ contract GenericMarketplaceTest is
         );
 
         // LR and X2Y2 require that the msg.sender is also the taker.
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-        ) {
+        bool requiresTakesIsSender = _isLooksRare(config);
+
+        if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -641,15 +660,25 @@ contract GenericMarketplaceTest is
             context.fulfiller = bob;
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray");
+
+            // if (requiresTakesIsSender) {
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard1155Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                standardERC1155
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -726,10 +755,7 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-        ) {
+        if (_isLooksRare(config) || _isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -761,14 +787,15 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            Item721[] memory erc721s;
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
 
-            erc721s = new Item721[](1);
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
 
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                erc721s = new Item721[](0);
-            } else {
-                erc721s[0] = standardERC721;
+            if (_isSudo(config)) {
+                itemTransfers = new ItemTransfer[](1);
+                adapterOrderOffer = new OfferItem[](0);
             }
 
             // Breadcrumb. This will probably need to be conditional.
@@ -776,11 +803,11 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                erc721s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -847,10 +874,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (
-            _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), looksRareConfig.name())
-        ) {
+        if (_isX2y2(config) || _isLooksRare(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -866,10 +890,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            Item721[] memory erc721s;
-
-            erc721s = new Item721[](1);
-            erc721s[0] = standardERC721;
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
 
             payload.executeOrder = payload
                 .executeOrder
@@ -879,7 +901,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                erc721s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -966,10 +988,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (
-            _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), looksRareConfig.name())
-        ) {
+        if (_isX2y2(config) || _isLooksRare(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -988,24 +1007,29 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            Item721[] memory erc721s = new Item721[](1);
-            erc721s[0] = standardERC721;
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
 
-            if (_sameName(config.name(), blurConfig.name())) {
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
+            if (_isBlur(config)) {
+                // Blur pulls the payment directly.
                 adapterOrderConsideration = new ConsiderationItem[](0);
-                erc721s = new Item721[](0);
+                // Blur sends the NFT directly to Bob.
+                itemTransfers = new ItemTransfer[](0);
+                // NOTE: THIS MEANS YOU GET NO SEAPORT SECURITY WHEN USING BLUR
+                //       THROUGH THE GENERIC ADAPTER. FOOTGUN RISK IS HIGH.
+                adapterOrderOffer = new OfferItem[](0);
             }
-
-            vm.prank(sidecar);
-            weth.approve(sidecar, type(uint256).max);
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 adapterOrderConsideration,
-                erc721s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1041,10 +1065,7 @@ contract GenericMarketplaceTest is
         );
 
         // TODO: Come back and see if there's a way to make these work.
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-        ) {
+        if (_isLooksRare(config) || _isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1075,16 +1096,17 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            Item721[] memory erc721s = new Item721[](1);
-            erc721s[0] = standardERC721;
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
 
-            if (_sameName(config.name(), blurConfig.name())) {
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
+            if (_isBlur(config)) {
+                adapterOrderOffer = new OfferItem[](0);
                 adapterOrderConsideration = new ConsiderationItem[](0);
-                erc721s = new Item721[](0);
+                itemTransfers = new ItemTransfer[](0);
             }
-
-            vm.prank(sidecar);
-            weth.approve(sidecar, type(uint256).max);
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1092,7 +1114,7 @@ contract GenericMarketplaceTest is
                 stdCastOfCharacters,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 adapterOrderConsideration,
-                erc721s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1224,6 +1246,9 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard1155Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
@@ -1232,7 +1257,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                standardERC1155
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1300,7 +1325,7 @@ contract GenericMarketplaceTest is
         );
 
         // Cheat the context for LR.
-        if (_sameName(config.name(), looksRareConfig.name())) {
+        if (_isLooksRare(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1316,6 +1341,9 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard1155Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
@@ -1324,7 +1352,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
-                standardERC1155
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1403,7 +1431,7 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_sameName(config.name(), x2y2Config.name())) {
+        if (_isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1430,22 +1458,26 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(bob), 0);
 
-            Item20[] memory erc20s = new Item20[](1);
-            erc20s[0] = standardERC20;
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray");
 
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                erc20s = new Item20[](0);
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard20Transfer;
+
+            if (_isSudo(config)) {
+                itemTransfers = new ItemTransfer[](0);
+                adapterOrderOffer = new OfferItem[](0);
             }
 
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
-                erc20s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1513,10 +1545,7 @@ contract GenericMarketplaceTest is
         );
 
         // Cheat the context for LR and X2Y2.
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-        ) {
+        if (_isLooksRare(config) || _isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1532,8 +1561,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            Item20[] memory erc20s = new Item20[](1);
-            erc20s[0] = standardERC20;
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard20Transfer;
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1543,7 +1572,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
-                erc20s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1649,12 +1678,12 @@ contract GenericMarketplaceTest is
             );
             assertEq(weth.balanceOf(bob), 0);
 
-            Item20[] memory erc20s = new Item20[](1);
-            erc20s[0] = standardWeth;
-
             // Look into why test20 requires an explicit approval lol.
             vm.prank(sidecar);
             weth.approve(sidecar, 100);
+
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standardWethTransfer;
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1664,7 +1693,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
-                erc20s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1733,10 +1762,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (
-            _sameName(config.name(), looksRareConfig.name())
-                || _sameName(config.name(), x2y2Config.name())
-        ) {
+        if (_isLooksRare(config) || _isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1754,7 +1780,7 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(bob), 0);
 
             // BREADCRUMB.  THEORY TEST.
-            if (_sameName(config.name(), blurConfig.name())) {
+            if (_isBlur(config)) {
                 payload.executeOrder = payload
                     .executeOrder
                     .createSeaportWrappedCallParameters(
@@ -1764,12 +1790,12 @@ contract GenericMarketplaceTest is
                     new Item721[](0)
                 );
             } else {
-                Item20[] memory erc20s = new Item20[](1);
-                erc20s[0] = standardWeth;
-
                 // Look into why test20 requires an explicit approval lol.
                 vm.prank(sidecar);
                 weth.approve(sidecar, 100);
+
+                ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+                itemTransfers[0] = standardWethTransfer;
 
                 payload.executeOrder = payload
                     .executeOrder
@@ -1779,7 +1805,7 @@ contract GenericMarketplaceTest is
                     ConsiderationItemLib.fromDefaultMany(
                         "standardERC721ConsiderationArray"
                     ),
-                    erc20s
+                    itemTransfers
                 );
             }
 
@@ -1871,8 +1897,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            Item20[] memory erc20s = new Item20[](1);
-            erc20s[0] = standardERC20;
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard20Transfer;
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1882,7 +1908,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
-                erc20s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1949,7 +1975,7 @@ contract GenericMarketplaceTest is
         );
 
         // Cheat the context for LR.
-        if (_sameName(config.name(), looksRareConfig.name())) {
+        if (_isLooksRare(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -1965,8 +1991,8 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            Item20[] memory erc20s = new Item20[](1);
-            erc20s[0] = standardERC20;
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard20Transfer;
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1976,7 +2002,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC1155ConsiderationArray"
                 ),
-                erc20s
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2413,13 +2439,16 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(505).withEndAmount(505);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 considerationArray,
-                standardERC721
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2485,7 +2514,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_sameName(config.name(), x2y2Config.name())) {
+        if (_isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -2504,13 +2533,23 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(105).withEndAmount(105);
 
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
+
+            // if (_isX2y2(config)) {
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 considerationArray,
-                standardERC721
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2618,13 +2657,16 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(110).withEndAmount(110);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 considerationArray,
-                standardERC721
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2694,7 +2736,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_sameName(config.name(), x2y2Config.name())) {
+        if (_isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
@@ -2714,13 +2756,16 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(110).withEndAmount(110);
 
+            ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
+            itemTransfers[0] = standard721Transfer;
+
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 considerationArray,
-                standardERC721
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2804,13 +2849,13 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        Item721[] memory items = new Item721[](10);
+        Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = Item721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
+        try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
         returns (TestOrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2829,21 +2874,38 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new Item721[](0);
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
+
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+            for (uint256 i; i < nfts.length; i++) {
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
             }
 
-            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            if (_isSudo(config)) {
+                itemTransfers = new ItemTransfer[](0);
+                adapterOrderOffer = new OfferItem[](0);
+            }
+
+            // BREADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             // Breadcrumb. Sudo will probably fail.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                items
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -2915,17 +2977,17 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_sameName(config.name(), x2y2Config.name())) {
+        if (_isX2y2(config)) {
             context.fulfiller = sidecar;
         }
 
-        Item721[] memory items = new Item721[](10);
+        Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = Item721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(context, items, 100)
+        try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
         returns (TestOrderPayload memory payload) {
             context.fulfiller = bob;
 
@@ -2933,16 +2995,37 @@ contract GenericMarketplaceTest is
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
-            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            OfferItem[] memory adapterOrderOffer =
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
+
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+            for (uint256 i; i < nfts.length; i++) {
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
+            }
+
+            if (_isX2y2(config)) {
+                itemTransfers = new ItemTransfer[](0);
+                adapterOrderOffer = new OfferItem[](0);
+            }
+
+            // BREADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                items
+                nfts
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3012,16 +3095,15 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
-        bool requiresTakerIsSender = _sameName(config.name(), x2y2Config.name())
-            || _sameName(config.name(), blurConfig.name());
+        bool requiresTakerIsSender = _isX2y2(config) || _isBlur(config);
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        Item721[] memory items = new Item721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = Item721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 false,
                 true,
@@ -3035,7 +3117,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, items, ethAmounts
+            contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].fulfiller = bob;
@@ -3059,14 +3141,40 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
-            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+            for (uint256 i; i < nfts.length; i++) {
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
+
+                adapterOrderOffer[i] = OfferItemLib.fromDefault(
+                    "standardERC721OfferItem"
+                ).withToken(nfts[i].token).withIdentifierOrCriteria(
+                    nfts[i].identifier
+                );
+            }
+
+            // if (requiresTakerIsSender) {
+            //     itemTransfers = new ItemTransfer[](0);
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
+            // BREADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 considerationArray,
-                items
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3142,16 +3250,23 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
+        bool transfersToSpecifiedTaker = _isSudo(config);
+
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
-        Item721[] memory items = new Item721[](10);
+        Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
-            items[i] = Item721(_test721Address, i + 1);
+            nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
                 true, true, alice, bob, flashloanOfferer, adapter, sidecar
             );
+
+            // if (transfersToSpecifiedTaker) {
+            //     contexts[i].fulfiller = adapter;
+            // }
+
             // There's something screwy with the ETH amounts here. For some
             // reason, this needs to be 101 instead of 100 like it is in its
             // sibling test. Only Sudo and Seaport are set up for this, and
@@ -3160,8 +3275,12 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, items, ethAmounts
+            contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
+            // for (uint256 i = 0; i < contexts.length; i++) {
+            //     contexts[i].fulfiller = bob;
+            // }
+
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3177,9 +3296,14 @@ contract GenericMarketplaceTest is
                 flashloanAmount += ethAmounts[i];
             }
 
-            // Sudo does the transfers.
-            if (_sameName(config.name(), sudoswapConfig.name())) {
-                items = new Item721[](0);
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+
+            for (uint256 i; i < nfts.length; i++) {
+                adapterOrderOffer[i] = OfferItemLib.fromDefault(
+                    "standardERC721OfferItem"
+                ).withToken(nfts[i].token).withIdentifierOrCriteria(
+                    nfts[i].identifier
+                );
             }
 
             ConsiderationItem[] memory considerationArray =
@@ -3190,15 +3314,34 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
-            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
-            // BreadCrumb. Sudo will probably fail.
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+            for (uint256 i; i < nfts.length; i++) {
+                // Please god no.
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
+            }
+
+            // Sudo does the transfers.
+            if (transfersToSpecifiedTaker) {
+                itemTransfers = new ItemTransfer[](0);
+                adapterOrderOffer = new OfferItem[](0);
+            }
+
+            // BREADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 considerationArray,
-                items
+                itemTransfers
             );
 
             payload.executeOrder.value = flashloanAmount;
@@ -3286,10 +3429,9 @@ contract GenericMarketplaceTest is
             erc20Amounts[i] = 100 + i;
         }
 
-        if (
-            _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), looksRareConfig.name())
-        ) {
+        bool requiresTakerIsSender = _isX2y2(config) || _isLooksRare(config);
+
+        if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].fulfiller = address(contexts[i].sidecar);
             }
@@ -3319,14 +3461,39 @@ contract GenericMarketplaceTest is
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
-            // BRADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+
+            for (uint256 i; i < nfts.length; i++) {
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
+
+                adapterOrderOffer[i] = OfferItemLib.fromDefault(
+                    "standardERC721OfferItem"
+                ).withToken(nfts[i].token).withIdentifierOrCriteria(
+                    nfts[i].identifier
+                );
+            }
+
+            // if (requiresTakerIsSender) {
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
+            // BRADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 adapterOrderConsideration,
-                nfts
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3408,10 +3575,7 @@ contract GenericMarketplaceTest is
         uint256[] memory erc20Amounts = new uint256[](10);
 
         // Ah crap this turns out to be only implemented for Seaport.
-        if (
-            _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), looksRareConfig.name())
-        ) {
+        if (_isX2y2(config) || _isLooksRare(config)) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].fulfiller = address(contexts[i].sidecar);
             }
@@ -3455,7 +3619,7 @@ contract GenericMarketplaceTest is
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
-            // BREACRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            // BREACRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
@@ -3557,12 +3721,11 @@ contract GenericMarketplaceTest is
             wethAmounts[i] = 100 + i;
         }
 
+        bool requiresTakerIsSender = _isX2y2(config) || _isBlur(config);
+
         // NOTE: Blur doesn't support ad hoc signing, so this just puts Blur on
         //       the `except` path, which currently fails silently.
-        if (
-            _sameName(config.name(), x2y2Config.name())
-                || _sameName(config.name(), blurConfig.name())
-        ) {
+        if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].fulfiller = sidecar;
             }
@@ -3585,23 +3748,45 @@ contract GenericMarketplaceTest is
                 totalWethAmount += wethAmounts[i];
             }
 
-            vm.prank(sidecar);
-            weth.approve(sidecar, type(uint256).max);
-
             ConsiderationItem[] memory considerationArray =
                 new ConsiderationItem[](1);
             considerationArray[0] = ConsiderationItemLib.fromDefault(
                 "standardWethConsiderationItem"
             ).withStartAmount(totalWethAmount).withEndAmount(totalWethAmount);
 
-            // BREADCRUMB. MIGHT SILENTLY FAIL TO DO ITS JOB.
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            ItemTransfer[] memory itemTransfers =
+                new ItemTransfer[](nfts.length);
+
+            for (uint256 i; i < nfts.length; i++) {
+                itemTransfers[i] = ItemTransfer({
+                    from: sidecar,
+                    to: adapter,
+                    token: nfts[i].token,
+                    identifier: nfts[i].identifier,
+                    amount: 1,
+                    itemType: ItemType.ERC721
+                });
+
+                adapterOrderOffer[i] = OfferItemLib.fromDefault(
+                    "standardERC721OfferItem"
+                ).withToken(nfts[i].token).withIdentifierOrCriteria(
+                    nfts[i].identifier
+                );
+            }
+
+            // if (requiresTakerIsSender) {
+            //     adapterOrderOffer = new OfferItem[](0);
+            // }
+
+            // BREADCRUMB. WILL SILENTLY FAIL TO DO ITS JOB.
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 considerationArray,
-                nfts
+                itemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -4020,6 +4205,39 @@ contract GenericMarketplaceTest is
         standardERC721Two = Item721(_test721Address, 2);
         standardERC1155 = Item1155(_test1155Address, 1, 1);
 
+        standardWethTransfer = ItemTransfer({
+            from: sidecar,
+            to: adapter,
+            token: standardWeth.token,
+            identifier: 0,
+            amount: standardWeth.amount,
+            itemType: ItemType.ERC20
+        });
+        standard20Transfer = ItemTransfer({
+            from: sidecar,
+            to: adapter,
+            token: standardERC20.token,
+            identifier: 0,
+            amount: standardERC20.amount,
+            itemType: ItemType.ERC20
+        });
+        standard721Transfer = ItemTransfer({
+            from: sidecar,
+            to: adapter,
+            token: standardERC721.token,
+            identifier: standardERC721.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+        standard1155Transfer = ItemTransfer({
+            from: sidecar,
+            to: adapter,
+            token: standardERC1155.token,
+            identifier: standardERC1155.identifier,
+            amount: 1,
+            itemType: ItemType.ERC1155
+        });
+
         vm.deal(flashloanOfferer, type(uint128).max);
 
         stdCastOfCharacters = CastOfCharacters({
@@ -4148,6 +4366,26 @@ contract GenericMarketplaceTest is
 
         // Do any final setup within config
         config.beforeAllPrepareMarketplace(alice, bob);
+    }
+
+    function _isSudo(BaseMarketConfig config) internal view returns (bool) {
+        return _sameName(config.name(), sudoswapConfig.name());
+    }
+
+    function _isBlur(BaseMarketConfig config) internal view returns (bool) {
+        return _sameName(config.name(), blurConfig.name());
+    }
+
+    function _isX2y2(BaseMarketConfig config) internal view returns (bool) {
+        return _sameName(config.name(), x2y2Config.name());
+    }
+
+    function _isLooksRare(BaseMarketConfig config)
+        internal
+        view
+        returns (bool)
+    {
+        return _sameName(config.name(), looksRareConfig.name());
     }
 
     function _sameName(string memory name1, string memory name2)

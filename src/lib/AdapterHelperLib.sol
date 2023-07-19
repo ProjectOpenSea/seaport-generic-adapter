@@ -437,6 +437,26 @@ library AdapterHelperLib {
     function createSeaportWrappedCallParameters(
         CallParameters memory callParameters,
         CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
+        ConsiderationItem[] memory adapterConsideration,
+        ItemTransfer[] memory itemTransfers
+    ) public view returns (CallParameters memory) {
+        CallParameters[] memory callParametersArray = new CallParameters[](1);
+        callParametersArray[0] = callParameters;
+
+        return createSeaportWrappedCallParameters(
+            callParametersArray,
+            castOfCharacters,
+            new Flashloan[](0),
+            adapterOffer,
+            adapterConsideration,
+            itemTransfers
+        );
+    }
+
+    function createSeaportWrappedCallParameters(
+        CallParameters memory callParameters,
+        CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,

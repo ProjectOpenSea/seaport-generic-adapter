@@ -150,6 +150,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         uint256 secondOrderGasUsed =
             buyOfferedERC1155WithEther_ListOnChain_Adapter(configs[1]);
         uint256 thirdOrderGasUsed = buyOfferedERC721WithWETH_Adapter(configs[2]);
+        // Not through adapter bc it's Seaport.
         uint256 fourthOrderGasUsed = buyOfferedERC1155WithERC20(configs[3]);
 
         uint256 totalGasUsed = firstOrderGasUsed + secondOrderGasUsed
