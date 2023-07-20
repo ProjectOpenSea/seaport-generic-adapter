@@ -33,6 +33,11 @@ interface FlashloanOffererInterface is ContractOffererInterface {
      */
     error InvalidMaximumSpentItem(SpentItem item);
 
+    /**
+     * @dev Revert with an error if the chainId is not supported.
+     *
+     * @param chainId The invalid chainId.
+     */
     error UnsupportedChainId(uint256 chainId);
 
     function generateOrder(

@@ -18,7 +18,7 @@ import { GenericAdapterSidecar } from "./GenericAdapterSidecar.sol";
 
 /**
  * @title GenericAdapter
- * @author 0age
+ * @author 0age, snotrocket.eth
  * @notice GenericAdapter is a proof of concept for a contract offerer that can
  *         source liquidity from arbitrary targets, such as other marketplaces,
  *         and make those liquidity sources available from within Seaport. It
@@ -40,8 +40,6 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
-    // // 0x2e3f1f34
-    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
@@ -51,14 +49,22 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     // 0xd6234725
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed(address);
+    /**
+     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     */
+    event SeaportCompatibleContractDeployed();
+
+    event SidecarDeployed(address);
 
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
         _SIDECAR = address(new GenericAdapterSidecar());
         _FLASHLOAN_OFFERER = flashloanOfferer;
 
-        emit SeaportCompatibleContractDeployed(_SIDECAR);
+        emit SidecarDeployed(_SIDECAR);
+
+        // Emit an event to indicate the contract is SIP-5 compatible.
+        emit SeaportCompatibleContractDeployed();
     }
 
     function supportsInterface(bytes4 interfaceId)

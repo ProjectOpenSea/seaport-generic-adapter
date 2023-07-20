@@ -37,7 +37,7 @@ import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
 /**
  * @title ReferenceGenericAdapter
- * @author 0age
+ * @author 0age, snotrocket.eth
  * @notice GenericAdapter is a proof of concept for a contract offerer that can
  *         source liquidity from arbitrary targets, such as other marketplaces,
  *         and make those liquidity sources available from within Seaport. It
@@ -72,7 +72,12 @@ contract ReferenceGenericAdapter is
     error InsufficientFunds(uint256 requiredAmount, uint256 availableAmount);
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed(address);
+    /**
+     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     */
+    event SeaportCompatibleContractDeployed();
+
+    event SidecarDeployed(address);
 
     using AdvancedOrderLib for AdvancedOrder;
     using ConsiderationItemLib for ConsiderationItem;
@@ -89,7 +94,10 @@ contract ReferenceGenericAdapter is
         _FLASHLOAN_OFFERER_INSTANCE =
             ReferenceFlashloanOfferer(payable(flashloanOfferer));
 
-        emit SeaportCompatibleContractDeployed(_SIDECAR_ADDRESS);
+        emit SidecarDeployed(_SIDECAR_ADDRESS);
+
+        // Emit an event to indicate the contract is SIP-5 compatible.
+        emit SeaportCompatibleContractDeployed();
     }
 
     function supportsInterface(bytes4 interfaceId)

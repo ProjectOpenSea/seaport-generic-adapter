@@ -210,9 +210,9 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             adapterOrders: new AdvancedOrder[](3),
             adapterFulfillments: new Fulfillment[](2),
             castOfCharacters: stdCastOfCharacters,
-            adapterOfferArray: new OfferItem[](2),
-            adapterConsiderationArray: new ConsiderationItem[](1),
-            itemTransfers: new ItemTransfer[](2),
+            adapterOfferArray: new OfferItem[](3),
+            adapterConsiderationArray: new ConsiderationItem[](2),
+            itemTransfers: new ItemTransfer[](3),
             item1155: standardERC1155,
             finalOrders: new AdvancedOrder[](5),
             finalFulfillments: new Fulfillment[](4)
@@ -239,6 +239,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         infra.adapterConsiderationArray[0] = ConsiderationItemLib.fromDefault(
             "standardNativeConsiderationItem"
         ).withStartAmount(605).withEndAmount(605);
+        infra.adapterConsiderationArray[1] =
+            ConsiderationItemLib.fromDefault("standardWethConsiderationItem");
 
         infra.adapterOfferArray[0] = OfferItem({
             itemType: ItemType.ERC721,
@@ -248,16 +250,15 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             endAmount: 1
         });
 
-        // 721 2 goes straight from the marketplace to Bob.  Come back to this.
-        // infra.adapterOfferArray[0] = OfferItem({
-        //     itemType: ItemType.ERC721,
-        //     token: standardERC721.token,
-        //     identifierOrCriteria: 2,
-        //     startAmount: 1,
-        //     endAmount: 1
-        // });
-
         infra.adapterOfferArray[1] = OfferItem({
+            itemType: ItemType.ERC721,
+            token: standardERC721.token,
+            identifierOrCriteria: 2,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        infra.adapterOfferArray[2] = OfferItem({
             itemType: ItemType.ERC1155,
             token: standardERC1155.token,
             identifierOrCriteria: 1,
@@ -276,6 +277,15 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[1] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC721.token,
+            identifier: standardERC721Two.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
+        infra.itemTransfers[2] = ItemTransfer({
             from: infra.castOfCharacters.sidecar,
             to: infra.castOfCharacters.adapter,
             token: standardERC1155.token,
@@ -497,12 +507,17 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
+        // Change the fulfiller to the sidecar to sneak through blur on an ad
+        // hoc sig.
+        infra.context.fulfiller = sidecar;
+
         // Start with all buy offered NFT with X. But eventually test a mix of
         // offered X for NFT. The helper will need more detail about each NFT
         // transfer (sender, receiver, etc.)
         try infra.configs[2].getPayload_BuyOfferedERC721WithWETH(
             infra.context, standardERC721Two, standardWeth
         ) returns (TestOrderPayload memory payload) {
+            infra.context.fulfiller = bob;
             assertEq(test721_1.ownerOf(2), alice);
             assertEq(weth.balanceOf(bob), 100);
             assertEq(weth.balanceOf(alice), 0);

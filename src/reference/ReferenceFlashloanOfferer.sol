@@ -18,7 +18,7 @@ interface Cleanup {
 
 /**
  * @title ReferenceFlashloanOfferer
- * @author 0age
+ * @author 0age, snotrocket.eth
  * @notice FlashloanOfferer is a proof of concept for a flashloan contract
  *         offerer. It will send native tokens to each specified recipient in
  *         the given amount when generating an order, and can optionally trigger
@@ -59,7 +59,17 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
      */
     error InvalidMaximumSpentItem(SpentItem item);
 
+    /**
+     * @dev Revert with an error if the chainId is not supported.
+     *
+     * @param chainId The invalid chainId.
+     */
     error UnsupportedChainId(uint256 chainId);
+
+    /**
+     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     */
+    event SeaportCompatibleContractDeployed();
 
     constructor(address seaport) {
         _SEAPORT = seaport;
@@ -123,6 +133,8 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             // Revert if the chain ID is not supported.
             revert UnsupportedChainId(block.chainid);
         }
+
+        emit SeaportCompatibleContractDeployed();
     }
 
     function supportsInterface(bytes4 interfaceId) public pure returns (bool) {

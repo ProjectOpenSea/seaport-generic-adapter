@@ -10,7 +10,7 @@ struct Call {
 
 /**
  * @title GenericAdapterSidecar
- * @author 0age
+ * @author 0age, snotrocket.eth
  * @notice GenericAdapterSidecar is a contract that is deployed alongside a
  *         GenericAdapter contract and that performs arbitrary calls in an
  *         isolated context. It is imperative that this contract does not ever
