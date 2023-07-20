@@ -73,12 +73,15 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         uint256 nftTokenId,
         address paymentToken,
         uint256 paymentTokenAmount,
-        Fee[] memory fee
+        Fee[] memory fee,
+        bool skipSignature
     )
         internal
         view
         returns (Order memory _order, uint8 _v, bytes32 _r, bytes32 _s)
     {
+        SigInfra memory infra = SigInfra({ v: 0, r: 0, s: 0 });
+
         Order memory order;
 
         order.trader = creator;
@@ -97,18 +100,20 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         order.salt = 0;
         order.extraParams = new bytes(0);
 
-        (uint8 v, bytes32 r, bytes32 s) = _sign(
-            creator,
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR,
-                    _hashOrder(order, 0) // Nonce management might be a pain.
+        if (!skipSignature) {
+            (infra.v, infra.r, infra.s) = _sign(
+                creator,
+                keccak256(
+                    abi.encodePacked(
+                        "\x19\x01",
+                        DOMAIN_SEPARATOR,
+                        _hashOrder(order, 0) // Nonce management might be a pain.
+                    )
                 )
-            )
-        );
+            );
+        }
 
-        return (order, v, r, s);
+        return (order, infra.v, infra.r, infra.s);
     }
 
     function buildInput(
@@ -131,6 +136,12 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         return input;
     }
 
+    struct SigInfra {
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
+
     function buildInputPair(
         address maker,
         address taker,
@@ -139,43 +150,52 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         address paymentToken,
         uint256 paymentTokenAmount,
         Fee[] memory fee,
-        bool isOffer
+        bool isOffer,
+        bool skipMakerSignature,
+        bool skipTakerSignature
     )
         internal
         view
         returns (Input memory makerInput, Input memory takerInput)
     {
+        SigInfra memory infra = SigInfra({ v: 0, r: 0, s: 0 });
+
         Order memory makerOrder;
         Order memory takerOrder;
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
 
-        // If it's an offer of ERC20 for ERC721, then the maker is the buyer and
-        // the taker is the seller.
-        (makerOrder, v, r, s) = buildOrder(
-            maker,
-            isOffer ? Side.Buy : Side.Sell,
-            nftContractAddress,
-            nftTokenId,
-            paymentToken,
-            paymentTokenAmount,
-            fee
+        {
+            // If it's an offer of ERC20 for ERC721, then the maker is the buyer and
+            // the taker is the seller.
+            (makerOrder, infra.v, infra.r, infra.s) = buildOrder(
+                maker,
+                isOffer ? Side.Buy : Side.Sell,
+                nftContractAddress,
+                nftTokenId,
+                paymentToken,
+                paymentTokenAmount,
+                fee,
+                skipMakerSignature
+            );
+        }
+
+        makerInput = buildInput(
+            makerOrder, infra.v, infra.r, infra.s, SignatureVersion.Single
         );
 
-        makerInput = buildInput(makerOrder, v, r, s, SignatureVersion.Single);
-
-        (takerOrder, v, r, s) = buildOrder(
+        (takerOrder, infra.v, infra.r, infra.s) = buildOrder(
             taker,
             isOffer ? Side.Sell : Side.Buy,
             nftContractAddress,
             nftTokenId,
             paymentToken,
             paymentTokenAmount,
-            fee
+            fee,
+            skipTakerSignature
         );
 
-        takerInput = buildInput(takerOrder, v, r, s, SignatureVersion.Single);
+        takerInput = buildInput(
+            takerOrder, infra.v, infra.r, infra.s, SignatureVersion.Single
+        );
 
         return (makerInput, takerInput);
     }
@@ -188,7 +208,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         address paymentToken,
         uint256 paymentTokenAmount,
         Fee[] memory fee,
-        bool isOffer
+        bool isOffer,
+        bool skipMakerSignature,
+        bool skipTakerSignature
     ) internal view returns (Execution memory _execution) {
         Execution memory execution;
         Input memory makerInput;
@@ -202,7 +224,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             paymentToken,
             paymentTokenAmount,
             fee,
-            isOffer
+            isOffer,
+            skipMakerSignature,
+            skipTakerSignature
         );
 
         execution.sell = makerInput;
@@ -224,7 +248,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             address(0),
             ethAmount,
             new Fee[](0),
-            false
+            false,
+            false,
+            context.routeThroughAdapter
         );
 
         if (context.listOnChain) {
@@ -291,7 +317,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             erc20.token,
             erc20.amount,
             new Fee[](0),
-            false
+            false,
+            false,
+            context.routeThroughAdapter
         );
 
         if (context.listOnChain) {
@@ -312,6 +340,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
+        bool skipMakerSignature = context.routeThroughAdapter;
+
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
             context.offerer,
             context.fulfiller,
@@ -320,7 +350,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             erc20.token,
             erc20.amount,
             new Fee[](0),
-            true
+            true,
+            false,
+            skipMakerSignature
         );
 
         if (context.listOnChain) {
@@ -448,6 +480,11 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //     );
     // }
 
+    struct StackPressureInfra {
+        uint256 sumEthAmount;
+        Execution[] executions;
+    }
+
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata contexts,
         Item721[] calldata nfts,
@@ -458,36 +495,46 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             "BlurConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
         );
 
-        uint256 sumEthAmount;
+        StackPressureInfra memory infra = StackPressureInfra({
+            sumEthAmount: 0,
+            executions: new Execution[](nfts.length)
+        });
 
-        Execution[] memory executions = new Execution[](nfts.length);
-        Execution memory _execution;
-        for (uint256 i = 0; i < nfts.length; i++) {
-            if (contexts[i].listOnChain) {
-                _notImplemented();
+        {
+            Execution memory _execution;
+            for (uint256 i = 0; i < nfts.length; i++) {
+                if (contexts[i].listOnChain) {
+                    _notImplemented();
+                }
+
+                {
+                    TestOrderContext[] memory _contexts = contexts;
+
+                    _execution = buildExecution(
+                        _contexts[i].offerer,
+                        _contexts[i].fulfiller,
+                        nfts[i].token,
+                        nfts[i].identifier,
+                        address(0),
+                        ethAmounts[i],
+                        new Fee[](0),
+                        false,
+                        false,
+                        _contexts[i].routeThroughAdapter
+                    );
+
+                    infra.executions[i] = _execution;
+                }
+
+                infra.sumEthAmount += ethAmounts[i];
             }
-
-            _execution = buildExecution(
-                contexts[i].offerer,
-                contexts[i].fulfiller,
-                nfts[i].token,
-                nfts[i].identifier,
-                address(0),
-                ethAmounts[i],
-                new Fee[](0),
-                false
-            );
-
-            executions[i] = _execution;
-
-            sumEthAmount += ethAmounts[i];
         }
 
         execution.executeOrder = CallParameters(
             address(blur),
-            sumEthAmount,
+            infra.sumEthAmount,
             abi.encodeWithSelector(
-                IBlurExchange.bulkExecute.selector, executions
+                IBlurExchange.bulkExecute.selector, infra.executions
             )
         );
     }
@@ -504,25 +551,32 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         );
 
         Execution[] memory executions = new Execution[](nfts.length);
-        Execution memory _execution;
 
-        for (uint256 i = 0; i < nfts.length; i++) {
-            if (contexts[i].listOnChain) {
-                _notImplemented();
+        {
+            Execution memory _execution;
+
+            for (uint256 i = 0; i < nfts.length; i++) {
+                if (contexts[i].listOnChain) {
+                    _notImplemented();
+                }
+
+                TestOrderContext[] memory _contexts = contexts;
+
+                _execution = buildExecution(
+                    _contexts[i].offerer,
+                    _contexts[i].fulfiller,
+                    nfts[i].token,
+                    nfts[i].identifier,
+                    erc20Address,
+                    erc20Amounts[i],
+                    new Fee[](0),
+                    false,
+                    false,
+                    _contexts[i].routeThroughAdapter
+                );
+
+                executions[i] = _execution;
             }
-
-            _execution = buildExecution(
-                contexts[i].offerer,
-                contexts[i].fulfiller,
-                nfts[i].token,
-                nfts[i].identifier,
-                erc20Address,
-                erc20Amounts[i],
-                new Fee[](0),
-                false
-            );
-
-            executions[i] = _execution;
         }
 
         execution.executeOrder = CallParameters(

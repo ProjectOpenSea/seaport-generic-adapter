@@ -355,9 +355,18 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
+        bool transfersToSpecifiedTaker = _isSudo(config);
+
+        // This causes the adapter to be set as the token recipient.
+        if (transfersToSpecifiedTaker) {
+            context.fulfiller = adapter;
+        }
+
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
+            context.fulfiller = bob;
+
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -379,9 +388,10 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            if (_isSudo(config)) {
+            if (transfersToSpecifiedTaker) {
+                // Sudo lets you send the NFT straight to the adapter and
+                // Seaport handles it from there.
                 sidecarItemTransfers = new ItemTransfer[](0);
-                adapterOrderOffer = new OfferItem[](0);
             }
 
             payload.executeOrder = payload
@@ -453,10 +463,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // LR and X2Y2 require that the msg.sender is also the taker.
-        // This just causes Blur to fail silently instead of loudly.
+        // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
         bool requiresTakesIsSender =
-            _isLooksRare(config) || _isX2y2(config) || _isBlur(config);
+            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
 
         if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
@@ -474,10 +483,6 @@ contract GenericMarketplaceTest is
 
             OfferItem[] memory adapterOrderOffer =
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
-            // if (_isX2y2(config)) {
-            //     adapterOrderOffer = new OfferItem[](0);
-            // }
 
             payload.executeOrder = payload
                 .executeOrder
@@ -646,7 +651,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // LR and X2Y2 require that the msg.sender is also the taker.
+        // LR requires that the msg.sender is also the taker.
         bool requiresTakesIsSender = _isLooksRare(config);
 
         if (requiresTakesIsSender) {
@@ -661,10 +666,6 @@ contract GenericMarketplaceTest is
 
             OfferItem[] memory adapterOrderOffer =
                 OfferItemLib.fromDefaultMany("standardERC1155OfferArray");
-
-            // if (requiresTakesIsSender) {
-            //     adapterOrderOffer = new OfferItem[](0);
-            // }
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard1155Transfer;
@@ -754,19 +755,31 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isLooksRare(config) || _isX2y2(config)) {
+        bool requiresTakerIsSender = _isLooksRare(config);
+
+        // LooksRare requires that the msg.sender is also the taker. So this
+        // changes the fulfiller on the context, which changes the taker on the
+        // orders created, which allows the sidecar to fulfill the order, and
+        // then below the sidecar transfers the NFTs to the adapter, so that
+        // Seaport can yoink them out and enforce that the caller gets what the
+        // caller expects.
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
+        }
+
+        bool transfersToSpecifiedTaker = _isSudo(config);
+
+        // This causes the adapter to be set as the token recipient, so no
+        // transfers from the sidecar are necessary.
+        if (transfersToSpecifiedTaker) {
+            context.fulfiller = adapter;
         }
 
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
 
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            standardERC721,
-            standardERC20
+            context, standardERC721, standardERC20
         ) returns (TestOrderPayload memory payload) {
             context.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
@@ -792,9 +805,10 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            if (_isSudo(config)) {
-                sidecarItemTransfers = new ItemTransfer[](1);
-                adapterOrderOffer = new OfferItem[](0);
+            if (transfersToSpecifiedTaker) {
+                // Sudo lets you send the NFT straight to the adapter and
+                // Seaport handles it from there.
+                sidecarItemTransfers = new ItemTransfer[](0);
             }
 
             payload.executeOrder = payload
@@ -872,7 +886,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config) || _isLooksRare(config)) {
+        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -986,7 +1002,10 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config) || _isLooksRare(config)) {
+        bool requiresTakerIsSender =
+            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -1010,16 +1029,6 @@ contract GenericMarketplaceTest is
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
-
-            if (_isBlur(config)) {
-                // Blur pulls the payment directly.
-                adapterOrderConsideration = new ConsiderationItem[](0);
-                // Blur sends the NFT directly to Bob.
-                sidecarItemTransfers = new ItemTransfer[](0);
-                // NOTE: THIS MEANS YOU GET NO SEAPORT SECURITY WHEN USING BLUR
-                //       THROUGH THE GENERIC ADAPTER. FOOTGUN RISK IS HIGH.
-                adapterOrderOffer = new OfferItem[](0);
-            }
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1062,8 +1071,11 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // TODO: Come back and see if there's a way to make these work.
-        if (_isLooksRare(config) || _isX2y2(config)) {
+        bool requiresTakerIsSender =
+            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+
+        // These aren't actually working. They're not implemented yet.
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -1100,17 +1112,11 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            if (_isBlur(config)) {
-                adapterOrderOffer = new OfferItem[](0);
-                adapterOrderConsideration = new ConsiderationItem[](0);
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderOffer,
                 adapterOrderConsideration,
                 sidecarItemTransfers
             );
@@ -1322,8 +1328,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // Cheat the context for LR.
-        if (_isLooksRare(config)) {
+        bool requiresTakerIsSender = _isLooksRare(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -1429,8 +1436,19 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config)) {
+        // Turns out X2Y2 doesn't support this, but if it did, it would need
+        // this.
+        bool requiresTakerIsSender = _isX2y2(config);
+
+        // X2Y2 requires that the taker is the msg.sender.
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
+        }
+
+        bool transfersToSpecifiedTaker = _isSudo(config);
+
+        if (transfersToSpecifiedTaker) {
+            context.fulfiller = adapter;
         }
 
         test20.mint(alice, 100);
@@ -1462,9 +1480,8 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard20Transfer;
 
-            if (_isSudo(config)) {
+            if (transfersToSpecifiedTaker) {
                 sidecarItemTransfers = new ItemTransfer[](0);
-                adapterOrderOffer = new OfferItem[](0);
             }
 
             payload.executeOrder = payload
@@ -1542,8 +1559,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        // Cheat the context for LR and X2Y2.
-        if (_isLooksRare(config) || _isX2y2(config)) {
+        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -1760,7 +1778,10 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isLooksRare(config) || _isX2y2(config)) {
+        bool requiresTakerIsSender =
+            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -1777,31 +1798,19 @@ contract GenericMarketplaceTest is
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
 
-            if (_isBlur(config)) {
-                payload.executeOrder = payload
-                    .executeOrder
-                    .createSeaportWrappedCallParameters(
-                    stdCastOfCharacters,
-                    new OfferItem[](0),
-                    new ConsiderationItem[](0),
-                    new ItemTransfer[](0)
-                );
-            } else {
-                ItemTransfer[] memory sidecarItemTransfers =
-                    new ItemTransfer[](1);
-                sidecarItemTransfers[0] = standardWethTransfer;
+            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = standardWethTransfer;
 
-                payload.executeOrder = payload
-                    .executeOrder
-                    .createSeaportWrappedCallParameters(
-                    stdCastOfCharacters,
-                    OfferItemLib.fromDefaultMany("standardWethOfferArray"),
-                    ConsiderationItemLib.fromDefaultMany(
-                        "standardERC721ConsiderationArray"
-                    ),
-                    sidecarItemTransfers
-                );
-            }
+            payload.executeOrder = payload
+                .executeOrder
+                .createSeaportWrappedCallParameters(
+                stdCastOfCharacters,
+                OfferItemLib.fromDefaultMany("standardWethOfferArray"),
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
+                sidecarItemTransfers
+            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1968,8 +1977,10 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
+        bool requiresTakerIsSender = _isLooksRare(config);
+
         // Cheat the context for LR.
-        if (_isLooksRare(config)) {
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -2508,7 +2519,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config)) {
+        bool requiresTakerIsSender = _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -2529,10 +2542,6 @@ contract GenericMarketplaceTest is
 
             OfferItem[] memory adapterOrderOffer =
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
-            // if (_isX2y2(config)) {
-            //     adapterOrderOffer = new OfferItem[](0);
-            // }
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
@@ -2730,7 +2739,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config)) {
+        bool requiresTakerIsSender = _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -2843,6 +2854,12 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
+        bool transfersToSpecifiedTaker = _isSudo(config);
+
+        if (transfersToSpecifiedTaker) {
+            context.fulfiller = adapter;
+        }
+
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
@@ -2889,9 +2906,8 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            if (_isSudo(config)) {
+            if (transfersToSpecifiedTaker) {
                 sidecarItemTransfers = new ItemTransfer[](0);
-                adapterOrderOffer = new OfferItem[](0);
             }
 
             payload.executeOrder = payload
@@ -2974,7 +2990,9 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        if (_isX2y2(config)) {
+        bool requiresTakerIsSender = _isX2y2(config);
+
+        if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
         }
 
@@ -3013,11 +3031,6 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            if (_isX2y2(config)) {
-                sidecarItemTransfers = new ItemTransfer[](0);
-                adapterOrderOffer = new OfferItem[](0);
-            }
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
@@ -3026,7 +3039,7 @@ contract GenericMarketplaceTest is
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
-                nfts
+                sidecarItemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -3096,7 +3109,7 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
-        bool requiresTakerIsSender = _isX2y2(config) || _isBlur(config);
+        bool requiresTakerIsSender = _isBlur(config) || _isX2y2(config);
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -3255,7 +3268,13 @@ contract GenericMarketplaceTest is
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
+                true,
+                true,
+                alice,
+                transfersToSpecifiedTaker ? adapter : bob,
+                flashloanOfferer,
+                adapter,
+                sidecar
             );
 
             // There's something screwy with the ETH amounts here. For some
@@ -3268,6 +3287,10 @@ contract GenericMarketplaceTest is
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
+            for (uint256 i = 0; i < 10; i++) {
+                contexts[i].fulfiller = bob;
+            }
+
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3317,7 +3340,6 @@ contract GenericMarketplaceTest is
             // Sudo does the transfers.
             if (transfersToSpecifiedTaker) {
                 sidecarItemTransfers = new ItemTransfer[](0);
-                adapterOrderOffer = new OfferItem[](0);
             }
 
             payload.executeOrder = payload
@@ -3414,7 +3436,7 @@ contract GenericMarketplaceTest is
             erc20Amounts[i] = 100 + i;
         }
 
-        bool requiresTakerIsSender = _isX2y2(config) || _isLooksRare(config);
+        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
@@ -3554,8 +3576,11 @@ contract GenericMarketplaceTest is
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
-        // Ah crap this turns out to be only implemented for Seaport.
-        if (_isX2y2(config) || _isLooksRare(config)) {
+        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+
+        // Ah crap this turns out to be only implemented for Seaport, so this is
+        // a no-op for now.
+        if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].fulfiller = address(contexts[i].sidecar);
             }
@@ -3695,11 +3720,6 @@ contract GenericMarketplaceTest is
         }
     }
 
-    // NOTE: Blur doesn't support ad hoc signing (a caller has to pass in a
-    //       signed taker order and a signed maker order). So in cases where it
-    //       also refuses to allow the caller to be different than the taker, it
-    //       looks like a hard block.
-
     function buyTenOfferedERC721WithWETHDistinctOrders_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
@@ -3722,10 +3742,8 @@ contract GenericMarketplaceTest is
             wethAmounts[i] = 100 + i;
         }
 
-        bool requiresTakerIsSender = _isX2y2(config) || _isBlur(config);
+        bool requiresTakerIsSender = _isBlur(config) || _isX2y2(config);
 
-        // NOTE: Blur doesn't support ad hoc signing, so this just puts Blur on
-        //       the `except` path, which currently fails silently.
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].fulfiller = sidecar;
