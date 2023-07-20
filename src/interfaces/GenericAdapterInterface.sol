@@ -27,7 +27,7 @@ interface GenericAdapterInterface is ContractOffererInterface {
     error InsufficientFunds(uint256 requiredAmount, uint256 availableAmount);
     error NotImplemented();
 
-    event SeaportCompatibleContractDeployed(address);
+    event SidecarDeployed(address);
 
     function generateOrder(
         address fulfiller,
