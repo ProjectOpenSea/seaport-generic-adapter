@@ -382,9 +382,6 @@ contract GenericMarketplaceTest is
                     || test721_1.ownerOf(1) == config.market()
             );
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -398,7 +395,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -481,14 +478,11 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             payload.executeOrder = payload
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -664,9 +658,6 @@ contract GenericMarketplaceTest is
             context.fulfiller = bob;
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard1155Transfer;
 
@@ -674,7 +665,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardNativeConsiderationArray"
                 ),
@@ -799,9 +790,6 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -815,7 +803,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC20ConsiderationArray"
                 ),
@@ -1024,9 +1012,6 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -1034,7 +1019,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 adapterOrderConsideration,
                 sidecarItemTransfers
             );
@@ -1106,9 +1091,6 @@ contract GenericMarketplaceTest is
                 "standardWethConsiderationArray"
             );
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -1116,7 +1098,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 adapterOrderConsideration,
                 sidecarItemTransfers
             );
@@ -1474,9 +1456,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(bob), 0);
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard20Transfer;
 
@@ -1488,7 +1467,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
                 ConsiderationItemLib.fromDefaultMany(
                     "standardERC721ConsiderationArray"
                 ),
@@ -2540,9 +2519,6 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(105).withEndAmount(105);
 
-            OfferItem[] memory adapterOrderOffer =
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray");
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -2550,7 +2526,7 @@ contract GenericMarketplaceTest is
                 .executeOrder
                 .createSeaportWrappedCallParameters(
                 stdCastOfCharacters,
-                adapterOrderOffer,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 considerationArray,
                 sidecarItemTransfers
             );

@@ -182,7 +182,7 @@ contract GenericAdapterTest is BaseOrderTest {
             abi.decode(entries[0].data, (address))
         );
         testSidecarReference = GenericAdapterSidecarInterface(
-            abi.decode(entries[1].data, (address))
+            abi.decode(entries[2].data, (address))
         );
 
         testERC721 = new TestERC721();
