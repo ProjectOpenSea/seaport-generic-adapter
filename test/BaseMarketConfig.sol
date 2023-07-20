@@ -27,6 +27,9 @@ import { GenericAdapterSidecarInterface } from
 
 import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
+    import {
+    CastOfCharacters
+} from "../src/lib/AdapterHelperLib.sol";
 
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
@@ -74,8 +77,7 @@ abstract contract BaseMarketConfig {
      * @return From address, to address, and calldata
      */
     function beforeAllPrepareMarketplaceCall(
-        address,
-        address,
+        CastOfCharacters calldata,
         address[] calldata,
         address[] calldata
     ) external virtual returns (SetupCall[] memory) {

@@ -15,6 +15,9 @@ import {
     Item20,
     SetupCall
 } from "../../../test/utils/Types.sol";
+import {
+    CastOfCharacters
+} from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     function name() external pure override returns (string memory) {
@@ -106,8 +109,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function beforeAllPrepareMarketplaceCall(
-        address,
-        address,
+        CastOfCharacters calldata,
         address[] calldata erc20Tokens,
         address[] calldata
     ) external pure override returns (SetupCall[] memory) {

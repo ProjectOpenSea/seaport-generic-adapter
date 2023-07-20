@@ -16,6 +16,9 @@ import "./lib/BlurTypeHashes.sol";
 import { IBlurExchange } from "./interfaces/IBlurExchange.sol";
 import "forge-std/console2.sol";
 import { TestERC20 } from "../../contracts/test/TestERC20.sol";
+import {
+    CastOfCharacters
+} from "../../../src/lib/AdapterHelperLib.sol";
 
 contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     function name() external pure override returns (string memory) {
@@ -50,8 +53,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     }
 
     function beforeAllPrepareMarketplaceCall(
-        address,
-        address,
+        CastOfCharacters calldata,
         address[] calldata,
         address[] calldata
     ) external pure override returns (SetupCall[] memory) {

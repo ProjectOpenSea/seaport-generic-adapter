@@ -16,6 +16,9 @@ import {
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
 import { IPairFactory } from "./interfaces/IPairFactory.sol";
+import {
+    CastOfCharacters
+} from "../../../src/lib/AdapterHelperLib.sol";
 
 contract SudoswapConfig is BaseMarketConfig {
     IPairFactory constant PAIR_FACTORY =
@@ -52,8 +55,7 @@ contract SudoswapConfig is BaseMarketConfig {
     }
 
     function beforeAllPrepareMarketplaceCall(
-        address seller,
-        address,
+        CastOfCharacters calldata cast,
         address[] calldata erc20Addresses,
         address[] calldata erc721Addresses
     ) external override returns (SetupCall[] memory setupCalls) {
@@ -88,7 +90,7 @@ contract SudoswapConfig is BaseMarketConfig {
                 token: erc20Addresses[0],
                 nft: erc721Addresses[0],
                 bondingCurve: LINEAR_CURVE,
-                assetRecipient: payable(seller),
+                assetRecipient: payable(cast.offerer),
                 poolType: IPairFactory.PoolType.TOKEN,
                 delta: DELTA,
                 fee: 0,
@@ -101,7 +103,7 @@ contract SudoswapConfig is BaseMarketConfig {
         ethNftPool = PAIR_FACTORY.createPairETH(
             erc721Addresses[0],
             LINEAR_CURVE,
-            payable(seller),
+            payable(cast.offerer),
             IPairFactory.PoolType.NFT,
             DELTA,
             0,
@@ -113,7 +115,7 @@ contract SudoswapConfig is BaseMarketConfig {
             ethNftPoolsForDistinct[i] = PAIR_FACTORY.createPairETH(
                 erc721Addresses[0],
                 LINEAR_CURVE,
-                payable(seller),
+                payable(cast.offerer),
                 IPairFactory.PoolType.NFT,
                 DELTA,
                 0,
@@ -127,7 +129,7 @@ contract SudoswapConfig is BaseMarketConfig {
                 token: erc20Addresses[0],
                 nft: erc721Addresses[0],
                 bondingCurve: LINEAR_CURVE,
-                assetRecipient: payable(seller),
+                assetRecipient: payable(cast.offerer),
                 poolType: IPairFactory.PoolType.NFT,
                 delta: DELTA,
                 fee: 0,

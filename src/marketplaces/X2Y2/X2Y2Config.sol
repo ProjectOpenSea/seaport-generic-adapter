@@ -14,6 +14,9 @@ import {
     Item1155,
     Item20
 } from "../../../test/utils/Types.sol";
+import {
+    CastOfCharacters
+} from "../../../src/lib/AdapterHelperLib.sol";
 
 contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     IX2Y2Marketplace internal constant X2Y2 =
@@ -41,8 +44,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function beforeAllPrepareMarketplaceCall(
-        address seller,
-        address,
+        CastOfCharacters calldata cast,
         address[] calldata,
         address[] calldata
     ) external override returns (SetupCall[] memory) {
@@ -50,7 +52,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
         address[] memory removeSigners = new address[](0);
         address[] memory addSigners = new address[](1);
-        addSigners[0] = seller;
+        addSigners[0] = cast.offerer;
 
         // Set seller as a signer for X2Y2
         setupCalls[0] = SetupCall(
@@ -63,7 +65,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             )
         );
 
-        X2Y2Signer = seller;
+        X2Y2Signer = cast.offerer;
 
         return setupCalls;
     }
