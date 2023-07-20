@@ -41,8 +41,8 @@ import { FoundationConfig } from
 import { LooksRareConfig } from
     "../src/marketplaces/looksRare/LooksRareConfig.sol";
 
-import { SeaportOnePointFourConfig } from
-    "../src/marketplaces/seaport-1.4/SeaportOnePointFourConfig.sol";
+import { SeaportOnePointFiveConfig } from
+    "../src/marketplaces/seaport-1.5/SeaportOnePointFiveConfig.sol";
 
 import { SudoswapConfig } from "../src/marketplaces/sudoswap/SudoswapConfig.sol";
 
@@ -77,8 +77,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
         looksRareConfig = BaseMarketConfig(new LooksRareConfig());
-        seaportOnePointFourConfig =
-            BaseMarketConfig(new SeaportOnePointFourConfig());
+        seaportOnePointFiveConfig =
+            BaseMarketConfig(new SeaportOnePointFiveConfig());
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
@@ -103,7 +103,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         configs[0] = foundationConfig;
         configs[1] = zeroExConfig;
         configs[2] = blurConfig;
-        configs[3] = seaportOnePointFourConfig;
+        configs[3] = seaportOnePointFiveConfig;
         benchmarkMixedIndividually(configs);
     }
 
@@ -134,7 +134,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         configs[0] = foundationConfig;
         configs[1] = zeroExConfig;
         configs[2] = blurConfig;
-        configs[3] = seaportOnePointFourConfig;
+        configs[3] = seaportOnePointFiveConfig;
         benchmarkMixedIndividuallyThroughAdapter(configs);
     }
 
@@ -167,7 +167,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         configs[0] = foundationConfig;
         configs[1] = zeroExConfig;
         configs[2] = blurConfig;
-        configs[3] = seaportOnePointFourConfig;
+        configs[3] = seaportOnePointFiveConfig;
 
         _doSetup();
         _setAdapterSpecificApprovals();

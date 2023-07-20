@@ -52,8 +52,8 @@ import { FoundationConfig } from
 import { LooksRareConfig } from
     "../src/marketplaces/looksRare/LooksRareConfig.sol";
 
-import { SeaportOnePointFourConfig } from
-    "../src/marketplaces/seaport-1.4/SeaportOnePointFourConfig.sol";
+import { SeaportOnePointFiveConfig } from
+    "../src/marketplaces/seaport-1.5/SeaportOnePointFiveConfig.sol";
 
 import { SudoswapConfig } from "../src/marketplaces/sudoswap/SudoswapConfig.sol";
 
@@ -74,7 +74,7 @@ import {
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 
 import { ConsiderationTypeHashes } from
-    "../src/marketplaces/seaport-1.4/lib/ConsiderationTypeHashes.sol";
+    "../src/marketplaces/seaport-1.5/lib/ConsiderationTypeHashes.sol";
 
 import "forge-std/console.sol";
 
@@ -99,7 +99,7 @@ contract GenericMarketplaceTest is
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
     BaseMarketConfig looksRareConfig;
-    BaseMarketConfig seaportOnePointFourConfig;
+    BaseMarketConfig seaportOnePointFiveConfig;
     BaseMarketConfig sudoswapConfig;
     BaseMarketConfig x2y2Config;
     BaseMarketConfig zeroExConfig;
@@ -130,7 +130,7 @@ contract GenericMarketplaceTest is
     ItemTransfer standard1155Transfer;
 
     ISeaport internal constant seaport =
-        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
+        ISeaport(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
 
     CastOfCharacters stdCastOfCharacters;
 
@@ -138,8 +138,8 @@ contract GenericMarketplaceTest is
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
         looksRareConfig = BaseMarketConfig(new LooksRareConfig());
-        seaportOnePointFourConfig =
-            BaseMarketConfig(new SeaportOnePointFourConfig());
+        seaportOnePointFiveConfig =
+            BaseMarketConfig(new SeaportOnePointFiveConfig());
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
@@ -161,7 +161,7 @@ contract GenericMarketplaceTest is
     // through the adapter for native Seaport orders. Also it's impossible bc
     // of the prohibition on reentrant calls.
     // function testSeaportOnePointFour() external {
-    //     benchmarkMarket(seaportOnePointFourConfig);
+    //     benchmarkMarket(seaportOnePointFiveConfig);
     // }
 
     function testSudoswap() external virtual {
