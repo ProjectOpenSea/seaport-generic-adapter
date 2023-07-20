@@ -1191,9 +1191,13 @@ contract GenericAdapterTest is BaseOrderTest {
             );
         }
 
+        uint256 thisBalanceBefore = address(this).balance;
+
         consideration.matchAdvancedOrders{ value: 3 ether }(
             orders, new CriteriaResolver[](0), fulfillments, address(0)
         );
+
+        uint256 thisBalanceAfter = address(this).balance;
 
         assertEq(nativeAction, 3 ether, "nativeAction should be 3 ether");
 
@@ -1275,11 +1279,21 @@ contract GenericAdapterTest is BaseOrderTest {
             orders[2] = order;
         }
 
+        thisBalanceBefore = address(this).balance;
+
         consideration.matchAdvancedOrders(
             orders, new CriteriaResolver[](0), fulfillments, address(0)
         );
 
-        assertEq(nativeAction, 6 ether, "nativeAction should be 6 ether");
+        thisBalanceAfter = address(this).balance;
+
+        assertEq(
+            thisBalanceAfter - thisBalanceBefore,
+            3 ether,
+            "this should gain 3 ether"
+        );
+
+        assertEq(nativeAction, 6 ether, "total nativeAction should be 6 ether");
     }
 
     function incrementNativeAction(uint256 amount) external payable {
