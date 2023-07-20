@@ -52,8 +52,11 @@ import { FoundationConfig } from
 import { LooksRareConfig } from
     "../src/marketplaces/looksRare/LooksRareConfig.sol";
 
-import { SeaportOnePointFourConfig } from
-    "../src/marketplaces/seaport-1.4/SeaportOnePointFourConfig.sol";
+import { LooksRareV2Config } from
+    "../src/marketplaces/looksRare-v2/LooksRareV2Config.sol";
+
+import { SeaportOnePointFiveConfig } from
+    "../src/marketplaces/seaport-1.5/SeaportOnePointFiveConfig.sol";
 
 import { SudoswapConfig } from "../src/marketplaces/sudoswap/SudoswapConfig.sol";
 
@@ -74,7 +77,7 @@ import {
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 
 import { ConsiderationTypeHashes } from
-    "../src/marketplaces/seaport-1.4/lib/ConsiderationTypeHashes.sol";
+    "../src/marketplaces/seaport-1.5/lib/ConsiderationTypeHashes.sol";
 
 import "forge-std/console.sol";
 
@@ -99,7 +102,8 @@ contract GenericMarketplaceTest is
     BaseMarketConfig blurConfig;
     BaseMarketConfig foundationConfig;
     BaseMarketConfig looksRareConfig;
-    BaseMarketConfig seaportOnePointFourConfig;
+    BaseMarketConfig looksRareV2Config;
+    BaseMarketConfig seaportOnePointFiveConfig;
     BaseMarketConfig sudoswapConfig;
     BaseMarketConfig x2y2Config;
     BaseMarketConfig zeroExConfig;
@@ -130,7 +134,7 @@ contract GenericMarketplaceTest is
     ItemTransfer standard1155Transfer;
 
     ISeaport internal constant seaport =
-        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
+        ISeaport(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
 
     CastOfCharacters stdCastOfCharacters;
 
@@ -138,8 +142,9 @@ contract GenericMarketplaceTest is
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
         looksRareConfig = BaseMarketConfig(new LooksRareConfig());
-        seaportOnePointFourConfig =
-            BaseMarketConfig(new SeaportOnePointFourConfig());
+        looksRareV2Config = BaseMarketConfig(new LooksRareV2Config());
+        seaportOnePointFiveConfig =
+            BaseMarketConfig(new SeaportOnePointFiveConfig());
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
@@ -157,11 +162,15 @@ contract GenericMarketplaceTest is
         benchmarkMarket(looksRareConfig);
     }
 
+    function testLooksRareV2() external {
+        benchmarkMarket(looksRareV2Config);
+    }
+
     // Seaport doesn't get tested directly, since there's no need to route
     // through the adapter for native Seaport orders. Also it's impossible bc
     // of the prohibition on reentrant calls.
     // function testSeaportOnePointFour() external {
-    //     benchmarkMarket(seaportOnePointFourConfig);
+    //     benchmarkMarket(seaportOnePointFiveConfig);
     // }
 
     function testSudoswap() external virtual {
@@ -461,8 +470,8 @@ contract GenericMarketplaceTest is
         );
 
         // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
-        bool requiresTakesIsSender =
-            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakesIsSender = _isBlur(config) || _isLooksRare(config)
+            || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
@@ -646,7 +655,8 @@ contract GenericMarketplaceTest is
         );
 
         // LR requires that the msg.sender is also the taker.
-        bool requiresTakesIsSender = _isLooksRare(config);
+        bool requiresTakesIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config);
 
         if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
@@ -746,7 +756,8 @@ contract GenericMarketplaceTest is
             true, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isLooksRare(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config);
 
         // LooksRare requires that the msg.sender is also the taker. So this
         // changes the fulfiller on the context, which changes the taker on the
@@ -874,7 +885,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -990,8 +1002,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender =
-            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
+            || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -1310,7 +1322,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isLooksRare(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -1538,7 +1551,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -1757,8 +1771,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender =
-            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
+            || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -1956,7 +1970,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isLooksRare(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config);
 
         // Cheat the context for LR.
         if (requiresTakerIsSender) {
@@ -2966,7 +2981,7 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isX2y2(config);
+        bool requiresTakerIsSender = _isX2y2(config) || _isLooksRareV2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -3085,7 +3100,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
-        bool requiresTakerIsSender = _isBlur(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isBlur(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -3412,7 +3428,8 @@ contract GenericMarketplaceTest is
             erc20Amounts[i] = 100 + i;
         }
 
-        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
@@ -3552,7 +3569,8 @@ contract GenericMarketplaceTest is
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
-        bool requiresTakerIsSender = _isLooksRare(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         // Ah crap this turns out to be only implemented for Seaport, so this is
         // a no-op for now.
@@ -3718,7 +3736,8 @@ contract GenericMarketplaceTest is
             wethAmounts[i] = 100 + i;
         }
 
-        bool requiresTakerIsSender = _isBlur(config) || _isX2y2(config);
+        bool requiresTakerIsSender =
+            _isBlur(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
@@ -4340,7 +4359,7 @@ contract GenericMarketplaceTest is
     {
         // Get requested call from marketplace. Needed by Wyvern to deploy proxy
         SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
-            alice, bob, erc20Addresses, erc721Addresses
+            stdCastOfCharacters, erc20Addresses, erc721Addresses
         );
 
         for (uint256 i = 0; i < setupCalls.length; i++) {
@@ -4376,6 +4395,14 @@ contract GenericMarketplaceTest is
         returns (bool)
     {
         return _sameName(config.name(), looksRareConfig.name());
+    }
+
+    function _isLooksRareV2(BaseMarketConfig config)
+        internal
+        view
+        returns (bool)
+    {
+        return _sameName(config.name(), looksRareV2Config.name());
     }
 
     function _sameName(string memory name1, string memory name2)

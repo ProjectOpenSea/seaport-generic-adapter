@@ -27,6 +27,9 @@ import { GenericAdapterSidecarInterface } from
 
 import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
+    import {
+    CastOfCharacters
+} from "../src/lib/AdapterHelperLib.sol";
 
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
@@ -62,7 +65,7 @@ abstract contract BaseMarketConfig {
     address public buyerErc20ApprovalTarget;
 
     ISeaport internal constant seaport =
-        ISeaport(0x00000000000001ad428e4906aE43D8F9852d0dD6);
+        ISeaport(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
 
     address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -74,8 +77,7 @@ abstract contract BaseMarketConfig {
      * @return From address, to address, and calldata
      */
     function beforeAllPrepareMarketplaceCall(
-        address,
-        address,
+        CastOfCharacters calldata,
         address[] calldata,
         address[] calldata
     ) external virtual returns (SetupCall[] memory) {
