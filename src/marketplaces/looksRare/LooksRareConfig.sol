@@ -15,9 +15,7 @@ import {
     Item20,
     SetupCall
 } from "../../../test/utils/Types.sol";
-import {
-    CastOfCharacters
-} from "../../../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     function name() external pure override returns (string memory) {

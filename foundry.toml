@@ -4,6 +4,9 @@ out = "out"
 libs = ["lib"]
 evm_version='shanghai'
 
+optimizer_runs = 9_999_999
+solc = '0.8.17'
+
 remappings = [
     '@rari-capital/solmate/=lib/solmate/',
     'forge-std/=lib/forge-std/src/',

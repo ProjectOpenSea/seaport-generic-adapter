@@ -427,6 +427,8 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
+            new Call[](0),
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -447,6 +449,8 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
+            new Call[](0),
             new Flashloan[](0),
             adapterOffer,
             adapterConsideration,
@@ -468,6 +472,8 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
+            new Call[](0),
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -478,6 +484,8 @@ library AdapterHelperLib {
     function createSeaportWrappedCallParameters(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
+        Call[] memory sidecarSetUpCalls,
+        Call[] memory sidecarWrapUpCalls,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
@@ -489,6 +497,8 @@ library AdapterHelperLib {
         createSeaportWrappedCallParametersReturnGranular(
             callParametersArray,
             castOfCharacters,
+            sidecarSetUpCalls,
+            sidecarWrapUpCalls,
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -516,6 +526,8 @@ library AdapterHelperLib {
     struct AdapterWrapperInfra {
         CallParameters[] callParametersArray;
         CastOfCharacters castOfCharacters;
+        Call[] sidecarSetUpCalls;
+        Call[] sidecarWrapUpCalls;
         ItemTransfer[] itemTransfers;
         OfferItem[] adapterOffer;
         ConsiderationItem[] adapterConsideration;
@@ -573,6 +585,8 @@ library AdapterHelperLib {
     function createSeaportWrappedCallParametersReturnGranular(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
+        Call[] memory sidecarSetUpCalls,
+        Call[] memory sidecarWrapUpCalls,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
@@ -588,6 +602,8 @@ library AdapterHelperLib {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra({
             callParametersArray: callParametersArray,
             castOfCharacters: castOfCharacters,
+            sidecarSetUpCalls: sidecarSetUpCalls,
+            sidecarWrapUpCalls: sidecarWrapUpCalls,
             itemTransfers: itemTransfers,
             adapterOffer: adapterOffer,
             adapterConsideration: adapterConsideration,
@@ -622,7 +638,7 @@ library AdapterHelperLib {
             infra.flashloans[0] = flashloan;
         }
 
-        _createAdapterOrder(infra);
+        _createAdapterOrder(infra, 1);
 
         if (infra.flashloans.length > 0) {
             _createFlashloanOrdersAndFulfillments(infra);
@@ -633,10 +649,95 @@ library AdapterHelperLib {
         return (infra.orders, infra.fulfillments);
     }
 
-    function _createAdapterOrder(AdapterWrapperInfra memory infra)
-        internal
+    function createSeaportWrappedCallParametersReturnGranularFulfillAvailable_TEMP(
+        CallParameters[] memory callParametersArray,
+        CastOfCharacters memory castOfCharacters,
+        Call[] memory sidecarSetUpCalls,
+        Call[] memory sidecarWrapUpCalls,
+        OfferItem[] memory adapterOffer,
+        ConsiderationItem[] memory adapterConsideration,
+        ItemTransfer[] memory itemTransfers
+    )
+        public
         view
+        returns (
+            AdvancedOrder[] memory orders,
+            FulfillmentComponent[][] memory offerFulfillments,
+            FulfillmentComponent[][] memory considerationFulfillments
+        )
     {
+        AdapterWrapperInfra memory infra = AdapterWrapperInfra({
+            callParametersArray: callParametersArray,
+            castOfCharacters: castOfCharacters,
+            sidecarSetUpCalls: sidecarSetUpCalls,
+            sidecarWrapUpCalls: sidecarWrapUpCalls,
+            itemTransfers: itemTransfers,
+            adapterOffer: adapterOffer,
+            adapterConsideration: adapterConsideration,
+            orderParameters: OrderParametersLib.empty(),
+            order: AdvancedOrderLib.empty(),
+            orders: new AdvancedOrder[](1),
+            flashloan: Flashloan(0, ItemType.NATIVE, false, address(0)),
+            flashloans: new Flashloan[](0),
+            call: Call(address(0), false, 0, bytes("")),
+            calls: new Call[](1),
+            extraData: new bytes(0),
+            fulfillments: new Fulfillment[](3),
+            value: 0,
+            totalFlashloanValueRequested: 0
+        });
+
+        _createAdapterOrder(infra, 0);
+
+        (offerFulfillments, considerationFulfillments) =
+            _createFulfillmentsComponents_TEMP(infra);
+
+        return (infra.orders, offerFulfillments, considerationFulfillments);
+    }
+
+    function _createFulfillmentsComponents_TEMP(
+        AdapterWrapperInfra memory /* infra */
+    )
+        internal
+        pure
+        returns (
+            FulfillmentComponent[][] memory offerFulfillments,
+            FulfillmentComponent[][] memory considerationFulfillments
+        )
+    {
+        // Cheat it for now by preparing them all here.
+
+        // The first order is the contract order.
+        FulfillmentComponent memory first_first =
+            FulfillmentComponent({ orderIndex: 0, itemIndex: 0 });
+
+        FulfillmentComponent memory second_first =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 0 });
+
+        FulfillmentComponent memory second_second =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 1 });
+
+        FulfillmentComponent memory second_third =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 2 });
+
+        offerFulfillments = new FulfillmentComponent[][](1);
+
+        offerFulfillments[0] = new FulfillmentComponent[](1);
+        offerFulfillments[0][0] = first_first;
+
+        considerationFulfillments = new FulfillmentComponent[][](1);
+
+        considerationFulfillments[0] = new FulfillmentComponent[](4);
+        considerationFulfillments[0][0] = first_first;
+        considerationFulfillments[0][1] = second_first;
+        considerationFulfillments[0][2] = second_second;
+        considerationFulfillments[0][3] = second_third;
+    }
+
+    function _createAdapterOrder(
+        AdapterWrapperInfra memory infra,
+        uint256 insertionIndex
+    ) internal view {
         // Create the adapter order.
         infra.order =
             AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
@@ -662,11 +763,15 @@ library AdapterHelperLib {
         }
 
         infra.calls =
-        new Call[](infra.callParametersArray.length + infra.itemTransfers.length);
+        new Call[](infra.sidecarSetUpCalls.length + infra.callParametersArray.length + infra.itemTransfers.length + infra.sidecarWrapUpCalls.length);
 
         {
+            for (uint256 i; i < infra.sidecarSetUpCalls.length; i++) {
+                infra.calls[i] = infra.sidecarSetUpCalls[i];
+            }
+
             for (uint256 i = 0; i < infra.callParametersArray.length; i++) {
-                infra.calls[i] = Call(
+                infra.calls[infra.sidecarSetUpCalls.length + i] = Call(
                     address(infra.callParametersArray[i].target),
                     false,
                     infra.callParametersArray[i].value,
@@ -680,8 +785,14 @@ library AdapterHelperLib {
             // Populate the calls array with the NFT transfer calls from the
             // helper.
             for (uint256 i = 0; i < tokenCalls.length; i++) {
-                infra.calls[infra.callParametersArray.length + i] =
-                    tokenCalls[i];
+                infra.calls[infra.sidecarSetUpCalls.length
+                    + infra.callParametersArray.length + i] = tokenCalls[i];
+            }
+
+            for (uint256 i = 0; i < infra.sidecarWrapUpCalls.length; i++) {
+                infra.calls[infra.sidecarSetUpCalls.length
+                    + infra.callParametersArray.length + tokenCalls.length + i] =
+                    infra.sidecarWrapUpCalls[i];
             }
         }
 
@@ -691,7 +802,8 @@ library AdapterHelperLib {
         }
 
         infra.order = infra.order.withExtraData(infra.extraData);
-        infra.orders[1] = infra.order;
+
+        infra.orders[insertionIndex] = infra.order;
     }
 
     function _createFlashloanOrdersAndFulfillments(

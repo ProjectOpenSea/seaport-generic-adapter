@@ -27,9 +27,7 @@ import { GenericAdapterSidecarInterface } from
 
 import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
-    import {
-    CastOfCharacters
-} from "../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../src/lib/AdapterHelperLib.sol";
 
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
@@ -149,6 +147,14 @@ abstract contract BaseMarketConfig {
         _notImplemented();
     }
 
+    function getComponents_BuyOfferedERC721WithERC20(
+        address,
+        Item721 calldata,
+        Item20 calldata
+    ) external view virtual returns (BasicOrderParameters memory) {
+        _notImplemented();
+    }
+
     /**
      * @dev Get call parameters to execute an order selling a 721 token for WETH.
      *   If `context.listOnChain` is true and marketplace does not support on-chain
@@ -163,6 +169,14 @@ abstract contract BaseMarketConfig {
         Item721 calldata,
         Item20 calldata
     ) external virtual returns (TestOrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_BuyOfferedERC721WithBETH(
+        TestOrderContext calldata, /* context */
+        Item721 calldata, /* nft */
+        Item20 calldata /* erc20*/
+    ) external virtual returns (TestOrderPayload memory /*execution*/ ) {
         _notImplemented();
     }
 
@@ -214,6 +228,14 @@ abstract contract BaseMarketConfig {
         Item20 calldata,
         Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_BuyOfferedBETHWithERC721(
+        TestOrderContext calldata, /* context */
+        Item20 calldata, /* erc20 */
+        Item721 calldata /* nft */
+    ) external virtual returns (TestOrderPayload memory /* execution */ ) {
         _notImplemented();
     }
 

@@ -14,9 +14,7 @@ import {
     Item1155,
     Item20
 } from "../../../test/utils/Types.sol";
-import {
-    CastOfCharacters
-} from "../../../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     IX2Y2Marketplace internal constant X2Y2 =

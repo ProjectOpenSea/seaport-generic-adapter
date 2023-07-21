@@ -23,6 +23,7 @@ import {
 import {
     AdapterHelperLib,
     Approval,
+    Call,
     CastOfCharacters,
     Flashloan,
     ItemTransfer
@@ -40,6 +41,9 @@ import { FoundationConfig } from
 
 import { LooksRareConfig } from
     "../src/marketplaces/looksRare/LooksRareConfig.sol";
+
+import { LooksRareV2Config } from
+    "../src/marketplaces/looksRare-v2/LooksRareV2Config.sol";
 
 import { SeaportOnePointFiveConfig } from
     "../src/marketplaces/seaport-1.5/SeaportOnePointFiveConfig.sol";
@@ -61,6 +65,8 @@ import {
 
 import { GenericMarketplaceTest } from "./GenericMarketplaceTest.t.sol";
 
+import "forge-std/console.sol";
+
 address constant VM_ADDRESS =
     address(uint160(uint256(keccak256("hevm cheat code"))));
 Vm constant vm = Vm(VM_ADDRESS);
@@ -77,6 +83,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         blurConfig = BaseMarketConfig(new BlurConfig());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
         looksRareConfig = BaseMarketConfig(new LooksRareConfig());
+        looksRareV2Config = BaseMarketConfig(new LooksRareV2Config());
         seaportOnePointFiveConfig =
             BaseMarketConfig(new SeaportOnePointFiveConfig());
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
@@ -85,8 +92,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     }
 
     function testBlur() external override { }
+    function testBlurV2() external override { }
     function testFoundation() external override { }
     function testLooksRare() external override { }
+    function testLooksRareV2() external override { }
     function testSudoswap() external override { }
     function testX2Y2() external override { }
     function testZeroEx() external override { }
@@ -227,7 +236,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         _prepareExternalCalls(infra);
 
         // Set up the aggregated orders.
-        // Orders will be prime seaport order, flashloan, mirror, adapter.
+        // Orders will be native seaport order, flashloan, mirror, adapter.
 
         test1155_1.mint(alice, 2, 1);
         hevm.deal(bob, 100);
@@ -299,6 +308,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             .createSeaportWrappedCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
+            new Call[](0),
+            new Call[](0),
             new Flashloan[](0), // The helper will automatically create one.
             infra.adapterOfferArray,
             infra.adapterConsiderationArray,
@@ -353,7 +364,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         uint256 gasUsed = _benchmarkCallWithParams(
             configs[3].name(),
-            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated")),
+            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated w/ match")),
             true,
             false,
             bob,
@@ -379,6 +390,199 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         assertEq(weth.balanceOf(alice), 100, "Alice did not get the wrapped");
 
         assertEq(test20.balanceOf(alice), 100, "Alice did not get the test20");
+
+        return gasUsed;
+    }
+
+    function testMixedAggregatedThroughSeaportFulfillAvailable() external {
+        BaseMarketConfig[] memory configs = new BaseMarketConfig[](4);
+        configs[0] = x2y2Config;
+        configs[1] = zeroExConfig;
+        configs[2] = looksRareV2Config;
+        configs[3] = seaportOnePointFiveConfig;
+
+        _doSetup();
+        _setAdapterSpecificApprovals();
+        _prepareMarketplaces(configs);
+
+        uint256 gasUsed =
+            benchmarkMixedAggregatedThroughSeaportFulfillAvailable(configs);
+
+        emit log_named_uint(
+            "Total gas for fulfilling orders aggregated through Seaport",
+            gasUsed
+        );
+    }
+
+    function benchmarkMixedAggregatedThroughSeaportFulfillAvailable(
+        BaseMarketConfig[] memory configs
+    ) public prepareAggregationTest(configs) returns (uint256) {
+        BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
+            testLabel: "Mixed aggregated through Seaport Fulfill Available",
+            configs: configs,
+            context: TestOrderContext(
+                false, true, alice, bob, flashloanOfferer, adapter, sidecar
+                ),
+            executionPayloads: new CallParameters[](3),
+            adapterOrders: new AdvancedOrder[](1),
+            adapterFulfillments: new Fulfillment[](0),
+            castOfCharacters: stdCastOfCharacters,
+            adapterOfferArray: new OfferItem[](3),
+            adapterConsiderationArray: new ConsiderationItem[](1),
+            itemTransfers: new ItemTransfer[](3),
+            item1155: standardERC1155,
+            finalOrders: new AdvancedOrder[](2),
+            finalFulfillments: new Fulfillment[](4)
+        });
+
+        // Set up the orders. The Seaport order should be passed in normally,
+        // and the rest will have to be put together in a big Call array.
+
+        vm.deal(alice, 0);
+        test721_1.mint(alice, 1);
+        test721_1.mint(alice, 2);
+        test721_1.mint(alice, 3);
+        test721_1.mint(alice, 4);
+
+        test20.mint(bob, 400);
+
+        // Expected starting condition.
+        assertEq(test721_1.ownerOf(1), alice, "Alice does not have the 721 1");
+        assertEq(test721_1.ownerOf(2), alice, "Alice does not have the 721 2");
+        assertEq(test721_1.ownerOf(3), alice, "Alice does not have the 721 3");
+        assertEq(test721_1.ownerOf(4), alice, "Alice does not have the 721 4");
+
+        assertEq(test20.balanceOf(bob), 400, "Bob does not have the test20");
+
+        _prepareExternalCallsFulfillAvailable(infra);
+
+        // Set up the aggregated orders.
+        // Orders will be native seaport order, adapter.
+
+        infra.adapterConsiderationArray[0] = ConsiderationItemLib.fromDefault(
+            "standardERC20ConsiderationItem"
+        ).withStartAmount(300).withEndAmount(300);
+
+        infra.adapterOfferArray[0] = OfferItem({
+            itemType: ItemType.ERC721,
+            token: standardERC721.token,
+            identifierOrCriteria: 1,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        infra.adapterOfferArray[1] = OfferItem({
+            itemType: ItemType.ERC721,
+            token: standardERC721.token,
+            identifierOrCriteria: 2,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        infra.adapterOfferArray[2] = OfferItem({
+            itemType: ItemType.ERC721,
+            token: standardERC721.token,
+            identifierOrCriteria: 3,
+            startAmount: 1,
+            endAmount: 1
+        });
+
+        infra.itemTransfers[0] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC721.token,
+            identifier: standardERC721.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
+        infra.itemTransfers[1] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC721.token,
+            identifier: 2,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
+        infra.itemTransfers[2] = ItemTransfer({
+            from: infra.castOfCharacters.sidecar,
+            to: infra.castOfCharacters.adapter,
+            token: standardERC721.token,
+            identifier: 3,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+
+        FulfillmentComponent[][] memory offerFulfillments =
+            new FulfillmentComponent[][](1);
+        FulfillmentComponent[][] memory considerationFulfillments =
+            new FulfillmentComponent[][](1);
+
+        (infra.adapterOrders, offerFulfillments, considerationFulfillments) =
+        AdapterHelperLib
+            .createSeaportWrappedCallParametersReturnGranularFulfillAvailable_TEMP(
+            infra.executionPayloads,
+            infra.castOfCharacters,
+            new Call[](0),
+            new Call[](0),
+            infra.adapterOfferArray,
+            infra.adapterConsiderationArray,
+            infra.itemTransfers
+        );
+
+        AdvancedOrder memory orderOffer721FourForERC20;
+
+        {
+            BasicOrderParameters memory params = configs[3]
+                .getComponents_BuyOfferedERC721WithERC20(
+                alice, Item721(_test721Address, 4), standardERC20
+            );
+
+            orderOffer721FourForERC20 =
+                _createSeaportOrderFromBasicParams(params);
+        }
+
+        {
+            infra.finalOrders[0] = orderOffer721FourForERC20;
+            infra.finalOrders[1] = infra.adapterOrders[0];
+        }
+
+        CallParameters memory finalCallParams;
+
+        {
+            finalCallParams = CallParameters(
+                seaportAddress, // target will definitely be seaport
+                0, // no value
+                abi.encodeWithSelector(
+                    ISeaport.fulfillAvailableAdvancedOrders.selector,
+                    infra.finalOrders,
+                    new CriteriaResolver[](0),
+                    offerFulfillments,
+                    considerationFulfillments,
+                    bytes32(0), // fulfillerConduitKey,
+                    address(0), // recipient. 0 means the caller should get everything.
+                    10 // maximumFulfilled TODO: set this to a correct value
+                )
+            );
+        }
+
+        uint256 gasUsed = _benchmarkCallWithParams(
+            configs[3].name(),
+            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated w/ fulfillAvailable")),
+            true,
+            false,
+            bob,
+            finalCallParams
+        );
+
+        // Expected outcomes.
+        assertEq(test721_1.ownerOf(1), bob, "Bob did not get the 721 1");
+        assertEq(test721_1.ownerOf(2), bob, "Bob did not get the 721 2");
+        assertEq(test721_1.ownerOf(3), bob, "Bob did not get the 721 3");
+        assertEq(test721_1.ownerOf(4), bob, "Bob did not get the 721 4");
+
+        assertEq(test20.balanceOf(alice), 400, "Alice did not get the test20");
 
         return gasUsed;
     }
@@ -442,6 +646,59 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         for (uint256 i; i < configs.length; i++) {
             beforeAllPrepareMarketplaceTest(configs[i]);
         }
+    }
+
+    function _prepareExternalCallsFulfillAvailable(
+        BenchmarkAggregatedInfra memory infra
+    ) internal {
+        // configs[0] = x2y2Config;
+        // configs[1] = zeroExConfig;
+        // configs[2] = looksRareV2Config;
+        // configs[3] = seaportOnePointFiveConfig;
+        // LR, and X2Y2 require that the taker is the sender.
+        infra.context.fulfiller = sidecar;
+
+        try infra.configs[0].getPayload_BuyOfferedERC721WithERC20(
+            infra.context, standardERC721, standardERC20
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(test20.balanceOf(alice), 0);
+            assertEq(test20.balanceOf(bob), 400);
+
+            infra.executionPayloads[0] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[0].name(), infra.testLabel);
+        }
+
+        infra.context.fulfiller = bob;
+
+        try infra.configs[1].getPayload_BuyOfferedERC721WithERC20(
+            infra.context, Item721(_test721Address, 2), standardERC20
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(2), alice);
+            assertEq(test20.balanceOf(alice), 0);
+            assertEq(test20.balanceOf(bob), 400);
+
+            infra.executionPayloads[1] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[0].name(), infra.testLabel);
+        }
+
+        infra.context.fulfiller = sidecar;
+
+        try infra.configs[2].getPayload_BuyOfferedERC721WithERC20(
+            infra.context, Item721(_test721Address, 3), standardERC20
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(3), alice);
+            assertEq(test20.balanceOf(alice), 0);
+            assertEq(test20.balanceOf(bob), 400);
+
+            infra.executionPayloads[2] = payload.executeOrder;
+        } catch {
+            _logNotSupported(infra.configs[0].name(), infra.testLabel);
+        }
+
+        infra.context.fulfiller = bob;
     }
 
     function _prepareExternalCalls(BenchmarkAggregatedInfra memory infra)
@@ -562,6 +819,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         infra.finalFulfillments[2] = primeFulfillment;
         infra.finalFulfillments[3] = mirrorFulfillment;
     }
+
+    function _createFulfillmentsForFulfillAvailableTest(
+        BenchmarkAggregatedInfra memory infra
+    ) internal pure { }
 
     function _createSeaportOrderFromBasicParams(
         BasicOrderParameters memory basicParams

@@ -16,9 +16,7 @@ import {
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
 import { IPairFactory } from "./interfaces/IPairFactory.sol";
-import {
-    CastOfCharacters
-} from "../../../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract SudoswapConfig is BaseMarketConfig {
     IPairFactory constant PAIR_FACTORY =

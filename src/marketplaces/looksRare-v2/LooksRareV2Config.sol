@@ -17,9 +17,7 @@ import {
     Item20,
     SetupCall
 } from "../../../test/utils/Types.sol";
-import {
-    CastOfCharacters
-} from "../../../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     /**

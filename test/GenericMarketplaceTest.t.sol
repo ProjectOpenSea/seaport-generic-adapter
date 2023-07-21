@@ -46,6 +46,8 @@ import { BaseMarketConfig } from "./BaseMarketConfig.sol";
 
 import { BlurConfig } from "../src/marketplaces/blur/BlurConfig.sol";
 
+import { BlurV2Config } from "../src/marketplaces/blur-2.0/BlurV2Config.sol";
+
 import { FoundationConfig } from
     "../src/marketplaces/foundation/FoundationConfig.sol";
 
@@ -100,6 +102,7 @@ contract GenericMarketplaceTest is
     using AdapterHelperLib for CallParameters[];
 
     BaseMarketConfig blurConfig;
+    BaseMarketConfig blurV2Config;
     BaseMarketConfig foundationConfig;
     BaseMarketConfig looksRareConfig;
     BaseMarketConfig looksRareV2Config;
@@ -140,6 +143,7 @@ contract GenericMarketplaceTest is
 
     constructor() {
         blurConfig = BaseMarketConfig(new BlurConfig());
+        blurV2Config = BaseMarketConfig(new BlurV2Config());
         foundationConfig = BaseMarketConfig(new FoundationConfig());
         looksRareConfig = BaseMarketConfig(new LooksRareConfig());
         looksRareV2Config = BaseMarketConfig(new LooksRareV2Config());
@@ -154,6 +158,10 @@ contract GenericMarketplaceTest is
         benchmarkMarket(blurConfig);
     }
 
+    function testBlurV2() external virtual {
+        benchmarkMarket(blurV2Config);
+    }
+
     function testFoundation() external virtual {
         benchmarkMarket(foundationConfig);
     }
@@ -162,7 +170,7 @@ contract GenericMarketplaceTest is
         benchmarkMarket(looksRareConfig);
     }
 
-    function testLooksRareV2() external {
+    function testLooksRareV2() external virtual {
         benchmarkMarket(looksRareV2Config);
     }
 
@@ -268,6 +276,9 @@ contract GenericMarketplaceTest is
         buyOfferedERC721WithWETH(config);
         buyOfferedERC721WithWETH_Adapter(config);
 
+        buyOfferedERC721WithBETH(config);
+        buyOfferedERC721WithBETH_Adapter(config);
+
         buyOfferedERC721WithWETH_ListOnChain(config);
         buyOfferedERC721WithWETH_ListOnChain_Adapter(config);
 
@@ -276,6 +287,9 @@ contract GenericMarketplaceTest is
 
         buyOfferedWETHWithERC721(config);
         buyOfferedWETHWithERC721_Adapter(config);
+
+        buyOfferedBETHWithERC721(config);
+        buyOfferedBETHWithERC721_Adapter(config);
 
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
@@ -470,8 +484,8 @@ contract GenericMarketplaceTest is
         );
 
         // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
-        bool requiresTakesIsSender = _isBlur(config) || _isLooksRare(config)
-            || _isLooksRareV2(config) || _isX2y2(config);
+        bool requiresTakesIsSender = _isBlur(config) || _isBlurV2(config)
+            || _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
@@ -656,7 +670,7 @@ contract GenericMarketplaceTest is
 
         // LR requires that the msg.sender is also the taker.
         bool requiresTakesIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config);
+            _isLooksRare(config) || _isLooksRareV2(config) || _isBlurV2(config);
 
         if (requiresTakesIsSender) {
             context.fulfiller = sidecar;
@@ -1048,6 +1062,147 @@ contract GenericMarketplaceTest is
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    function buyOfferedERC721WithBETH(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+        returns (uint256 gasUsed)
+    {
+        string memory testLabel = "(buyOfferedERC721WithBETH)";
+        test721_1.mint(alice, 1);
+        hevm.deal(alice, 0);
+        hevm.deal(bob, 100);
+        hevm.prank(bob);
+        beth.deposit{ value: 100 }();
+
+        TestOrderContext memory context = TestOrderContext(
+            false, false, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        try config.getPayload_BuyOfferedERC721WithBETH(
+            context, Item721(address(test721_1), 1), Item20(address(beth), 100)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(beth.balanceOf(alice), 0);
+            assertEq(alice.balance, 0);
+            assertEq(beth.balanceOf(bob), 100);
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
+                true,
+                false,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(alice.balance, 100, "Alice did not get paid native tokens");
+            assertEq(beth.balanceOf(alice), 0, "Alice did not get paid BETH");
+            assertEq(beth.balanceOf(bob), 0);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    function buyOfferedERC721WithBETH_Adapter(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+        returns (uint256 gasUsed)
+    {
+        string memory testLabel = "(buyOfferedERC721WithBETH_Adapter)";
+        test721_1.mint(alice, 1);
+        hevm.deal(alice, 0);
+        hevm.deal(bob, 100);
+        // Bob doesn't deposit BETH for this, he sends native tokens, gets a
+        // flashloan, which goes from adapter to sidecar to BETH's deposit
+        // function, and then the sidecar uses the BETH to fulfill the listing.
+        // hevm.prank(bob);
+        // beth.deposit{ value: 100 }();
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
+
+        if (requiresTakerIsSender) {
+            context.fulfiller = sidecar;
+        }
+
+        try config.getPayload_BuyOfferedERC721WithBETH(
+            context, Item721(address(test721_1), 1), Item20(address(beth), 100)
+        ) returns (TestOrderPayload memory payload) {
+            context.fulfiller = bob;
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(beth.balanceOf(alice), 0);
+            assertEq(alice.balance, 0);
+            assertEq(beth.balanceOf(bob), 0);
+            assertEq(bob.balance, 100);
+
+            ConsiderationItem[] memory adapterOrderConsideration =
+                new ConsiderationItem[](1);
+            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
+                "standardNativeConsiderationItem"
+            );
+
+            Flashloan[] memory flashloans = new Flashloan[](1);
+
+            Flashloan memory flashloan = Flashloan({
+                amount: uint88(100),
+                itemType: ItemType.NATIVE,
+                shouldCallback: true,
+                recipient: context.adapter
+            });
+
+            flashloans[0] = flashloan;
+
+            Call[] memory sidecarSetUpCalls = new Call[](1);
+            Call memory call = Call({
+                target: address(beth),
+                allowFailure: false,
+                value: 100,
+                callData: abi.encodeWithSelector(beth.deposit.selector)
+            });
+            sidecarSetUpCalls[0] = call;
+
+            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = standard721Transfer;
+
+            CallParameters[] memory callParametersArray;
+            callParametersArray = new CallParameters[](1);
+            callParametersArray[0] = payload.executeOrder;
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedCallParameters(
+                callParametersArray,
+                stdCastOfCharacters,
+                sidecarSetUpCalls,
+                new Call[](0),
+                flashloans,
+                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
+                adapterOrderConsideration,
+                sidecarItemTransfers
+            );
+
+            payload.executeOrder.value = 100;
+
+            gasUsed = _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(alice.balance, 100);
+            assertEq(beth.balanceOf(bob), 0);
         } catch {
             _logNotSupported(config.name(), testLabel);
         }
@@ -1817,6 +1972,133 @@ contract GenericMarketplaceTest is
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    function buyOfferedBETHWithERC721(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+    {
+        string memory testLabel = "(buyOfferedBETHWithERC721)";
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        beth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
+        try config.getPayload_BuyOfferedBETHWithERC721(
+            TestOrderContext(
+                false, false, alice, bob, flashloanOfferer, adapter, sidecar
+            ),
+            Item20(address(beth), 100),
+            Item721(address(test721_1), 1)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(beth.balanceOf(alice), 100);
+            assertEq(beth.balanceOf(bob), 0);
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
+                true,
+                false,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(beth.balanceOf(alice), 0);
+            assertEq(beth.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    function buyOfferedBETHWithERC721_Adapter(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+    {
+        string memory testLabel = "(buyOfferedBETHWithERC721_Adapter)";
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        beth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
+        hevm.deal(bob, 0);
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        bool requiresTakerIsSender = _isBlurV2(config);
+
+        if (requiresTakerIsSender) {
+            context.fulfiller = sidecar;
+        }
+
+        try config.getPayload_BuyOfferedBETHWithERC721(
+            context, Item20(address(beth), 100), Item721(address(test721_1), 1)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(beth.balanceOf(alice), 100);
+            assertEq(beth.balanceOf(bob), 0);
+            assertEq(bob.balance, 0);
+
+            // Sidecar's not going to transfer anything.
+            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
+
+            // Bob expects to get 100 native tokens.
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
+            adapterOrderOffer[0] =
+                OfferItemLib.fromDefault("standardNativeOfferItem");
+
+            // This converts the BETH received by the sidecar into native tokens
+            // which should make their way to bob.
+            Call[] memory sidecarWrapUpCalls = new Call[](2);
+            Call memory bethCall = Call({
+                target: address(beth),
+                allowFailure: false,
+                value: 0,
+                callData: abi.encodeWithSelector(beth.withdraw.selector, 100)
+            });
+            Call memory sendNativeTokensToSeaportCall = Call({
+                target: seaportAddress,
+                allowFailure: false,
+                value: 100,
+                callData: ""
+            });
+            sidecarWrapUpCalls[0] = bethCall;
+            sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
+
+            CallParameters[] memory callParametersArray;
+            callParametersArray = new CallParameters[](1);
+            callParametersArray[0] = payload.executeOrder;
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedCallParameters(
+                callParametersArray,
+                stdCastOfCharacters,
+                new Call[](0),
+                sidecarWrapUpCalls,
+                new Flashloan[](0),
+                adapterOrderOffer,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
+                sidecarItemTransfers
+            );
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(beth.balanceOf(alice), 0);
+            assertEq(bob.balance, 100);
         } catch {
             _logNotSupported(config.name(), testLabel);
         }
@@ -2981,7 +3263,8 @@ contract GenericMarketplaceTest is
             false, true, alice, bob, flashloanOfferer, adapter, sidecar
         );
 
-        bool requiresTakerIsSender = _isX2y2(config) || _isLooksRareV2(config);
+        bool requiresTakerIsSender =
+            _isBlurV2(config) || _isX2y2(config) || _isLooksRareV2(config);
 
         if (requiresTakerIsSender) {
             context.fulfiller = sidecar;
@@ -3100,8 +3383,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
-        bool requiresTakerIsSender =
-            _isBlur(config) || _isLooksRareV2(config) || _isX2y2(config);
+        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
+            || _isLooksRareV2(config) || _isX2y2(config);
 
         TestOrderContext[] memory contexts = new TestOrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -4385,6 +4668,10 @@ contract GenericMarketplaceTest is
         return _sameName(config.name(), blurConfig.name());
     }
 
+    function _isBlurV2(BaseMarketConfig config) internal view returns (bool) {
+        return _sameName(config.name(), blurV2Config.name());
+    }
+
     function _isX2y2(BaseMarketConfig config) internal view returns (bool) {
         return _sameName(config.name(), x2y2Config.name());
     }
@@ -4468,6 +4755,7 @@ contract GenericMarketplaceTest is
             // After the && is just safety.
             if (shouldLogGasDelta && gasUsed > costOfLastCall) {
                 emit log_named_uint("gas delta", gasUsed - costOfLastCall);
+                // Separate a matched pair visually.
                 console.log("");
             }
 
