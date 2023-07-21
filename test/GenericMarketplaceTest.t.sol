@@ -2046,7 +2046,6 @@ contract GenericMarketplaceTest is
             // Sidecar's not going to transfer anything.
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
 
-
             // Bob expects to get 100 native tokens.
             OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
             adapterOrderOffer[0] =

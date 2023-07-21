@@ -147,6 +147,14 @@ abstract contract BaseMarketConfig {
         _notImplemented();
     }
 
+    function getComponents_BuyOfferedERC721WithERC20(
+        address,
+        Item721 calldata,
+        Item20 calldata
+    ) external view virtual returns (BasicOrderParameters memory) {
+        _notImplemented();
+    }
+
     /**
      * @dev Get call parameters to execute an order selling a 721 token for WETH.
      *   If `context.listOnChain` is true and marketplace does not support on-chain

@@ -406,6 +406,31 @@ contract SeaportOnePointFiveConfig is
         );
     }
 
+    function getComponents_BuyOfferedERC721WithERC20(
+        address offerer,
+        Item721 calldata nft,
+        Item20 calldata erc20
+    )
+        external
+        view
+        override
+        returns (BasicOrderParameters memory basicComponents)
+    {
+        (, basicComponents) = buildBasicOrder(
+            BasicOrderRouteType.ERC20_TO_ERC721,
+            offerer,
+            OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
+            ConsiderationItem(
+                ItemType.ERC20,
+                erc20.token,
+                0,
+                erc20.amount,
+                erc20.amount,
+                payable(offerer)
+            )
+        );
+    }
+
     function getPayload_BuyOfferedERC721WithERC20(
         TestOrderContext calldata context,
         Item721 memory nft,
