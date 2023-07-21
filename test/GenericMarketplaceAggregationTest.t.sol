@@ -23,6 +23,7 @@ import {
 import {
     AdapterHelperLib,
     Approval,
+    Call,
     CastOfCharacters,
     Flashloan,
     ItemTransfer
@@ -301,6 +302,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             .createSeaportWrappedCallParametersReturnGranular(
             infra.executionPayloads,
             infra.castOfCharacters,
+            new Call[](0),
             new Flashloan[](0), // The helper will automatically create one.
             infra.adapterOfferArray,
             infra.adapterConsiderationArray,

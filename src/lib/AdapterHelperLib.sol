@@ -427,6 +427,7 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -447,6 +448,7 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
             new Flashloan[](0),
             adapterOffer,
             adapterConsideration,
@@ -468,6 +470,7 @@ library AdapterHelperLib {
         return createSeaportWrappedCallParameters(
             callParametersArray,
             castOfCharacters,
+            new Call[](0),
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -478,6 +481,7 @@ library AdapterHelperLib {
     function createSeaportWrappedCallParameters(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
+        Call[] memory sidecarSetupCalls,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
@@ -489,6 +493,7 @@ library AdapterHelperLib {
         createSeaportWrappedCallParametersReturnGranular(
             callParametersArray,
             castOfCharacters,
+            sidecarSetupCalls,
             flashloans,
             adapterOffer,
             adapterConsideration,
@@ -516,6 +521,7 @@ library AdapterHelperLib {
     struct AdapterWrapperInfra {
         CallParameters[] callParametersArray;
         CastOfCharacters castOfCharacters;
+        Call[] sidecarSetupCalls;
         ItemTransfer[] itemTransfers;
         OfferItem[] adapterOffer;
         ConsiderationItem[] adapterConsideration;
@@ -573,6 +579,7 @@ library AdapterHelperLib {
     function createSeaportWrappedCallParametersReturnGranular(
         CallParameters[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
+        Call[] memory sidecarSetupCalls,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
@@ -588,6 +595,7 @@ library AdapterHelperLib {
         AdapterWrapperInfra memory infra = AdapterWrapperInfra({
             callParametersArray: callParametersArray,
             castOfCharacters: castOfCharacters,
+            sidecarSetupCalls: new Call[](sidecarSetupCalls.length),
             itemTransfers: itemTransfers,
             adapterOffer: adapterOffer,
             adapterConsideration: adapterConsideration,
@@ -603,6 +611,8 @@ library AdapterHelperLib {
             value: 0,
             totalFlashloanValueRequested: 0
         });
+
+        infra.sidecarSetupCalls = sidecarSetupCalls;
 
         // Set the value to send.
         for (uint256 i; i < callParametersArray.length; ++i) {
@@ -662,11 +672,15 @@ library AdapterHelperLib {
         }
 
         infra.calls =
-        new Call[](infra.callParametersArray.length + infra.itemTransfers.length);
+        new Call[](infra.sidecarSetupCalls.length + infra.callParametersArray.length + infra.itemTransfers.length);
 
         {
+            for (uint256 i; i < infra.sidecarSetupCalls.length; i++) {
+                infra.calls[i] = infra.sidecarSetupCalls[i];
+            }
+
             for (uint256 i = 0; i < infra.callParametersArray.length; i++) {
-                infra.calls[i] = Call(
+                infra.calls[infra.sidecarSetupCalls.length + i] = Call(
                     address(infra.callParametersArray[i].target),
                     false,
                     infra.callParametersArray[i].value,
@@ -680,8 +694,8 @@ library AdapterHelperLib {
             // Populate the calls array with the NFT transfer calls from the
             // helper.
             for (uint256 i = 0; i < tokenCalls.length; i++) {
-                infra.calls[infra.callParametersArray.length + i] =
-                    tokenCalls[i];
+                infra.calls[infra.sidecarSetupCalls.length
+                    + infra.callParametersArray.length + i] = tokenCalls[i];
             }
         }
 
