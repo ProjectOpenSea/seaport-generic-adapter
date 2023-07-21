@@ -289,7 +289,7 @@ contract GenericMarketplaceTest is
         buyOfferedWETHWithERC721_Adapter(config);
 
         buyOfferedBETHWithERC721(config);
-        // buyOfferedBETHWithERC721_Adapter(config);
+        buyOfferedBETHWithERC721_Adapter(config);
 
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
@@ -1161,14 +1161,14 @@ contract GenericMarketplaceTest is
 
             flashloans[0] = flashloan;
 
-            Call[] memory calls = new Call[](1);
+            Call[] memory sidecarSetUpCalls = new Call[](1);
             Call memory call = Call({
                 target: address(beth),
                 allowFailure: false,
                 value: 100,
                 callData: abi.encodeWithSelector(beth.deposit.selector)
             });
-            calls[0] = call;
+            sidecarSetUpCalls[0] = call;
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
@@ -1181,7 +1181,8 @@ contract GenericMarketplaceTest is
                 .createSeaportWrappedCallParameters(
                 callParametersArray,
                 stdCastOfCharacters,
-                calls,
+                sidecarSetUpCalls,
+                new Call[](0),
                 flashloans,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 adapterOrderConsideration,
@@ -2008,6 +2009,97 @@ contract GenericMarketplaceTest is
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(beth.balanceOf(bob), 100);
+        } catch {
+            _logNotSupported(config.name(), testLabel);
+        }
+    }
+
+    function buyOfferedBETHWithERC721_Adapter(BaseMarketConfig config)
+        internal
+        prepareTest(config)
+    {
+        string memory testLabel = "(buyOfferedBETHWithERC721_Adapter)";
+        hevm.deal(alice, 100);
+        hevm.prank(alice);
+        beth.deposit{ value: 100 }();
+        test721_1.mint(bob, 1);
+        hevm.deal(bob, 0);
+
+        TestOrderContext memory context = TestOrderContext(
+            false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        );
+
+        bool requiresTakerIsSender = _isBlurV2(config);
+
+        if (requiresTakerIsSender) {
+            context.fulfiller = sidecar;
+        }
+
+        try config.getPayload_BuyOfferedBETHWithERC721(
+            context, Item20(address(beth), 100), Item721(address(test721_1), 1)
+        ) returns (TestOrderPayload memory payload) {
+            assertEq(test721_1.ownerOf(1), bob);
+            assertEq(beth.balanceOf(alice), 100);
+            assertEq(beth.balanceOf(bob), 0);
+            assertEq(bob.balance, 0);
+
+            // Sidecar's not going to transfer anything.
+            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
+
+
+            // Bob expects to get 100 native tokens.
+            OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
+            adapterOrderOffer[0] =
+                OfferItemLib.fromDefault("standardNativeOfferItem");
+
+            // This converts the BETH received by the sidecar into native tokens
+            // which should make their way to bob.
+            Call[] memory sidecarWrapUpCalls = new Call[](2);
+            Call memory bethCall = Call({
+                target: address(beth),
+                allowFailure: false,
+                value: 0,
+                callData: abi.encodeWithSelector(beth.withdraw.selector, 100)
+            });
+            Call memory sendNativeTokensToSeaportCall = Call({
+                target: seaportAddress,
+                allowFailure: false,
+                value: 100,
+                callData: ""
+            });
+            sidecarWrapUpCalls[0] = bethCall;
+            sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
+
+            CallParameters[] memory callParametersArray;
+            callParametersArray = new CallParameters[](1);
+            callParametersArray[0] = payload.executeOrder;
+
+            payload.executeOrder = AdapterHelperLib
+                .createSeaportWrappedCallParameters(
+                callParametersArray,
+                stdCastOfCharacters,
+                new Call[](0),
+                sidecarWrapUpCalls,
+                new Flashloan[](0),
+                adapterOrderOffer,
+                ConsiderationItemLib.fromDefaultMany(
+                    "standardERC721ConsiderationArray"
+                ),
+                sidecarItemTransfers
+            );
+
+            _benchmarkCallWithParams(
+                config.name(),
+                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+                true,
+                true,
+                bob,
+                payload.executeOrder
+            );
+
+            assertEq(test721_1.ownerOf(1), alice);
+            assertEq(beth.balanceOf(alice), 0);
+            assertEq(bob.balance, 100);
         } catch {
             _logNotSupported(config.name(), testLabel);
         }

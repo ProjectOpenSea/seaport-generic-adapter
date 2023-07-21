@@ -303,6 +303,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             infra.executionPayloads,
             infra.castOfCharacters,
             new Call[](0),
+            new Call[](0),
             new Flashloan[](0), // The helper will automatically create one.
             infra.adapterOfferArray,
             infra.adapterConsiderationArray,
