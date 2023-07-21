@@ -85,8 +85,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     }
 
     function testBlur() external override { }
+    function testBlurV2() external override { }
     function testFoundation() external override { }
     function testLooksRare() external override { }
+    function testLooksRareV2() external override { }
     function testSudoswap() external override { }
     function testX2Y2() external override { }
     function testZeroEx() external override { }

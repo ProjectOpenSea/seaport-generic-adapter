@@ -27,9 +27,7 @@ import { GenericAdapterSidecarInterface } from
 
 import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
-    import {
-    CastOfCharacters
-} from "../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../src/lib/AdapterHelperLib.sol";
 
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
@@ -166,6 +164,14 @@ abstract contract BaseMarketConfig {
         _notImplemented();
     }
 
+    function getPayload_BuyOfferedERC721WithBETH(
+        TestOrderContext calldata, /* context */
+        Item721 calldata, /* nft */
+        Item20 calldata /* erc20*/
+    ) external virtual returns (TestOrderPayload memory /*execution*/ ) {
+        _notImplemented();
+    }
+
     /**
      * @dev Get call parameters to execute an order selling an 1155 token for an ERC20.
      *   If `context.listOnChain` is true and marketplace does not support on-chain
@@ -214,6 +220,14 @@ abstract contract BaseMarketConfig {
         Item20 calldata,
         Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_BuyOfferedBETHWithERC721(
+        TestOrderContext calldata, /* context */
+        Item20 calldata, /* erc20 */
+        Item721 calldata /* nft */
+    ) external virtual returns (TestOrderPayload memory /* execution */ ) {
         _notImplemented();
     }
 
