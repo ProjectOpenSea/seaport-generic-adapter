@@ -68,7 +68,8 @@ interface FlashloanOffererInterface is ContractOffererInterface {
     function getSeaportMetadata()
         external
         pure
-        returns (string memory name, Schema[] memory schemas); // map to Seaport Improvement Proposal IDs
+        returns (string memory name, Schema[] memory schemas); // map to Seaport
+        // Improvement Proposal IDs
 
     function getBalance(address account) external view returns (uint256);
 }

@@ -67,7 +67,8 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
     error UnsupportedChainId(uint256 chainId);
 
     /**
-     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     * @dev Emit an event at deployment to indicate the contract is SIP-5
+     *      compatible.
      */
     event SeaportCompatibleContractDeployed();
 
@@ -107,7 +108,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             wrappedTokenAddress = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
         } else if (block.chainid == 43113) {
             // Avalanche Fuji (WAVAX)
-            wrappedTokenAddress = 0x1D308089a2D1Ced3f1Ce36B1FcaF815b07217be3;
+            wrappedTokenAddress = 0xd00ae08403B9bbb9124bB305C09058E32C39A48c;
         } else if (block.chainid == 56) {
             // Binance Smart Chain (WBNB)
             wrappedTokenAddress = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
@@ -129,6 +130,16 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         } else if (block.chainid == 1285) {
             // Moonriver (WMOVR)
             wrappedTokenAddress = 0x98878B06940aE243284CA214f92Bb71a2b032B8A;
+        } else if (
+            block
+                // OP chains: Optimisim (10), Optimism Goerli (420), Base
+                // (8453), Base Goerli (84531), Zora (7777777), and Zora Testnet
+                // (999).
+                .chainid == 10 || block.chainid == 420 || block.chainid == 8453
+                || block.chainid == 84531 || block.chainid == 7777777
+                || block.chainid == 999
+        ) {
+            wrappedTokenAddress = 0x4200000000000000000000000000000000000006;
         } else {
             // Revert if the chain ID is not supported.
             revert UnsupportedChainId(block.chainid);
@@ -432,7 +443,8 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
             Schema[] memory schemas // map to Seaport Improvement Proposal IDs
         )
     {
-        schemas = new Schema[](0);
+        schemas = new Schema[](1);
+        schemas[0] = Schema({ id: 12, metadata: "" });
         return ("FlashloanOfferer", schemas);
     }
 

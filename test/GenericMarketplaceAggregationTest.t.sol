@@ -275,7 +275,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             endAmount: 1
         });
 
-        // Stick the items into the adapter so that seaport can yank them out lol.
+        // Stick the items into the adapter so that seaport can yank them out.
         infra.itemTransfers[0] = ItemTransfer({
             from: infra.castOfCharacters.sidecar,
             to: infra.castOfCharacters.adapter,
@@ -364,7 +364,11 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         uint256 gasUsed = _benchmarkCallWithParams(
             configs[3].name(),
-            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated w/ match")),
+            string(
+                abi.encodePacked(
+                    infra.testLabel, " Fulfill aggregated w/ match"
+                )
+            ),
             true,
             false,
             bob,
@@ -561,15 +565,20 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
                     offerFulfillments,
                     considerationFulfillments,
                     bytes32(0), // fulfillerConduitKey,
-                    address(0), // recipient. 0 means the caller should get everything.
-                    10 // maximumFulfilled TODO: set this to a correct value
+                    address(0), // recipient. 0 means the caller should get
+                        // everything.
+                    2 // maximumFulfilled TODO: set this to a correct value
                 )
             );
         }
 
         uint256 gasUsed = _benchmarkCallWithParams(
             configs[3].name(),
-            string(abi.encodePacked(infra.testLabel, " Fulfill aggregated w/ fulfillAvailable")),
+            string(
+                abi.encodePacked(
+                    infra.testLabel, " Fulfill aggregated w/ fulfillAvailable"
+                )
+            ),
             true,
             false,
             bob,

@@ -170,7 +170,8 @@ contract FlashloanOffererTest is BaseOrderTest {
         (string memory name, Schema[] memory schemas) =
             context.flashloanOfferer.getSeaportMetadata();
         assertEq(name, "FlashloanOfferer");
-        assertEq(schemas.length, 0);
+        assertEq(schemas.length, 1);
+        assertEq(schemas[0].id, 12);
     }
 
     function testGenerateOrderThresholdReverts() public {
@@ -330,7 +331,8 @@ contract FlashloanOffererTest is BaseOrderTest {
             address(this), minimumReceived, maximumSpent, bytes("")
         );
 
-        // Test the InvalidCaller that lies on the process deposit or withdrawal path.
+        // Test the InvalidCaller that lies on the process deposit or withdrawal
+        // path.
         vm.expectRevert(
             abi.encodeWithSelector(
                 FlashloanOffererInterface.InvalidCaller.selector, address(this)
@@ -340,7 +342,8 @@ contract FlashloanOffererTest is BaseOrderTest {
             address(this), minimumReceived, maximumSpent, bytes("")
         );
 
-        // Test the InvalidExtraDataEncoding that lies on the process deposit or withdrawal path.
+        // Test the InvalidExtraDataEncoding that lies on the process deposit or
+        // withdrawal path.
         vm.prank(address(consideration));
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -523,12 +526,14 @@ contract FlashloanOffererTest is BaseOrderTest {
         Context memory context
     ) external stateless {
         // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
-        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte]
+        // [flashloanData...]
         //
         // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
         // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
 
-        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte], [recipient, 20 bytes]
+        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte],
+        // [recipient, 20 bytes]
 
         uint256 flashloanValueRequested = 0x3333333333333333333333;
 
@@ -600,12 +605,14 @@ contract FlashloanOffererTest is BaseOrderTest {
         Context memory context
     ) external stateless {
         // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
-        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte]
+        // [flashloanData...]
         //
         // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
         // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...
 
-        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte], [recipient, 20 bytes]
+        // flashloan data goes: [amount, 11 bytes], [shouldcallback, 1 byte],
+        // [recipient, 20 bytes]
 
         uint256 flashloanValueRequested = 0x3333333333333333333333;
 

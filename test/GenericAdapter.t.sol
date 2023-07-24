@@ -283,7 +283,8 @@ contract GenericAdapterTest is BaseOrderTest {
         (string memory name, Schema[] memory schemas) =
             context.adapter.getSeaportMetadata();
         assertEq(name, "GenericAdapter");
-        assertEq(schemas.length, 0);
+        assertEq(schemas.length, 1);
+        assertEq(schemas[0].id, 11);
     }
 
     function testCleanup() public {
@@ -610,28 +611,38 @@ contract GenericAdapterTest is BaseOrderTest {
         // assembly {
         //     // Insert the number of approvals into the second word. Becomes
         //     // something like:
-        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
+        //     //
+        // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2500000000000000000000
         //     secondWord := or(shl(248, 0x03), erc20AddressShifted)
-        //     // Insert the approval type for the second item into the second word
+        //     // Insert the approval type for the second item into the second
+        // word
         //     // Becomes something like:
-        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
+        //     //
+        // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e2501000000000000000000
         //     secondWord := or(shl(72, 0x01), secondWord)
         //     // Insert the first 9 bytes of the ERC721 address into the second
         //     // word.  Becomes something like:
-        //     // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
+        //     //
+        // 0x0300e54a55121a47451c5727adbaf9b9fc1643477e250194771550282853f6e0
         //     secondWord := or(shr(88, erc721Address), secondWord)
 
-        //     // Insert the remaining 11 bytes of the ERC721 address into the third
+        //     // Insert the remaining 11 bytes of the ERC721 address into the
+        // third
         //     // word. Becomes something like:
-        //     // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
+        //     //
+        // 0x124c302f7de1cf50aa45ca000000000000000000000000000000000000000000
         //     thirdWord := shl(168, erc721Address)
-        //     // Insert the approval type for the third item into the third word.
+        //     // Insert the approval type for the third item into the third
+        // word.
         //     // Becomes something like:
-        //     // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
+        //     //
+        // 0x124c302f7de1cf50aa45ca010000000000000000000000000000000000000000
         //     thirdWord := or(shl(160, 0x01), thirdWord)
-        //     // Insert the ERC1155 address into the third word. Becomes something
+        //     // Insert the ERC1155 address into the third word. Becomes
+        // something
         //     // like:
-        //     // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
+        //     //
+        // 0x124c302f7de1cf50aa45ca018227724c33c1748a42d1c1cd06e21ab8deb6eb0a
         //     thirdWord := or(erc1155Address, thirdWord)
         // }
 

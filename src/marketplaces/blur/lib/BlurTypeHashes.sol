@@ -12,7 +12,8 @@ contract BlurTypeHashes {
             keccak256("Blur Exchange"),
             keccak256("1.0"), // for versionId = 1
             1,
-            0x000000000000Ad05Ccc4F10045630fb830B95127 // mainnet Blur exchange address
+            0x000000000000Ad05Ccc4F10045630fb830B95127 // mainnet Blur exchange
+                // address
         )
     );
 

@@ -8,7 +8,8 @@ contract DifferentialTest is Test {
     error RevertWithFailureStatus(bool status);
     error DifferentialTestAssertionFailed();
 
-    // slot where vm stores a bool representing whether or not an assertion has failed
+    // slot where vm stores a bool representing whether or not an assertion has
+    // failed
     bytes32 vm_FAILED_SLOT = bytes32("failed");
 
     // hash of the bytes surfaced by `revert RevertWithFailureStatus(false)`
@@ -16,14 +17,16 @@ contract DifferentialTest is Test {
         abi.encodeWithSelector(RevertWithFailureStatus.selector, false)
     );
 
-    ///@dev reverts after function body with vm failure status, which clears all state changes
+    ///@dev reverts after function body with vm failure status, which clears all
+    /// state changes
     ///     but still surfaces assertion failure status.
     modifier stateless() {
         _;
         revert RevertWithFailureStatus(readvmFailureSlot());
     }
 
-    ///@dev revert if the supplied bytes do not match the expected "passing" revert bytes
+    ///@dev revert if the supplied bytes do not match the expected "passing"
+    /// revert bytes
     function assertPass(bytes memory reason) internal view {
         // hash the reason and compare to the hash of the passing revert bytes
         if (keccak256(reason) != PASSING_HASH) {

@@ -36,7 +36,8 @@ library ECDSA {
 
     /**
      * @dev Returns the address that signed a hashed message (`hash`) with
-     * `signature` or error string. This address can then be used for verification purposes.
+     * `signature` or error string. This address can then be used for
+     * verification purposes.
      *
      * The `ecrecover` EVM opcode allows for malleable (non-unique) signatures:
      * this function rejects them by requiring the `s` value to be in the lower
@@ -49,7 +50,8 @@ library ECDSA {
      * be too long), and then calling {toEthSignedMessageHash} on it.
      *
      * Documentation for signature generation:
-     * - with https://web3js.readthedocs.io/en/v1.3.4/web3-eth-accounts.html#sign[Web3.js]
+     * - with
+     * https://web3js.readthedocs.io/en/v1.3.4/web3-eth-accounts.html#sign[Web3.js]
      * - with https://docs.ethers.io/v5/api/signer/#Signer-signMessage[ethers]
      *
      * _Available since v4.3._
@@ -61,12 +63,14 @@ library ECDSA {
     {
         // Check the signature length
         // - case 65: r,s,v signature (standard)
-        // - case 64: r,vs signature (cf https://eips.ethereum.org/EIPS/eip-2098) _Available since v4.1._
+        // - case 64: r,vs signature (cf
+        // https://eips.ethereum.org/EIPS/eip-2098) _Available since v4.1._
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
             uint8 v;
-            // ecrecover takes the signature parameters, and the only way to get them
+            // ecrecover takes the signature parameters, and the only way to get
+            // them
             // currently is to use assembly.
             assembly {
                 r := mload(add(signature, 0x20))
@@ -77,7 +81,8 @@ library ECDSA {
         } else if (signature.length == 64) {
             bytes32 r;
             bytes32 vs;
-            // ecrecover takes the signature parameters, and the only way to get them
+            // ecrecover takes the signature parameters, and the only way to get
+            // them
             // currently is to use assembly.
             assembly {
                 r := mload(add(signature, 0x20))
@@ -114,7 +119,8 @@ library ECDSA {
     }
 
     /**
-     * @dev Overload of {ECDSA-tryRecover} that receives the `r` and `vs` short-signature fields separately.
+     * @dev Overload of {ECDSA-tryRecover} that receives the `r` and `vs`
+     * short-signature fields separately.
      *
      * See https://eips.ethereum.org/EIPS/eip-2098[EIP-2098 short signatures]
      *
@@ -139,7 +145,8 @@ library ECDSA {
     }
 
     /**
-     * @dev Overload of {ECDSA-recover} that receives the `r and `vs` short-signature fields separately.
+     * @dev Overload of {ECDSA-recover} that receives the `r and `vs`
+     * short-signature fields separately.
      *
      * _Available since v4.2._
      */
@@ -164,14 +171,22 @@ library ECDSA {
         pure
         returns (address, RecoverError)
     {
-        // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
-        // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
-        // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
-        // signatures from current libraries generate a unique signature with an s-value in the lower half order.
+        // EIP-2 still allows signature malleability for ecrecover(). Remove
+        // this possibility and make the signature
+        // unique. Appendix F in the Ethereum Yellow paper
+        // (https://ethereum.github.io/yellowpaper/paper.pdf), defines
+        // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for
+        // v in (302): v ∈ {27, 28}. Most
+        // signatures from current libraries generate a unique signature with an
+        // s-value in the lower half order.
         //
-        // If your library generates malleable signatures, such as s-values in the upper range, calculate a new s-value
-        // with 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 - s1 and flip v from 27 to 28 or
-        // vice versa. If your library also generates signatures with 0/1 for v instead 27/28, add 27 to v to accept
+        // If your library generates malleable signatures, such as s-values in
+        // the upper range, calculate a new s-value
+        // with
+        // 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141 -
+        // s1 and flip v from 27 to 28 or
+        // vice versa. If your library also generates signatures with 0/1 for v
+        // instead 27/28, add 27 to v to accept
         // these malleable signatures as well.
         if (
             uint256(s)
@@ -183,7 +198,8 @@ library ECDSA {
             return (address(0), RecoverError.InvalidSignatureV);
         }
 
-        // If the signature is valid (and not malleable), return the signer address
+        // If the signature is valid (and not malleable), return the signer
+        // address
         address signer = ecrecover(hash, v, r, s);
         if (signer == address(0)) {
             return (address(0), RecoverError.InvalidSignature);

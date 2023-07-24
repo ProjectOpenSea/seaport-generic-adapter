@@ -14,7 +14,8 @@ interface ILooksRareProtocol {
      *         and the order hash that triggered the status change.
      * @param orderHash Maker order hash
      * @param orderNonce Order nonce
-     * @param isNonceInvalidated Whether this transaction invalidated the maker user's order nonce at the protocol level
+     * @param isNonceInvalidated Whether this transaction invalidated the maker
+     * user's order nonce at the protocol level
      */
     struct NonceInvalidationParameters {
         bytes32 orderHash;
@@ -38,14 +39,16 @@ interface ILooksRareProtocol {
     event NewDomainSeparator();
 
     /**
-     * @notice It is emitted when there is a new gas limit for a ETH transfer (before it is wrapped to WETH).
+     * @notice It is emitted when there is a new gas limit for a ETH transfer
+     * (before it is wrapped to WETH).
      * @param gasLimitETHTransfer Gas limit for an ETH transfer
      */
     event NewGasLimitETHTransfer(uint256 gasLimitETHTransfer);
 
     /**
      * @notice It is emitted when a taker ask transaction is completed.
-     * @param nonceInvalidationParameters Struct about nonce invalidation parameters
+     * @param nonceInvalidationParameters Struct about nonce invalidation
+     * parameters
      * @param askUser Address of the ask user
      * @param bidUser Address of the bid user
      * @param strategyId Id of the strategy
@@ -54,12 +57,14 @@ interface ILooksRareProtocol {
      * @param itemIds Array of item ids
      * @param amounts Array of amounts (for item ids)
      * @param feeRecipients Array of fee recipients
-     *        feeRecipients[0] User who receives the proceeds of the sale (it can be the taker ask user or different)
+     *        feeRecipients[0] User who receives the proceeds of the sale (it
+     * can be the taker ask user or different)
      *        feeRecipients[1] Creator fee recipient (if none, address(0))
      * @param feeAmounts Array of fee amounts
      *        feeAmounts[0] Fee amount for the user receiving sale proceeds
      *        feeAmounts[1] Creator fee amount
-     *        feeAmounts[2] Protocol fee amount prior to adjustment for a potential affiliate payment
+     *        feeAmounts[2] Protocol fee amount prior to adjustment for a
+     * potential affiliate payment
      */
     // maker (receives the NFT)
     event TakerAsk( // taker (initiates the transaction)
@@ -77,7 +82,8 @@ interface ILooksRareProtocol {
 
     /**
      * @notice It is emitted when a taker bid transaction is completed.
-     * @param nonceInvalidationParameters Struct about nonce invalidation parameters
+     * @param nonceInvalidationParameters Struct about nonce invalidation
+     * parameters
      * @param bidUser Address of the bid user
      * @param bidRecipient Address of the recipient of the bid
      * @param strategyId Id of the strategy
@@ -86,12 +92,14 @@ interface ILooksRareProtocol {
      * @param itemIds Array of item ids
      * @param amounts Array of amounts (for item ids)
      * @param feeRecipients Array of fee recipients
-     *        feeRecipients[0] User who receives the proceeds of the sale (it is the maker ask user)
+     *        feeRecipients[0] User who receives the proceeds of the sale (it is
+     * the maker ask user)
      *        feeRecipients[1] Creator fee recipient (if none, address(0))
      * @param feeAmounts Array of fee amounts
      *        feeAmounts[0] Fee amount for the user receiving sale proceeds
      *        feeAmounts[1] Creator fee amount
-     *        feeAmounts[2] Protocol fee amount prior to adjustment for a potential affiliate payment
+     *        feeAmounts[2] Protocol fee amount prior to adjustment for a
+     * potential affiliate payment
      */
     // taker (receives the NFT)
     event TakerBid( // taker (initiates the transaction)
@@ -108,12 +116,14 @@ interface ILooksRareProtocol {
     );
 
     /**
-     * @notice It is returned if the gas limit for a standard ETH transfer is too low.
+     * @notice It is returned if the gas limit for a standard ETH transfer is
+     * too low.
      */
     error NewGasLimitETHTransferTooLow();
 
     /**
-     * @notice It is returned if the domain separator cannot be updated (i.e. the chainId is the same).
+     * @notice It is returned if the domain separator cannot be updated (i.e. the
+     * chainId is the same).
      */
     error SameDomainSeparator();
 
@@ -128,11 +138,13 @@ interface ILooksRareProtocol {
     error NoncesInvalid();
 
     /**
-     * @notice This function allows a user to execute a taker ask (against a maker bid).
+     * @notice This function allows a user to execute a taker ask (against a
+     * maker bid).
      * @param takerAsk Taker ask struct
      * @param makerBid Maker bid struct
      * @param makerSignature Maker signature
-     * @param merkleTree Merkle tree struct (if the signature contains multiple maker orders)
+     * @param merkleTree Merkle tree struct (if the signature contains multiple
+     * maker orders)
      * @param affiliate Affiliate address
      */
     function executeTakerAsk(
@@ -144,11 +156,13 @@ interface ILooksRareProtocol {
     ) external;
 
     /**
-     * @notice This function allows a user to execute a taker bid (against a maker ask).
+     * @notice This function allows a user to execute a taker bid (against a
+     * maker ask).
      * @param takerBid Taker bid struct
      * @param makerAsk Maker ask struct
      * @param makerSignature Maker signature
-     * @param merkleTree Merkle tree struct (if the signature contains multiple maker orders)
+     * @param merkleTree Merkle tree struct (if the signature contains multiple
+     * maker orders)
      * @param affiliate Affiliate address
      */
     function executeTakerBid(
@@ -160,11 +174,13 @@ interface ILooksRareProtocol {
     ) external payable;
 
     /**
-     * @notice This function allows a user to batch buy with an array of taker bids (against an array of maker asks).
+     * @notice This function allows a user to batch buy with an array of taker
+     * bids (against an array of maker asks).
      * @param takerBids Array of taker bid structs
      * @param makerAsks Array of maker ask structs
      * @param makerSignatures Array of maker signatures
-     * @param merkleTrees Array of merkle tree structs if the signature contains multiple maker orders
+     * @param merkleTrees Array of merkle tree structs if the signature contains
+     * multiple maker orders
      * @param affiliate Affiliate address
      * @param isAtomic Whether the execution should be atomic
      *        i.e. whether it should revert if 1 or more transactions fail
@@ -179,7 +195,8 @@ interface ILooksRareProtocol {
     ) external payable;
 
     /**
-     * @notice This function allows the owner to update the status of a currency.
+     * @notice This function allows the owner to update the status of a
+     * currency.
      * @param currency Currency address (address(0) for ETH)
      * @param isAllowed Whether the currency should be allowed for trading
      * @dev Only callable by owner.
@@ -187,7 +204,8 @@ interface ILooksRareProtocol {
     function updateCurrencyStatus(address currency, bool isAllowed) external;
 
     /**
-     * @notice This function allows the owner to update the protocol fee recipient.
+     * @notice This function allows the owner to update the protocol fee
+     * recipient.
      * @param newProtocolFeeRecipient New protocol fee recipient address
      * @dev Only callable by owner.
      */

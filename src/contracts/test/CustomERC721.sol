@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 /// @notice Modern, minimalist, and gas efficient ERC-721 implementation.
-/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)
+/// @author Solmate
+/// (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)
 /// @notice modified for testing purposes
 abstract contract CustomERC721 {
     /*//////////////////////////////////////////////////////////////
@@ -114,7 +115,8 @@ abstract contract CustomERC721 {
         );
 
         // Underflow of the sender's balance is impossible because we check for
-        // ownership above and the recipient's balance can't realistically overflow.
+        // ownership above and the recipient's balance can't realistically
+        // overflow.
         unchecked {
             _balanceOf[from]--;
 
@@ -241,8 +243,10 @@ abstract contract CustomERC721 {
     }
 }
 
-/// @notice A generic interface for a contract which properly accepts ERC721 tokens.
-/// @author Solmate (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)
+/// @notice A generic interface for a contract which properly accepts ERC721
+/// tokens.
+/// @author Solmate
+/// (https://github.com/Rari-Capital/solmate/blob/main/src/tokens/ERC721.sol)
 abstract contract ERC721TokenReceiver {
     function onERC721Received(address, address, uint256, bytes calldata)
         external

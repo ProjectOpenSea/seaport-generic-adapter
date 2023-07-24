@@ -23,7 +23,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF);
     address constant NATIVE_TOKEN_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    // Note: in order to take advantage of a gas optimization, first create a "used" nonce
+    // Note: in order to take advantage of a gas optimization, first create a
+    // "used" nonce
     uint256 usedNonce = uint256(0x1010101000000000);
     uint256 testNonce = uint256(0x1010101000000001);
 
@@ -59,7 +60,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
-            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
+            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be
+                // "bought" with the native token using this sentinel value
             erc20TokenAmount: ethAmount,
             fees: new LibNFTOrder.Fee[](0),
             erc721Token: nft.token,
@@ -79,7 +81,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -117,7 +120,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
-            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
+            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be
+                // "bought" with the native token using this sentinel value
             erc20TokenAmount: ethAmount,
             fees: new LibNFTOrder.Fee[](0),
             erc1155Token: nft.token,
@@ -138,7 +142,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -198,7 +203,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -256,7 +262,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -315,7 +322,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -375,7 +383,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -440,7 +449,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -506,7 +516,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -562,7 +573,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
-            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
+            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be
+                // "bought" with the native token using this sentinel value
             erc20TokenAmount: priceEthAmount,
             fees: fees,
             erc721Token: nft.token,
@@ -582,7 +594,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -637,7 +650,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
-            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
+            erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be
+                // "bought" with the native token using this sentinel value
             erc20TokenAmount: priceEthAmount,
             fees: fees,
             erc721Token: nft.token,
@@ -657,7 +671,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             s: s
         });
 
-        // Handle special case if "listing on chain" or in the 0x parlance the order is "presigned"
+        // Handle special case if "listing on chain" or in the 0x parlance the
+        // order is "presigned"
         if (context.listOnChain) {
             sig = LibSignature.Signature({
                 signatureType: LibSignature.SignatureType.PRESIGNED,
@@ -678,7 +693,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         // Execute the buy
         execution.executeOrder = CallParameters(
             address(zeroEx),
-            priceEthAmount + feeEthAmount1 + feeEthAmount2, // pay the maker and pay the fees
+            priceEthAmount + feeEthAmount1 + feeEthAmount2, // pay the maker and
+                // pay the fees
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
         );
     }
@@ -718,7 +734,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
-                erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be "bought" with the native token using this sentinel value
+                erc20Token: NATIVE_TOKEN_ADDRESS, // 0x orders are able to be
+                    // "bought" with the native token using this sentinel value
                 erc20TokenAmount: ethAmounts[i],
                 fees: new LibNFTOrder.Fee[](0),
                 erc721Token: nfts[i].token,

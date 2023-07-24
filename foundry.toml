@@ -20,3 +20,4 @@ remappings = [
 line_length = 80
 tab_width = 4
 bracket_spacing = true
+wrap_comments = true

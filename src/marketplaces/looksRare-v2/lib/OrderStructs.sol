@@ -7,7 +7,8 @@ import { QuoteType } from "./QuoteType.sol";
 
 /**
  * @title OrderStructs
- * @notice This library contains all order struct types for the LooksRare protocol (v2).
+ * @notice This library contains all order struct types for the LooksRare
+ * protocol (v2).
  * @author LooksRare protocol team (👀,💎)
  */
 library OrderStructs {
@@ -20,7 +21,8 @@ library OrderStructs {
      * @param quoteType Quote type (i.e. 0 = BID, 1 = ASK)
      * @param globalNonce Global user order nonce for maker orders
      * @param subsetNonce Subset nonce (shared across bid/ask maker orders)
-     * @param orderNonce Order nonce (it can be shared across bid/ask maker orders)
+     * @param orderNonce Order nonce (it can be shared across bid/ask maker
+     * orders)
      * @param strategyId Strategy id
      * @param collectionType Collection type (i.e. 0 = ERC721, 1 = ERC1155)
      * @param collection Collection address
@@ -56,9 +58,12 @@ library OrderStructs {
      */
 
     /**
-     * @notice Taker is the struct for a taker ask/bid order. It contains the parameters required for a direct purchase.
-     * @dev Taker struct is matched against MakerAsk/MakerBid structs at the protocol level.
-     * @param recipient Recipient address (to receive NFTs or non-fungible tokens)
+     * @notice Taker is the struct for a taker ask/bid order. It contains the
+     * parameters required for a direct purchase.
+     * @dev Taker struct is matched against MakerAsk/MakerBid structs at the
+     * protocol level.
+     * @param recipient Recipient address (to receive NFTs or non-fungible
+     * tokens)
      * @param additionalParameters Extra data specific for the order
      */
     struct Taker {
@@ -90,7 +95,8 @@ library OrderStructs {
     /**
      * @notice MerkleTree is the struct for a merkle tree of order hashes.
      * @dev A Merkle tree can be computed with order hashes.
-     *      It can contain order hashes from both maker bid and maker ask structs.
+     *      It can contain order hashes from both maker bid and maker ask
+     * structs.
      * @param root Merkle root
      * @param proof Array containing the merkle proof
      */
@@ -104,7 +110,8 @@ library OrderStructs {
      */
 
     /**
-     * @notice This is the type hash constant used to compute the maker order hash.
+     * @notice This is the type hash constant used to compute the maker order
+     * hash.
      */
     bytes32 internal constant _MAKER_TYPEHASH = keccak256(
         "Maker(" "uint8 quoteType," "uint256 globalNonce,"
@@ -120,7 +127,8 @@ library OrderStructs {
      */
 
     /**
-     * @notice This function is used to compute the order hash for a maker struct.
+     * @notice This function is used to compute the order hash for a maker
+     * struct.
      * @param maker Maker order struct
      * @return makerHash Hash of the maker struct
      */

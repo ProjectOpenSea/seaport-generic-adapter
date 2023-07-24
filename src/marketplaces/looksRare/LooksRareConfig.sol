@@ -26,8 +26,6 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         return address(looksRare);
     }
 
-    // address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-
     ILooksRareExchange internal constant looksRare =
         ILooksRareExchange(0x59728544B08AB483533076417FbBB2fD0B17CE3a);
     address internal constant looksRareOwner =
@@ -99,7 +97,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
 
     function beforeAllPrepareMarketplace(address, address) external override {
         buyerNftApprovalTarget =
-            sellerNftApprovalTarget = 0xf42aa99F011A1fA7CDA90E5E98b277E306BcA83e; // ERC721 transfer manager
+            sellerNftApprovalTarget = 0xf42aa99F011A1fA7CDA90E5E98b277E306BcA83e; // ERC721
+            // transfer manager
         buyerErc1155ApprovalTarget = sellerErc1155ApprovalTarget =
             0xFED24eC7E22f573c2e08AEF55aA6797Ca2b3A051; // ERC1155 transfer manager
         buyerErc20ApprovalTarget =

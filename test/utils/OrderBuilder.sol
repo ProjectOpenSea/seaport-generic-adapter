@@ -437,7 +437,8 @@ contract OrderBuilder is OfferConsiderationItemAdder {
     }
 
     /**
-     * @dev configures order components based on order parameters in storage and counter param
+     * @dev configures order components based on order parameters in storage and
+     * counter param
      */
     function configureOrderComponents(uint256 counter) internal {
         baseOrderComponents.offerer = baseOrderParameters.offerer;

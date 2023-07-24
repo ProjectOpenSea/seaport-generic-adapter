@@ -50,7 +50,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
     error NotImplemented();
 
     /**
-     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     * @dev Emit an event at deployment to indicate the contract is SIP-5
+     * compatible.
      */
     event SeaportCompatibleContractDeployed();
 
@@ -126,7 +127,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         uint256 approvalDataSize;
         uint256 totalApprovals;
 
-        // context is 1 bytes of SIP-6 version, [ empty bytes?], 4 bytes of size,
+        // context is 1 bytes of SIP-6 version, [ empty bytes?], 4 bytes of
+        // size,
         // 1 byte of total approval count, and 21 bytes per approval (1 byte for
         // type, 20 bytes for token).
 
@@ -215,7 +217,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     mstore(0, selector)
                     mstore(0x40, approvalValue)
 
-                    // Declare a variable indicating whether the call was successful or not.
+                    // Declare a variable indicating whether the call was
+                    // successful or not.
                     success := call(gas(), approvalToken, 0, 0x1c, 0x44, 0, 0)
 
                     // Fire off call to token. Revert & bubble up revert data if
@@ -246,7 +249,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
 
         // Track cumulative native tokens to be spent.
         uint256 value;
-        // duplicate fulfiller on stack before it's pushed too far down to be accessed
+        // duplicate fulfiller on stack before it's pushed too far down to be
+        // accessed
         address _fulfiller = fulfiller;
 
         // Transfer each maximumSpent item to the sidecar.
@@ -286,7 +290,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
             }
 
             // if (value > address(this).balance) {
-            //     revert("Please ensure this contract has sufficient balance first.");
+            //     revert("Please ensure this contract has sufficient balance
+            // first.");
             // }
 
             assembly {
@@ -312,10 +317,10 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                 // Everything else is the payload.
                 let payloadSize := sub(contextLength, add(33, approvalDataSize))
 
-                // TODO: think more about validation and safety.
                 if payloadSize {
-                    // Write the execute(Call[]) selector. Note this as well as the
-                    // single offset can be removed on both ends as an optimization.
+                    // Write the execute(Call[]) selector. Note this as well as
+                    // the single offset can be removed on both ends as an
+                    // optimization.
                     mstore(freeMemoryPointer, 0xb252b6e5)
 
                     // Copy payload into memory after selector.
@@ -325,10 +330,11 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                         payloadSize
                     )
 
-                    // Fire off call to target. Revert and bubble up revert data if
-                    // present & reasonably-sized, else revert with a custom error.
-                    // Note that checking for sufficient native token balance is an
-                    // option here if more specific custom reverts are preferred.
+                    // Fire off call to target. Revert and bubble up revert data
+                    // if present & reasonably-sized, else revert with a custom
+                    // error. Note that checking for sufficient native token
+                    // balance is an option here if more specific custom reverts
+                    // are preferred.
                     if iszero(
                         call(
                             gas(),
@@ -514,7 +520,8 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
             Schema[] memory schemas // map to Seaport Improvement Proposal IDs
         )
     {
-        schemas = new Schema[](0);
+        schemas = new Schema[](1);
+        schemas[0] = Schema({ id: 11, metadata: "" });
         return ("GenericAdapter", schemas);
     }
 
