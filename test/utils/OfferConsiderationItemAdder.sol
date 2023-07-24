@@ -158,7 +158,8 @@ contract OfferConsiderationItemAdder is TestTokenMinter {
         delete considerationItems;
     }
 
-    ///@dev construct a considerationItem and add it to the considerationItems array
+    ///@dev construct a considerationItem and add it to the considerationItems
+    /// array
     function addConsiderationItem(
         address payable recipient,
         ItemType itemType,

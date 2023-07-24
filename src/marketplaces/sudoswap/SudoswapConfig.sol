@@ -26,7 +26,8 @@ contract SudoswapConfig is BaseMarketConfig {
     address constant LINEAR_CURVE = 0x5B6aC51d9B1CeDE0068a1B26533CAce807f883Ee;
 
     uint128 constant DELTA = 1;
-    uint128 constant NFT_PRICE = 100; // the price at which NFTs are being bought/sold
+    uint128 constant NFT_PRICE = 100; // the price at which NFTs are being
+        // bought/sold
     uint128 constant TOKEN_POOL_SPOT_PRICE = NFT_PRICE;
     uint128 constant NFT_POOL_SPOT_PRICE = TOKEN_POOL_SPOT_PRICE - DELTA;
 

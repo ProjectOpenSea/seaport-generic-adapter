@@ -105,9 +105,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
                 creator,
                 keccak256(
                     abi.encodePacked(
-                        "\x19\x01",
-                        DOMAIN_SEPARATOR,
-                        _hashOrder(order, 0) // Nonce management might be a pain.
+                        "\x19\x01", DOMAIN_SEPARATOR, _hashOrder(order, 0)
                     )
                 )
             );
@@ -164,7 +162,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         Order memory takerOrder;
 
         {
-            // If it's an offer of ERC20 for ERC721, then the maker is the buyer and
+            // If it's an offer of ERC20 for ERC721, then the maker is the buyer
+            // and
             // the taker is the seller.
             (makerOrder, infra.v, infra.r, infra.s) = buildOrder(
                 maker,
@@ -270,7 +269,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     // be sold.  This pattern should be close to viable when they update the
     // policy.
     //
-    // See https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L521,
+    // See
+    // https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L521,
     // https://etherscan.io/address/0x00000000006411739DA1c40B106F8511de5D1FAC#code#F1#L36.
     // function getPayload_BuyOfferedERC1155WithEther(
     //     TestOrderContext calldata context,
@@ -303,7 +303,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
     // It's not possible to purchase NFTs with tokens other than ETH, WETH, or
     // Blur's proprietary version of WETH.
-    // See https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
+    // See
+    // https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
     function getPayload_BuyOfferedERC721WithWETH(
         TestOrderContext calldata context,
         Item721 memory nft,
@@ -398,7 +399,8 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //     rate = (feeEthAmount * 10000) / (priceEthAmount) + 1;
     //     uint16 convertedRate;
     //     convertedRate = convert(rate);
-    //     fees[0] = Fee({ recipient: payable(feeRecipient), rate: convertedRate });
+    //     fees[0] = Fee({ recipient: payable(feeRecipient), rate: convertedRate
+    // });
     //     (Input memory makerInput, Input memory takerInput) = buildInputPair(
     //         context.offerer,
     //         context.fulfiller,

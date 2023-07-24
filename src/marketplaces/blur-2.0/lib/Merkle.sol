@@ -3,7 +3,8 @@ pragma solidity ^0.8.13;
 
 import "./MurkyBase.sol";
 
-/// @notice Nascent, simple, kinda efficient (and improving!) Merkle proof generator and verifier
+/// @notice Nascent, simple, kinda efficient (and improving!) Merkle proof
+/// generator and verifier
 /// @author dmfxyz
 /// @dev Note Generic Merkle Tree
 contract Merkle is MurkyBase {

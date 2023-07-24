@@ -3508,7 +3508,8 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
-            // @dev checking ownership here (when nfts are escrowed in different contracts) is messy so we skip it for now
+            // @dev checking ownership here (when nfts are escrowed in different
+            // contracts) is messy so we skip it for now
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -4290,7 +4291,8 @@ contract GenericMarketplaceTest is
         // Item721[] memory nfts = new Item721[](3);
 
         // contexts[0] = TestOrderContext(
-        //     false, true, alice, address(0), flashloanOfferer, adapter, sidecar
+        //     false, true, alice, address(0), flashloanOfferer, adapter,
+        // sidecar
         // );
         // contexts[1] = TestOrderContext(
         //     false, true, cal, address(0), flashloanOfferer, adapter, sidecar

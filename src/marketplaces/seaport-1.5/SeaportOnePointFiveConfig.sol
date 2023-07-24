@@ -308,7 +308,8 @@ contract SeaportOnePointFiveConfig is
             fulfillerOfferItems,
             fulfillerConsiderationItems
         );
-        orders[nfts.length].signature = ""; // Signature isn't needed since fulfiller is msg.sender
+        orders[nfts.length].signature = ""; // Signature isn't needed since
+            // fulfiller is msg.sender
 
         return (orders, fullfillments, sumAmounts);
     }
@@ -1001,9 +1002,11 @@ contract SeaportOnePointFiveConfig is
             contexts, address(0), nfts, ethAmounts
         );
 
-        // Validate all for simplicity for now, could make this combination of on-chain and not
+        // Validate all for simplicity for now, could make this combination of
+        // on-chain and not
         if (contexts[0].listOnChain) {
-            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last order is fulfiller order
+            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last
+                // order is fulfiller order
             for (uint256 i = 0; i < orders.length - 1; i++) {
                 orders[i].signature = "";
                 ordersToValidate[i] = orders[i];
@@ -1042,9 +1045,11 @@ contract SeaportOnePointFiveConfig is
             contexts, erc20Address, nfts, erc20Amounts
         );
 
-        // Validate all for simplicity for now, could make this combination of on-chain and not
+        // Validate all for simplicity for now, could make this combination of
+        // on-chain and not
         if (contexts[0].listOnChain) {
-            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last order is fulfiller order
+            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last
+                // order is fulfiller order
             for (uint256 i = 0; i < orders.length - 1; i++) {
                 orders[i].signature = "";
                 ordersToValidate[i] = orders[i];
@@ -1083,9 +1088,11 @@ contract SeaportOnePointFiveConfig is
             contexts, erc20Address, nfts, erc20Amounts
         );
 
-        // Validate all for simplicity for now, could make this combination of on-chain and not
+        // Validate all for simplicity for now, could make this combination of
+        // on-chain and not
         if (contexts[0].listOnChain) {
-            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last order is fulfiller order
+            Order[] memory ordersToValidate = new Order[](orders.length - 1); // Last
+                // order is fulfiller order
             for (uint256 i = 0; i < orders.length - 1; i++) {
                 orders[i].signature = "";
                 ordersToValidate[i] = orders[i];
@@ -1119,7 +1126,8 @@ contract SeaportOnePointFiveConfig is
         Fulfillment[] memory fullfillments = new Fulfillment[](nfts.length);
 
         for (uint256 i = 0; i < nfts.length; i++) {
-            uint256 wrappedIndex = i + 1 == nfts.length ? 0 : i + 1; // wrap around back to 0
+            uint256 wrappedIndex = i + 1 == nfts.length ? 0 : i + 1; // wrap
+                // around back to 0
             {
                 OfferItem[] memory offerItems = new OfferItem[](1);
                 offerItems[0] = OfferItem(
@@ -1185,7 +1193,8 @@ contract SeaportOnePointFiveConfig is
         Fulfillment[] memory fullfillments = new Fulfillment[](nfts.length);
 
         for (uint256 i = 0; i < nfts.length; i++) {
-            uint256 wrappedIndex = i + 1 == nfts.length ? 0 : i + 1; // wrap around back to 0
+            uint256 wrappedIndex = i + 1 == nfts.length ? 0 : i + 1; // wrap
+                // around back to 0
             {
                 OfferItem[] memory offerItems = new OfferItem[](1);
                 offerItems[0] = OfferItem(

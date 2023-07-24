@@ -231,7 +231,8 @@ contract TestTokenMinter is
     }
 
     /**
-     * @dev allocate amount of each token, 1 of each 721, and 1, 5, and 10 of respective 1155s
+     * @dev allocate amount of each token, 1 of each 721, and 1, 5, and 10 of
+     * respective 1155s
      */
     function allocateTokensAndApprovals(address _to, uint128 _amount)
         internal

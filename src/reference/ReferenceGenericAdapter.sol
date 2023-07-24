@@ -5,17 +5,14 @@ import { ContractOffererInterface } from
     "seaport-types/interfaces/ContractOffererInterface.sol";
 
 import {
-    AdvancedOrder,
     ConsiderationItem,
-    CriteriaResolver,
-    OfferItem,
     OrderParameters,
     ReceivedItem,
     Schema,
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
-import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
+import { ItemType } from "seaport-types/lib/ConsiderationEnums.sol";
 
 import { TokenTransferrer } from "seaport-core/lib/TokenTransferrer.sol";
 
@@ -28,12 +25,6 @@ import {
 } from "./ReferenceGenericAdapterSidecar.sol";
 
 import { ReferenceFlashloanOfferer } from "./ReferenceFlashloanOfferer.sol";
-
-import { AdvancedOrderLib } from "seaport-sol/lib/AdvancedOrderLib.sol";
-
-import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
-
-import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
 
 /**
  * @title ReferenceGenericAdapter
@@ -62,8 +53,6 @@ contract ReferenceGenericAdapter is
     error InvalidExtraDataEncoding(uint8 version);
     // 0xe5a0a42f
     error ApprovalFailed(address approvalToken);
-    // // 0x2e3f1f34
-    // error EmptyPayload();
     // 0x3204506f
     error CallFailed();
     // 0xbc806b96
@@ -73,15 +62,12 @@ contract ReferenceGenericAdapter is
     error NotImplemented();
 
     /**
-     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     * @dev Emit an event at deployment to indicate the contract is SIP-5
+     * compatible.
      */
     event SeaportCompatibleContractDeployed();
 
     event SidecarDeployed(address);
-
-    using AdvancedOrderLib for AdvancedOrder;
-    using ConsiderationItemLib for ConsiderationItem;
-    using OrderParametersLib for OrderParameters;
 
     constructor(address seaport, address flashloanOfferer) {
         _SEAPORT = seaport;
@@ -482,7 +468,8 @@ contract ReferenceGenericAdapter is
             Schema[] memory schemas // map to Seaport Improvement Proposal IDs
         )
     {
-        schemas = new Schema[](0);
+        schemas = new Schema[](1);
+        schemas[0] = Schema({ id: 11, metadata: "" });
         return ("GenericAdapter", schemas);
     }
 }

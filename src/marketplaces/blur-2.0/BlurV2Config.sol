@@ -321,7 +321,8 @@ contract BlurV2Config is
         infra.order = buildOrder(
             context.offerer, // The seller of an NFT is the "trader" here.
             nftToken, // This is "collection" in Blur parlance.
-            bytes32(0), // Listings root (merkle tree root of hashed listings), set below.
+            bytes32(0), // Listings root (merkle tree root of hashed listings),
+                // set below.
             2, // Number of listings, 2 to make Murky happy.
             block.timestamp + 1000, // expirationTime
             assetType, // assetType
@@ -435,7 +436,8 @@ contract BlurV2Config is
 
     // It's not possible to purchase NFTs with tokens other than ETH or Blur's
     // proprietary version of WETH.
-    // See https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
+    // See
+    // https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
     function getPayload_BuyOfferedERC721WithBETH(
         TestOrderContext calldata context,
         Item721 memory nft,
@@ -502,7 +504,8 @@ contract BlurV2Config is
         infra.order = buildOrder(
             context.offerer, // The seller of an NFT is the "trader" here.
             nftToken, // This is "collection" in Blur parlance.
-            bytes32(0), // Listings root (merkle tree root of hashed listings), set below.
+            bytes32(0), // Listings root (merkle tree root of hashed listings),
+                // set below.
             2, // Number of listings, 2 to make Murky happy.
             block.timestamp + 1000, // expirationTime
             assetType, // assetType
@@ -614,9 +617,11 @@ contract BlurV2Config is
         for (uint256 i; i < nfts.length; ++i) {
             // Create an order.
             infra.order = buildOrder(
-                contexts[i].offerer, // The seller of an NFT is the "trader" here.
+                contexts[i].offerer, // The seller of an NFT is the "trader"
+                    // here.
                 nfts[i].token, // This is "collection" in Blur parlance.
-                bytes32(0), // Listings root (merkle tree root of hashed listings), set below.
+                bytes32(0), // Listings root (merkle tree root of hashed
+                    // listings), set below.
                 2, // Number of listings, 2 to make Murky happy.
                 block.timestamp + 1000, // expirationTime
                 assetType, // assetType
@@ -742,7 +747,8 @@ contract BlurV2Config is
         infra.order = buildOrder(
             context.offerer, // The seller of an NFT is the "trader" here.
             nfts[0].token, // This is "collection" in Blur parlance.
-            bytes32(0), // Listings root (merkle tree root of hashed listings), set below.
+            bytes32(0), // Listings root (merkle tree root of hashed listings),
+                // set below.
             10, // Number of listings.
             block.timestamp + 1000, // expirationTime
             assetType, // assetType

@@ -21,12 +21,19 @@ import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     /**
-     * @dev A struct to merge the 5 calldata variables to prevent stack too deep error.
-     * @param takerBids Taker bids to be used as function argument when calling LooksRare V2
-     * @param makerAsks Maker asks to be used as function argument when calling LooksRare V2
-     * @param makerSignatures Maker signatures to be used as function argument when calling LooksRare V2
-     * @param merkleTrees Merkle trees to be used as function argument when calling LooksRare V2
-     * @param ethValue The ETH value to be passed as msg.value when calling LooksRare V2
+     * @dev A struct to merge the 5 calldata variables to prevent stack too deep
+     * error.
+     *
+     * @param takerBids       Taker bids to be used as function argument when
+     *                        calling LooksRare V2
+     * @param makerAsks       Maker asks to be used as function argument when
+     *                        calling LooksRare V2
+     * @param makerSignatures Maker signatures to be used as function argument
+     *                        when calling LooksRare V2
+     * @param merkleTrees     Merkle trees to be used as function argument when
+     *                        calling LooksRare V2
+     * @param ethValue        The ETH value to be passed as msg.value when
+     *                        calling LooksRare V2
      */
     struct ManyItemsCalldataParams {
         OrderStructs.Taker[] takerBids;

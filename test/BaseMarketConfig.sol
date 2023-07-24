@@ -42,22 +42,23 @@ abstract contract BaseMarketConfig {
     function market() public view virtual returns (address);
 
     /**
-     * @dev Address that should be approved for nft tokens
-     *   (ERC721 and ERC1155). Should be set during `beforeAllPrepareMarketplace`.
+     * @dev Address that should be approved for nft tokens (ERC721 and ERC1155).
+     *      Should be set during beforeAllPrepareMarketplace`.
      */
     address public sellerNftApprovalTarget;
     address public buyerNftApprovalTarget;
 
     /**
      * @dev Address that should be approved for ERC1155 tokens. Only set if
-     *   different than ERC721 which is defined above. Set during `beforeAllPrepareMarketplace`.
+     *      different than ERC721 which is defined above. Set during
+     *      `beforeAllPrepareMarketplace`.
      */
     address public sellerErc1155ApprovalTarget;
     address public buyerErc1155ApprovalTarget;
 
     /**
-     * @dev Address that should be approved for erc20 tokens.
-     *   Should be set during `beforeAllPrepareMarketplace`.
+     * @dev Address that should be approved for erc20 tokens. Should be set
+     *      during `beforeAllPrepareMarketplace`.
      */
     address public sellerErc20ApprovalTarget;
     address public buyerErc20ApprovalTarget;
@@ -69,9 +70,11 @@ abstract contract BaseMarketConfig {
 
     /**
      * @dev Get calldata to call from test prior to starting tests
-     *   (used by wyvern to create proxies)
+     *      (e.g. used by wyvern to create proxies)
+     * 
      * @ param seller The seller address used for testing the marketplace
-     * @ param buyer The buyer address used for testing the marketplace
+     * @ param buyer  The buyer address used for testing the marketplace
+     * 
      * @return From address, to address, and calldata
      */
     function beforeAllPrepareMarketplaceCall(
@@ -97,10 +100,13 @@ abstract contract BaseMarketConfig {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * @dev Get call parameters to execute an order selling a 721 token for Ether.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling a 721 token for
+     * Ether.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *   order should be listed on chain.
      * @ param nft Address and ID for ERC721 token to be sold.
      * @ param ethAmount Amount of Ether to be received for the NFT.
@@ -114,10 +120,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an 1155 token for Ether.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an 1155 token for
+     * Ether.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address, ID and amount for ERC1155 token to be sold.
      * @ param ethAmount Amount of Ether to be received for the NFT.
@@ -131,10 +140,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling a 721 token for an ERC20.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling a 721 token for an
+     * ERC20.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address and ID of 721 token to be sold.
      * @ param erc20 Address and amount for ERC20 to be received for nft.
@@ -156,10 +168,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling a 721 token for WETH.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling a 721 token for
+     * WETH.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address and ID of 721 token to be sold.
      * @ param erc20 Address and amount for WETH to be received for nft.
@@ -181,10 +196,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an 1155 token for an ERC20.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an 1155 token for an
+     * ERC20.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address, ID and amount for ERC1155 token to be sold.
      * @ param erc20 Address and amount for ERC20 to be received for nft.
@@ -198,10 +216,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an ERC20 token for an ERC721.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an ERC20 token for
+     * an ERC721.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param erc20 Address and amount for ERC20 to be sold.
      * @ param nft Address and ID for 721 token to be received for ERC20.
@@ -216,9 +237,11 @@ abstract contract BaseMarketConfig {
 
     /**
      * @dev Get call parameters to execute an order selling WETH for an ERC721.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param erc20 Address and amount of WETH to be sold.
      * @ param nft Address and ID for 721 token to be received for WETH.
@@ -240,13 +263,17 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an ERC20 token for an ERC1155.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an ERC20 token for
+     * an ERC1155.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param erc20 Address and amount for ERC20 to be sold.
-     * @ param nft Address, ID and amount for 1155 token to be received for ERC20.
+     * @ param nft Address, ID and amount for 1155 token to be received for
+     * ERC20.
      */
     function getPayload_BuyOfferedERC20WithERC1155(
         TestOrderContext calldata,
@@ -257,13 +284,17 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an ERC721 token for an ERC1155.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an ERC721 token for
+     * an ERC1155.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param sellNft Address and ID of 721 token to be sold.
-     * @ param buyNft Address, ID and amount of 1155 token to be received for ERC721.
+     * @ param buyNft Address, ID and amount of 1155 token to be received for
+     * ERC721.
      */
     function getPayload_BuyOfferedERC721WithERC1155(
         TestOrderContext calldata,
@@ -274,13 +305,17 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling an ERC1155 token for an ERC721.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling an ERC1155 token for
+     * an ERC721.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param sellNft Address and ID of 1155 token to be sold.
-     * @ param buyNft Address, ID and amount of 721 token to be received for ERC1155.
+     * @ param buyNft Address, ID and amount of 721 token to be received for
+     * ERC1155.
      */
     function getPayload_BuyOfferedERC1155WithERC721(
         TestOrderContext calldata,
@@ -291,10 +326,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling a 721 token for Ether with one fee recipient.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling a 721 token for
+     * Ether with one fee recipient.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address and ID for ERC721 token to be sold.
      * @ param priceEthAmount Amount of Ether to be received for the NFT.
@@ -312,10 +350,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling a 721 token for Ether with two fee recipients.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling a 721 token for
+     * Ether with two fee recipients.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nft Address and ID for ERC721 token to be sold.
      * @ param priceEthAmount Amount of Ether to be received for the NFT.
@@ -337,10 +378,13 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order selling many 721 tokens for Ether.
-     *   If `context.listOnChain` is true and marketplace does not support on-chain
+     * @dev Get call parameters to execute an order selling many 721 tokens for
+     * Ether.
+     *   If `context.listOnChain` is true and marketplace does not support
+     * on-chain
      *   listing, this function must revert with NotImplemented.
-     * @ param context Order context, including the buyer and seller and whether the
+     * @ param context Order context, including the buyer and seller and whether
+     * the
      *  order should be listed on chain.
      * @ param nfts Array of Address and ID for ERC721 tokens to be sold.
      * @ param ethAmount Amount of Ether to be received for the NFT.
@@ -354,12 +398,15 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order "sweeping the floor" buy filling 10 distinct
-     *   ERC-721->ETH orders at once. Same seller on each order. If the market does not support the
+     * @dev Get call parameters to execute an order "sweeping the floor" buy
+     * filling 10 distinct
+     *   ERC-721->ETH orders at once. Same seller on each order. If the market
+     * does not support the
      *   order type, must revert with NotImplemented.
      * @ param contexts Array of contexts for each order
      * @ param nfts Array of NFTs for each order
-     * @ param ethAmounts Array of Ether emounts to be received for the NFTs in each order
+     * @ param ethAmounts Array of Ether emounts to be received for the NFTs in
+     * each order
      */
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
         TestOrderContext[] calldata,
@@ -370,13 +417,16 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order "sweeping the floor" buy filling 10 distinct
-     *   ERC-721->ERC-20 orders at once. Same seller on each order. If the market does not support the
+     * @dev Get call parameters to execute an order "sweeping the floor" buy
+     * filling 10 distinct
+     *   ERC-721->ERC-20 orders at once. Same seller on each order. If the
+     * market does not support the
      *   order type, must revert with NotImplemented.
      * @ param contexts Array of contexts for each order
      * @ param erc20Address The erc20 address to use across orders
      * @ param nfts Array of NFTs for each order
-     * @ param erc20Amounts Array of Erc20 amounts to be received for the NFTs in each order
+     * @ param erc20Amounts Array of Erc20 amounts to be received for the NFTs
+     * in each order
      */
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
         TestOrderContext[] calldata,
@@ -388,13 +438,16 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute an order "sweeping the floor" buy filling 10 distinct
-     *   ERC-721->WETH orders at once. Same seller on each order. If the market does not support the
+     * @dev Get call parameters to execute an order "sweeping the floor" buy
+     * filling 10 distinct
+     *   ERC-721->WETH orders at once. Same seller on each order. If the market
+     * does not support the
      *   order type, must revert with NotImplemented.
      * @ param contexts Array of contexts for each order
      * @ param erc20Address The WETH address to use across orders
      * @ param nfts Array of NFTs for each order
-     * @ param erc20Amounts Array of WETH amounts to be received for the NFTs in each order
+     * @ param erc20Amounts Array of WETH amounts to be received for the NFTs in
+     * each order
      */
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
         TestOrderContext[] calldata,
@@ -406,9 +459,12 @@ abstract contract BaseMarketConfig {
     }
 
     /**
-     * @dev Get call parameters to execute a match orders style execution. This execution
-     *   involves arbitrary number of orders in the pattern A -> B -> C -> A. Where each arrow
-     *   indicates an individual order. There orders are not fulfillable individually,
+     * @dev Get call parameters to execute a match orders style execution. This
+     * execution
+     *   involves arbitrary number of orders in the pattern A -> B -> C -> A.
+     * Where each arrow
+     *   indicates an individual order. There orders are not fulfillable
+     * individually,
      *   however, they are when executed atomically.
      * @ param contexts Array of contexts for each order
      * @ param nfts Array of NFTs in the order A, B, C...

@@ -35,7 +35,8 @@ library Strings {
     }
 
     /**
-     * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation.
+     * @dev Converts a `uint256` to its ASCII `string` hexadecimal
+     * representation.
      */
     function toHexString(uint256 value) internal pure returns (string memory) {
         if (value == 0) {
@@ -51,7 +52,8 @@ library Strings {
     }
 
     /**
-     * @dev Converts a `uint256` to its ASCII `string` hexadecimal representation with fixed length.
+     * @dev Converts a `uint256` to its ASCII `string` hexadecimal
+     * representation with fixed length.
      */
     function toHexString(uint256 value, uint256 length)
         internal

@@ -60,7 +60,8 @@ contract FlashloanOfferer is ContractOffererInterface {
     error UnsupportedChainId(uint256 chainId);
 
     /**
-     * @dev Emit an event at deployment to indicate the contract is SIP-5 compatible.
+     * @dev Emit an event at deployment to indicate the contract is SIP-5
+     *      compatible.
      */
     event SeaportCompatibleContractDeployed();
 
@@ -100,7 +101,7 @@ contract FlashloanOfferer is ContractOffererInterface {
             wrappedTokenAddress = 0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7;
         } else if (block.chainid == 43113) {
             // Avalanche Fuji (WAVAX)
-            wrappedTokenAddress = 0x1D308089a2D1Ced3f1Ce36B1FcaF815b07217be3;
+            wrappedTokenAddress = 0xd00ae08403B9bbb9124bB305C09058E32C39A48c;
         } else if (block.chainid == 56) {
             // Binance Smart Chain (WBNB)
             wrappedTokenAddress = 0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c;
@@ -122,6 +123,16 @@ contract FlashloanOfferer is ContractOffererInterface {
         } else if (block.chainid == 1285) {
             // Moonriver (WMOVR)
             wrappedTokenAddress = 0x98878B06940aE243284CA214f92Bb71a2b032B8A;
+        } else if (
+            block
+                // OP chains: Optimisim (10), Optimism Goerli (420), Base
+                // (8453), Base Goerli (84531), Zora (7777777), and Zora Testnet
+                // (999).
+                .chainid == 10 || block.chainid == 420 || block.chainid == 8453
+                || block.chainid == 84531 || block.chainid == 7777777
+                || block.chainid == 999
+        ) {
+            wrappedTokenAddress = 0x4200000000000000000000000000000000000006;
         } else {
             // Revert if the chain ID is not supported.
             revert UnsupportedChainId(block.chainid);
@@ -240,16 +251,25 @@ contract FlashloanOfferer is ContractOffererInterface {
             assembly {
                 // Revert if minimumReceived item amount is greater than
                 // maximumSpent, or if any of the following is not true:
-                //  - one of the item types is 1 and the other is 0 (so, both item items same, revert)
-                //  - one of the tokens is address(this) and the other is null (so, both same, revert or neither is this, revert) IS THIS REDUNDANT?
+                //  - one of the item types is 1 and the other is 0 (so, both
+                // item items same, revert)
+                //  - one of the tokens is address(this) and the other is null
+                // (so, both same, revert or neither is this, revert) IS THIS
+                // REDUNDANT?
                 //  - item type 1 has address(this) token and 0 is null token
 
-                // TODO: look at how expensive it would be to swap these in for readbility.
-                // let minimumReceivedItemType := and(calldataload(minimumReceivedItem), 0xff)
-                // let maximumSpentItemType := and(calldataload(maximumSpentItem), 0xff)
-                // let minimumReceivedToken := calldataload(add(minimumReceivedItem, 0x20))
-                // let maximumSpentToken := calldataload(add(maximumSpentItem, 0x20))
-                // let minimumReceivedAmount := calldataload(add(minimumReceivedItem, 0x60))
+                // TODO: look at how expensive it would be to swap these in for
+                // readbility.
+                // let minimumReceivedItemType :=
+                // and(calldataload(minimumReceivedItem), 0xff)
+                // let maximumSpentItemType :=
+                // and(calldataload(maximumSpentItem), 0xff)
+                // let minimumReceivedToken :=
+                // calldataload(add(minimumReceivedItem, 0x20))
+                // let maximumSpentToken := calldataload(add(maximumSpentItem,
+                // 0x20))
+                // let minimumReceivedAmount :=
+                // calldataload(add(minimumReceivedItem, 0x60))
 
                 // Ensure that minimumReceived item amount is less than or equal
                 // to maximumSpent.
@@ -292,8 +312,9 @@ contract FlashloanOfferer is ContractOffererInterface {
                             iszero(
                                 // 1 if the ERC20 address is this contract.
                                 eq(
-                                    // Since it has to be a zero and a 1 for item types, this just
-                                    // returns the non-null address token.
+                                    // Since it has to be a zero and a 1 for item
+                                    // types, this just returns the non-null address
+                                    // token.
                                     add(
                                         // Token value if ERC20, 0 otherwise.
                                         mul(
@@ -337,13 +358,15 @@ contract FlashloanOfferer is ContractOffererInterface {
                                             )
                                         )
                                     ),
-                                    // 1 if the lone non-null address is this contract.
+                                    // 1 if the lone non-null address is this
+                                    // contract.
                                     iszero(
                                         // Returns either this address or 0.
-                                        // Is only zero if the address from the `add` is
-                                        // this address.
+                                        // Is only zero if the address from the
+                                        // `add` is this address.
                                         xor(
-                                            // Just returns the non-null address token.
+                                            // Just returns the non-null address
+                                            // token.
                                             add(
                                                 calldataload(
                                                     add(minimumReceivedItem, 0x20)
@@ -451,11 +474,11 @@ contract FlashloanOfferer is ContractOffererInterface {
                             flashloanData
                         )
 
-                    // Fire off call to flashloanRecipient. Revert & bubble up revert
-                    // data if present & reasonably-sized, else revert with a
-                    // custom error. Note that checking for sufficient native
-                    // token balance is an option here if more specific custom
-                    // reverts are preferred.
+                    // Fire off call to flashloanRecipient. Revert & bubble up
+                    // revert data if present & reasonably-sized, else revert
+                    // with a custom error. Note that checking for sufficient
+                    // native token balance is an option here if more specific
+                    // custom reverts are preferred.
                     if shouldCall {
                         let success :=
                             call(gas(), flashloanRecipient, 0, 0x1c, 0x24, 0, 4)
@@ -499,7 +522,7 @@ contract FlashloanOfferer is ContractOffererInterface {
      *      (supplied as extraData).
      *
      * @custom:param caller      The address of the caller (e.g. Seaport).
-     * @custom:param fulfiller    The address of the fulfiller (e.g. the account
+     * @custom:param fulfiller   The address of the fulfiller (e.g. the account
      *                           calling Seaport).
      * @custom:param minReceived The minimum items that the caller is willing to
      *                           receive.
@@ -539,7 +562,8 @@ contract FlashloanOfferer is ContractOffererInterface {
             Schema[] memory schemas // map to Seaport Improvement Proposal IDs
         )
     {
-        schemas = new Schema[](0);
+        schemas = new Schema[](1);
+        schemas[0] = Schema({ id: 12, metadata: "" });
         return ("FlashloanOfferer", schemas);
     }
 
@@ -559,7 +583,8 @@ contract FlashloanOfferer is ContractOffererInterface {
 
         // The expected structure of the context is:
         // [version, 1 byte][ignored 27 bytes][context arg length 4 bytes]
-        // [cleanupRecipient, 20 bytes][totalFlashloans, 1 byte][flashloanData...]
+        // [cleanupRecipient, 20 bytes][totalFlashloans, 1
+        // byte][flashloanData...]
         //
         // 0x00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee11111111
         // aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaccffffffffffffffffffffff...

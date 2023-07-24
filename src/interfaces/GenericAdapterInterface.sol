@@ -78,5 +78,6 @@ interface GenericAdapterInterface is ContractOffererInterface {
         external
         pure
         override
-        returns (string memory name, Schema[] memory schemas); // map to Seaport Improvement Proposal IDs
+        returns (string memory name, Schema[] memory schemas); // map to Seaport
+        // Improvement Proposal IDs
 }
