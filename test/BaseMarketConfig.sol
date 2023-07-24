@@ -71,10 +71,10 @@ abstract contract BaseMarketConfig {
     /**
      * @dev Get calldata to call from test prior to starting tests
      *      (e.g. used by wyvern to create proxies)
-     * 
+     *
      * @ param seller The seller address used for testing the marketplace
      * @ param buyer  The buyer address used for testing the marketplace
-     * 
+     *
      * @return From address, to address, and calldata
      */
     function beforeAllPrepareMarketplaceCall(

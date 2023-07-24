@@ -127,8 +127,7 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
         uint256 approvalDataSize;
         uint256 totalApprovals;
 
-        // context is 1 bytes of SIP-6 version, [ empty bytes?], 4 bytes of
-        // size,
+        // Context is 1 bytes of SIP-6 version, [ empty bytes], 4 bytes of size,
         // 1 byte of total approval count, and 21 bytes per approval (1 byte for
         // type, 20 bytes for token).
 
@@ -288,11 +287,6 @@ contract GenericAdapter is ContractOffererInterface, TokenTransferrer {
                     ++i;
                 }
             }
-
-            // if (value > address(this).balance) {
-            //     revert("Please ensure this contract has sufficient balance
-            // first.");
-            // }
 
             assembly {
                 if gt(value, selfbalance()) {
