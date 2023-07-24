@@ -254,22 +254,8 @@ contract FlashloanOfferer is ContractOffererInterface {
                 //  - one of the item types is 1 and the other is 0 (so, both
                 // item items same, revert)
                 //  - one of the tokens is address(this) and the other is null
-                // (so, both same, revert or neither is this, revert) IS THIS
-                // REDUNDANT?
+                // (so, both same, revert or neither is this, revert)
                 //  - item type 1 has address(this) token and 0 is null token
-
-                // TODO: look at how expensive it would be to swap these in for
-                // readbility.
-                // let minimumReceivedItemType :=
-                // and(calldataload(minimumReceivedItem), 0xff)
-                // let maximumSpentItemType :=
-                // and(calldataload(maximumSpentItem), 0xff)
-                // let minimumReceivedToken :=
-                // calldataload(add(minimumReceivedItem, 0x20))
-                // let maximumSpentToken := calldataload(add(maximumSpentItem,
-                // 0x20))
-                // let minimumReceivedAmount :=
-                // calldataload(add(minimumReceivedItem, 0x60))
 
                 // Ensure that minimumReceived item amount is less than or equal
                 // to maximumSpent.
