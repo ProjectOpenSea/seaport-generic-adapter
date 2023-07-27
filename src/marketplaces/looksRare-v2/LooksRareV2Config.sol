@@ -13,7 +13,7 @@ import {
     Item721,
     Item1155,
     Item20,
-    CallParameters,
+    Call,
     OrderContext
 } from "../../lib/AdapterHelperLib.sol";
 import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
@@ -220,8 +220,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -259,8 +260,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -298,8 +300,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -337,8 +340,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -376,8 +380,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -415,8 +420,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerAsk.selector,
@@ -454,8 +460,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerAsk.selector,
@@ -493,8 +500,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerAsk.selector,
@@ -541,8 +549,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeTakerBid.selector,
@@ -590,8 +599,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             params.ethValue += ethAmounts[i];
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             params.ethValue,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeMultipleTakerBids.selector,
@@ -640,8 +650,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 buildTakerOrder(contexts[i].castOfCharacters.fulfiller);
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeMultipleTakerBids.selector,
@@ -690,8 +701,9 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 buildTakerOrder(contexts[i].castOfCharacters.fulfiller);
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(LOOKS_RARE),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareProtocol.executeMultipleTakerBids.selector,

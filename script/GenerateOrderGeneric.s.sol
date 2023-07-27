@@ -26,7 +26,7 @@ import {
     AdapterHelperLib,
     Approval,
     Call,
-    CallParameters,
+    Call,
     CastOfCharacters,
     Flashloan,
     Item20,
@@ -83,8 +83,8 @@ contract GenerateOrderGeneric is Script {
     using ConsiderationItemLib for ConsiderationItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
-    using AdapterHelperLib for CallParameters;
-    using AdapterHelperLib for CallParameters[];
+    using AdapterHelperLib for Call;
+    using AdapterHelperLib for Call[];
 
     BaseMarketConfig blurConfig;
     BaseMarketConfig blurV2Config;

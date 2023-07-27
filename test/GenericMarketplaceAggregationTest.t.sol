@@ -56,7 +56,7 @@ import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
 
 import {
-    CallParameters,
+    Call,
     Item20,
     Item721,
     Item1155,
@@ -76,8 +76,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     using ConsiderationItemLib for ConsiderationItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
-    using AdapterHelperLib for CallParameters;
-    using AdapterHelperLib for CallParameters[];
+    using AdapterHelperLib for Call;
+    using AdapterHelperLib for Call[];
 
     constructor() {
         blurConfig = BaseMarketConfig(new BlurConfig());
@@ -194,7 +194,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         string testLabel;
         BaseMarketConfig[] configs;
         OrderContext context;
-        CallParameters[] executionPayloads;
+        Call[] executionPayloads;
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
         OfferItem[] adapterOfferArray;
@@ -212,7 +212,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             testLabel: "Mixed aggregated through Seaport",
             configs: configs,
             context: OrderContext(true, true, stdCastOfCharacters),
-            executionPayloads: new CallParameters[](3),
+            executionPayloads: new Call[](3),
             adapterOrders: new AdvancedOrder[](3),
             adapterFulfillments: new Fulfillment[](2),
             adapterOfferArray: new OfferItem[](3),
@@ -340,11 +340,12 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         _createFulfillmentsForAggregatedTest(infra);
 
-        CallParameters memory finalCallParams;
+        Call memory finalCallParams;
 
         {
-            finalCallParams = CallParameters(
+            finalCallParams = Call(
                 seaportAddress, // target will definitely be seaport
+                false, // allowFailure, ignored in this context
                 605, // value will be sum of all the values
                 abi.encodeWithSelector(
                     ISeaport.matchAdvancedOrders.selector,
@@ -421,7 +422,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             testLabel: "Mixed aggregated through Seaport Fulfill Available",
             configs: configs,
             context: OrderContext(false, true, stdCastOfCharacters),
-            executionPayloads: new CallParameters[](3),
+            executionPayloads: new Call[](3),
             adapterOrders: new AdvancedOrder[](1),
             adapterFulfillments: new Fulfillment[](0),
             adapterOfferArray: new OfferItem[](3),
@@ -545,11 +546,12 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             infra.finalOrders[1] = infra.adapterOrders[0];
         }
 
-        CallParameters memory finalCallParams;
+        Call memory finalCallParams;
 
         {
-            finalCallParams = CallParameters(
+            finalCallParams = Call(
                 seaportAddress, // target will definitely be seaport
+                false, // allowFailure, ignored in this context
                 0, // no value
                 abi.encodeWithSelector(
                     ISeaport.fulfillAvailableAdvancedOrders.selector,

@@ -69,7 +69,7 @@ import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
 
 import {
-    CallParameters,
+    Call,
     Item20,
     Item721,
     Item1155,
@@ -98,8 +98,8 @@ contract GenericMarketplaceTest is
     using OfferItemLib for OfferItem[];
     using OrderParametersLib for OrderParameters;
     using OrderParametersLib for OrderParameters[];
-    using AdapterHelperLib for CallParameters;
-    using AdapterHelperLib for CallParameters[];
+    using AdapterHelperLib for Call;
+    using AdapterHelperLib for Call[];
 
     BaseMarketConfig blurConfig;
     BaseMarketConfig blurV2Config;
@@ -1144,8 +1144,8 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            CallParameters[] memory callParametersArray;
-            callParametersArray = new CallParameters[](1);
+            Call[] memory callParametersArray;
+            callParametersArray = new Call[](1);
             callParametersArray[0] = payload.executeOrder;
 
             payload.executeOrder = AdapterHelperLib
@@ -2016,8 +2016,8 @@ contract GenericMarketplaceTest is
             sidecarWrapUpCalls[0] = bethCall;
             sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
 
-            CallParameters[] memory callParametersArray;
-            callParametersArray = new CallParameters[](1);
+            Call[] memory callParametersArray;
+            callParametersArray = new Call[](1);
             callParametersArray[0] = payload.executeOrder;
 
             payload.executeOrder = AdapterHelperLib
@@ -4089,7 +4089,7 @@ contract GenericMarketplaceTest is
                 stdCastOfCharacters,
                 new OfferItem[](0), // TODO: add boilerplate for conditionality
                 considerationArray,
-                new Item721[](0)
+                new ItemTransfer[](0)
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -4643,15 +4643,15 @@ contract GenericMarketplaceTest is
         bool shouldLog,
         bool shouldLogGasDelta,
         address sender,
-        CallParameters memory params
+        Call memory params
     ) internal returns (uint256 gasUsed) {
         hevm.startPrank(sender);
         uint256 gasDelta;
         bool success;
         assembly {
             let to := mload(params)
-            let value := mload(add(params, 0x20))
-            let data := mload(add(params, 0x40))
+            let value := mload(add(params, 0x40))
+            let data := mload(add(params, 0x60))
             let ptr := add(data, 0x20)
             let len := mload(data)
             let g1 := gas()
@@ -4665,7 +4665,7 @@ contract GenericMarketplaceTest is
         }
         hevm.stopPrank();
 
-        gasUsed = gasDelta + _additionalGasFee(params.data);
+        gasUsed = gasDelta + _additionalGasFee(params.callData);
 
         if (shouldLog) {
             emit log_named_uint(_formatLog(name, label), gasUsed);

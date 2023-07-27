@@ -5,12 +5,7 @@ import "solmate/tokens/ERC20.sol";
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
-import {
-    CallParameters,
-    Item20,
-    Item721,
-    Item1155
-} from "../../lib/AdapterHelperLib.sol";
+import { Call, Item20, Item721, Item1155 } from "../../lib/AdapterHelperLib.sol";
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
 import { IPairFactory } from "./interfaces/IPairFactory.sol";
@@ -154,10 +149,11 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC721 to ethNftPool
-        execution.submitOrder = CallParameters({
+        execution.submitOrder = Call({
             target: nft.token,
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSignature(
+            callData: abi.encodeWithSignature(
                 "safeTransferFrom(address,address,uint256)",
                 context.castOfCharacters.offerer,
                 address(ethNftPool),
@@ -169,10 +165,11 @@ contract SudoswapConfig is BaseMarketConfig {
         // fulfiller calls pair directly to swap
         uint256[] memory nftIds = new uint256[](1);
         nftIds[0] = nft.identifier;
-        execution.executeOrder = CallParameters({
+        execution.executeOrder = Call({
             target: address(ethNftPool),
+            allowFailure: false,
             value: ethAmount,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 IPair.swapTokenForSpecificNFTs.selector,
                 nftIds,
                 type(uint256).max,
@@ -198,10 +195,11 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC721 to erc20NftPool
-        execution.submitOrder = CallParameters({
+        execution.submitOrder = Call({
             target: nft.token,
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSignature(
+            callData: abi.encodeWithSignature(
                 "safeTransferFrom(address,address,uint256)",
                 context.castOfCharacters.offerer,
                 address(erc20NftPool),
@@ -220,10 +218,11 @@ contract SudoswapConfig is BaseMarketConfig {
             pair: address(erc20NftPool),
             nftIds: nftIds
         });
-        execution.executeOrder = CallParameters({
+        execution.executeOrder = Call({
             target: address(ROUTER),
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 IRouter.swapERC20ForSpecificNFTs.selector,
                 swapList,
                 erc20.amount,
@@ -248,10 +247,11 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers ERC20 to erc20TokenPool
-        execution.submitOrder = CallParameters({
+        execution.submitOrder = Call({
             target: erc20.token,
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 ERC20.transfer.selector, address(erc20TokenPool), erc20.amount
                 )
         });
@@ -267,10 +267,11 @@ contract SudoswapConfig is BaseMarketConfig {
             pair: address(erc20TokenPool),
             nftIds: nftIds
         });
-        execution.executeOrder = CallParameters({
+        execution.executeOrder = Call({
             target: address(ROUTER),
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 IRouter.swapNFTsForToken.selector,
                 swapList,
                 0,
@@ -299,10 +300,11 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct submitOrder payload
         // offerer transfers 10 ERC721s to ethNftPool
-        execution.submitOrder = CallParameters({
+        execution.submitOrder = Call({
             target: address(ROUTER),
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSignature(
+            callData: abi.encodeWithSignature(
                 "depositNFTs(address,uint256[],address)",
                 nftAddress,
                 ids,
@@ -312,10 +314,11 @@ contract SudoswapConfig is BaseMarketConfig {
 
         // construct executeOrder payload
         // fulfiller calls pair directly to swap
-        execution.executeOrder = CallParameters({
+        execution.executeOrder = Call({
             target: address(ethNftPool),
+            allowFailure: false,
             value: ethAmount,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 IPair.swapTokenForSpecificNFTs.selector,
                 ids,
                 type(uint256).max,
@@ -341,10 +344,11 @@ contract SudoswapConfig is BaseMarketConfig {
             ids[i] = nfts[i].identifier;
         }
 
-        execution.submitOrder = CallParameters({
+        execution.submitOrder = Call({
             target: address(ROUTER),
+            allowFailure: false,
             value: 0,
-            data: abi.encodeWithSignature(
+            callData: abi.encodeWithSignature(
                 "depositNFTs(address,uint256[],address[])",
                 nfts[0].token,
                 ids,
@@ -372,10 +376,11 @@ contract SudoswapConfig is BaseMarketConfig {
             totalEthAmount += ethAmounts[i];
         }
 
-        execution.executeOrder = CallParameters({
+        execution.executeOrder = Call({
             target: address(ROUTER),
+            allowFailure: false,
             value: totalEthAmount,
-            data: abi.encodeWithSelector(
+            callData: abi.encodeWithSelector(
                 IRouter.swapETHForSpecificNFTs.selector,
                 swapList,
                 contexts[0].castOfCharacters.offerer,

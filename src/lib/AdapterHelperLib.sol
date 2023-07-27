@@ -52,17 +52,18 @@ struct Item20 {
     uint256 amount;
 }
 
-struct CallParameters {
-    address target;
-    uint256 value;
-    bytes data;
-}
+// struct Call {
+//     address target;
+//     uint256 value;
+//     bytes data;
+// }
 
-struct OrderContext {
-    bool listOnChain;
-    bool routeThroughAdapter;
-    CastOfCharacters castOfCharacters;
-}
+// struct Call {
+//     address target;
+//     bool allowFailure;
+//     uint256 value;
+//     bytes callData;
+// }
 
 /**
  * @dev A Flashloan is a struct that specifies the amount, type, and recipient
@@ -116,6 +117,21 @@ struct ItemTransfer {
     uint256 amount;
     ItemType itemType;
 }
+
+struct OrderContext {
+    bool listOnChain;
+    bool routeThroughAdapter;
+    CastOfCharacters castOfCharacters;
+}
+
+// // Maybe
+// struct OrderContext {
+//     Call[] callParametersArray;
+//     Flashloan[] flashloans;
+//     Approval[] approvals;
+//     CastOfCharacters[] castOfCharactersArray;
+//     ItemTransfer[] itemTransfers;
+// }
 
 /**
  * @title AdapterHelperLib
@@ -296,175 +312,13 @@ library AdapterHelperLib {
     ////////////////////////////////////////////////////////////////////////////
 
     function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
-        CastOfCharacters memory castOfCharacters,
-        OfferItem[] memory adapterOffer,
-        ConsiderationItem[] memory adapterConsideration,
-        Item721 memory nft
-    ) public view returns (CallParameters memory) {
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        if (callParameters.value > 0) {
-            flashloans = _getFlashloanArrayFromParams(
-                uint88(callParameters.value),
-                ItemType.NATIVE,
-                true,
-                castOfCharacters.adapter
-            );
-        }
-
-        ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
-        itemTransfers[0] = ItemTransfer({
-            from: castOfCharacters.sidecar,
-            to: castOfCharacters.fulfiller,
-            token: nft.token,
-            identifier: nft.identifier,
-            amount: 1,
-            itemType: ItemType.ERC721
-        });
-
-        return createSeaportWrappedCallParameters(
-            callParameters,
-            castOfCharacters,
-            flashloans,
-            adapterOffer,
-            adapterConsideration,
-            itemTransfers
-        );
-    }
-
-    function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
-        CastOfCharacters memory castOfCharacters,
-        OfferItem[] memory adapterOffer,
-        ConsiderationItem[] memory adapterConsideration,
-        Item721[] memory nfts
-    ) public view returns (CallParameters memory) {
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        if (callParameters.value > 0) {
-            flashloans = _getFlashloanArrayFromParams(
-                uint88(callParameters.value),
-                ItemType.NATIVE,
-                true,
-                castOfCharacters.adapter
-            );
-        }
-
-        ItemTransfer[] memory itemTransfers = new ItemTransfer[](nfts.length);
-        for (uint256 i; i < nfts.length; i++) {
-            itemTransfers[i] = ItemTransfer({
-                from: castOfCharacters.sidecar,
-                to: castOfCharacters.fulfiller,
-                token: nfts[i].token,
-                identifier: nfts[i].identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
-        }
-
-        return createSeaportWrappedCallParameters(
-            callParameters,
-            castOfCharacters,
-            flashloans,
-            adapterOffer,
-            adapterConsideration,
-            itemTransfers
-        );
-    }
-
-    function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
-        CastOfCharacters memory castOfCharacters,
-        OfferItem[] memory adapterOffer,
-        ConsiderationItem[] memory adapterConsideration,
-        Item1155 memory nft
-    ) public view returns (CallParameters memory) {
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        if (callParameters.value > 0) {
-            flashloans = _getFlashloanArrayFromParams(
-                uint88(callParameters.value),
-                ItemType.NATIVE,
-                true,
-                castOfCharacters.adapter
-            );
-        }
-
-        ItemTransfer[] memory itemTransfers = new ItemTransfer[](1);
-        itemTransfers[0] = ItemTransfer({
-            from: castOfCharacters.sidecar,
-            to: castOfCharacters.fulfiller,
-            token: nft.token,
-            identifier: nft.identifier,
-            amount: nft.amount,
-            itemType: ItemType.ERC1155
-        });
-
-        return createSeaportWrappedCallParameters(
-            callParameters,
-            castOfCharacters,
-            flashloans,
-            adapterOffer,
-            adapterConsideration,
-            itemTransfers
-        );
-    }
-
-    function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
-        CastOfCharacters memory castOfCharacters,
-        OfferItem[] memory adapterOffer,
-        ConsiderationItem[] memory adapterConsideration,
-        Item20[] memory erc20s
-    ) public view returns (CallParameters memory) {
-        CallParameters[] memory callParametersArray = new CallParameters[](1);
-        callParametersArray[0] = callParameters;
-        Flashloan[] memory flashloans = new Flashloan[](0);
-
-        if (callParameters.value > 0) {
-            flashloans = new Flashloan[](1);
-            Flashloan memory flashloan = Flashloan({
-                amount: uint88(callParameters.value),
-                itemType: ItemType.NATIVE,
-                shouldCallback: true,
-                recipient: castOfCharacters.adapter
-            });
-            flashloans[0] = flashloan;
-        }
-
-        ItemTransfer[] memory itemTransfers = new ItemTransfer[](erc20s.length);
-        for (uint256 i; i < erc20s.length; i++) {
-            itemTransfers[i] = ItemTransfer({
-                from: castOfCharacters.sidecar,
-                to: castOfCharacters.fulfiller,
-                token: erc20s[i].token,
-                identifier: 0,
-                amount: erc20s[i].amount,
-                itemType: ItemType.ERC20
-            });
-        }
-
-        return createSeaportWrappedCallParameters(
-            callParametersArray,
-            castOfCharacters,
-            new Call[](0),
-            new Call[](0),
-            flashloans,
-            adapterOffer,
-            adapterConsideration,
-            itemTransfers
-        );
-    }
-
-    function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
+        Call memory callParameters,
         CastOfCharacters memory castOfCharacters,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (CallParameters memory) {
-        CallParameters[] memory callParametersArray = new CallParameters[](1);
+    ) public view returns (Call memory) {
+        Call[] memory callParametersArray = new Call[](1);
         callParametersArray[0] = callParameters;
 
         return createSeaportWrappedCallParameters(
@@ -480,14 +334,14 @@ library AdapterHelperLib {
     }
 
     function createSeaportWrappedCallParameters(
-        CallParameters memory callParameters,
+        Call memory callParameters,
         CastOfCharacters memory castOfCharacters,
         Flashloan[] memory flashloans,
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (CallParameters memory) {
-        CallParameters[] memory callParametersArray = new CallParameters[](1);
+    ) public view returns (Call memory) {
+        Call[] memory callParametersArray = new Call[](1);
         callParametersArray[0] = callParameters;
 
         return createSeaportWrappedCallParameters(
@@ -503,7 +357,7 @@ library AdapterHelperLib {
     }
 
     function createSeaportWrappedCallParameters(
-        CallParameters[] memory callParametersArray,
+        Call[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Call[] memory sidecarSetUpCalls,
         Call[] memory sidecarWrapUpCalls,
@@ -511,7 +365,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (CallParameters memory wrappedCallParameters) {
+    ) public view returns (Call memory wrappedCallParameters) {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
         (orders, fulfillments) =
@@ -526,7 +380,7 @@ library AdapterHelperLib {
             itemTransfers
         );
 
-        wrappedCallParameters.data = abi.encodeWithSelector(
+        wrappedCallParameters.callData = abi.encodeWithSelector(
             ConsiderationInterface.matchAdvancedOrders.selector,
             orders,
             new CriteriaResolver[](0),
@@ -545,7 +399,7 @@ library AdapterHelperLib {
     }
 
     struct AdapterWrapperInfra {
-        CallParameters[] callParametersArray;
+        Call[] callParametersArray;
         CastOfCharacters castOfCharacters;
         Call[] sidecarSetUpCalls;
         Call[] sidecarWrapUpCalls;
@@ -576,13 +430,19 @@ library AdapterHelperLib {
      *      flashloans, if any are passed in. It returns the orders and
      *      fulfillments separately.
      *
-     * @param callParametersArray An array of CallParameters structs
+     * @param callParametersArray     An array of Call structs
      *                                that contain the target, value, and
      *                                calldata for the calls to external
      *                                marketplaces.
      * @param castOfCharacters        A CastOfCharacters struct that contains
      *                                the addresses of the relevant
      *                                participants.
+     * @param sidecarSetUpCalls       An array of Call structs that contain
+     *                                the calls to be made by the sidecar before
+     *                                the calls to external marketplaces.
+     * @param sidecarWrapUpCalls      An array of Call structs that contain
+     *                                the calls to be made by the sidecar after
+     *                                the calls to external marketplaces.
      * @param flashloans              An array of Flashloan structs that contain
      *                                the flashloan parameters.
      * @param adapterOffer            An array of OfferItem structs that
@@ -604,7 +464,7 @@ library AdapterHelperLib {
      *
      */
     function createSeaportWrappedCallParametersReturnGranular(
-        CallParameters[] memory callParametersArray,
+        Call[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Call[] memory sidecarSetUpCalls,
         Call[] memory sidecarWrapUpCalls,
@@ -671,7 +531,7 @@ library AdapterHelperLib {
     }
 
     function createSeaportWrappedCallParametersReturnGranularFulfillAvailable_TEMP(
-        CallParameters[] memory callParametersArray,
+        Call[] memory callParametersArray,
         CastOfCharacters memory castOfCharacters,
         Call[] memory sidecarSetUpCalls,
         Call[] memory sidecarWrapUpCalls,
@@ -796,7 +656,7 @@ library AdapterHelperLib {
                     address(infra.callParametersArray[i].target),
                     false,
                     infra.callParametersArray[i].value,
-                    infra.callParametersArray[i].data
+                    infra.callParametersArray[i].callData
                 );
             }
 

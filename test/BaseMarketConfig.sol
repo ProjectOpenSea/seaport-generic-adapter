@@ -4,10 +4,7 @@ pragma solidity ^0.8.17;
 import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
 
 import {
-    CallParameters,
-    Item20,
-    Item721,
-    Item1155
+    Call, Item20, Item721, Item1155
 } from "../src/lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from

@@ -5,7 +5,7 @@ import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import { TestOrderPayload } from "../../../test/utils/Types.sol";
 
 import {
-    CallParameters,
+    Call,
     Item721,
     Item1155,
     Item20,
@@ -347,14 +347,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -394,14 +396,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -460,14 +464,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -501,14 +507,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -576,14 +584,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -619,14 +629,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -662,14 +674,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -732,14 +746,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -778,14 +794,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
         );
@@ -826,14 +844,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
         );
@@ -871,14 +891,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             priceEthAmount + feeEthAmount,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -925,14 +947,16 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             priceEthAmount + feeEthAmount1 + feeEthAmount2,
             abi.encodeWithSelector(
                 ISeaport.fulfillBasicOrder_efficient_6GL6yc.selector,
@@ -976,15 +1000,17 @@ contract SeaportOnePointFiveConfig is
 
             Order[] memory orders = new Order[](1);
             orders[0] = order;
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(ISeaport.validate.selector, orders)
             );
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             ethAmount,
             abi.encodeWithSelector(ISeaport.fulfillOrder.selector, order, 0)
         );
@@ -1018,8 +1044,9 @@ contract SeaportOnePointFiveConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(
                     ISeaport.validate.selector, ordersToValidate
@@ -1027,8 +1054,9 @@ contract SeaportOnePointFiveConfig is
             );
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             sumEthAmount,
             abi.encodeWithSelector(
                 ISeaport.matchOrders.selector, orders, fullfillments
@@ -1061,8 +1089,9 @@ contract SeaportOnePointFiveConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(
                     ISeaport.validate.selector, ordersToValidate
@@ -1070,8 +1099,9 @@ contract SeaportOnePointFiveConfig is
             );
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.matchOrders.selector, orders, fullfillments
@@ -1104,8 +1134,9 @@ contract SeaportOnePointFiveConfig is
                 ordersToValidate[i] = orders[i];
             }
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(seaport),
+                false,
                 0,
                 abi.encodeWithSelector(
                     ISeaport.validate.selector, ordersToValidate
@@ -1113,8 +1144,9 @@ contract SeaportOnePointFiveConfig is
             );
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.matchOrders.selector, orders, fullfillments
@@ -1178,8 +1210,9 @@ contract SeaportOnePointFiveConfig is
             }
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.matchOrders.selector, orders, fullfillments
@@ -1247,8 +1280,9 @@ contract SeaportOnePointFiveConfig is
             }
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(seaport),
+            false,
             0,
             abi.encodeWithSelector(
                 ISeaport.matchOrders.selector, orders, fullfillments

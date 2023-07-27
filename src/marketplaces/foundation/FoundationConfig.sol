@@ -8,7 +8,7 @@ import { IFoundation } from "./interfaces/IFoundation.sol";
 import { TestOrderPayload } from "../../../test/utils/Types.sol";
 
 import {
-    CallParameters,
+    Call,
     Item20,
     Item721,
     Item1155,
@@ -46,8 +46,9 @@ contract FoundationConfig is BaseMarketConfig {
             _notImplemented();
         }
 
-        execution.submitOrder = CallParameters(
+        execution.submitOrder = Call(
             address(foundation),
+            false,
             0,
             abi.encodeWithSelector(
                 IFoundation.setBuyPrice.selector,
@@ -56,8 +57,9 @@ contract FoundationConfig is BaseMarketConfig {
                 ethAmount
             )
         );
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(foundation),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 IFoundation.buyV2.selector,
@@ -80,8 +82,9 @@ contract FoundationConfig is BaseMarketConfig {
             _notImplemented();
         }
 
-        execution.submitOrder = CallParameters(
+        execution.submitOrder = Call(
             address(foundation),
+            false,
             0,
             abi.encodeWithSelector(
                 IFoundation.setBuyPrice.selector,
@@ -90,8 +93,9 @@ contract FoundationConfig is BaseMarketConfig {
                 priceEthAmount
             )
         );
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(foundation),
+            false,
             priceEthAmount + feeEthAmount,
             abi.encodeWithSelector(
                 IFoundation.buyV2.selector,

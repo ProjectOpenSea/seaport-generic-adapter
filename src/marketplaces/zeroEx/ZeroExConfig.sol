@@ -5,9 +5,9 @@ import "solmate/tokens/ERC20.sol";
 import "forge-std/Test.sol";
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    CallParameters,
+    Call,
     Item20,
     Item721,
     Item1155,
@@ -90,8 +90,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -100,8 +101,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             ethAmount,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
         );
@@ -151,8 +153,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC1155Order.selector, order
@@ -161,8 +164,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 IZeroEx.buyERC1155.selector, order, sig, uint128(nft.amount), ""
@@ -212,8 +216,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -222,8 +227,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
         );
@@ -271,8 +277,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -281,8 +288,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
         );
@@ -331,8 +339,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC1155Order.selector, order
@@ -341,8 +350,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.buyERC1155.selector, order, sig, uint128(nft.amount), ""
@@ -392,8 +402,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -402,8 +413,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.sellERC721.selector,
@@ -458,8 +470,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -468,8 +481,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.sellERC721.selector,
@@ -525,8 +539,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC1155Order.selector, order
@@ -535,8 +550,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the sell
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.sellERC1155.selector,
@@ -603,8 +619,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -613,8 +630,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             priceEthAmount + feeEthAmount, // pay the maker and pay the fee
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
         );
@@ -680,8 +698,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 s: 0
             });
 
-            execution.submitOrder = CallParameters(
+            execution.submitOrder = Call(
                 address(zeroEx),
+                false,
                 0,
                 abi.encodeWithSelector(
                     IZeroEx.preSignERC721Order.selector, order
@@ -690,8 +709,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         }
 
         // Execute the buy
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             priceEthAmount + feeEthAmount1 + feeEthAmount2, // pay the maker and
                 // pay the fees
             abi.encodeWithSelector(IZeroEx.buyERC721.selector, order, sig, "")
@@ -755,8 +775,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             });
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             sumEth,
             abi.encodeWithSelector(
                 IZeroEx.batchBuyERC721s.selector, orders, sigs, callbacks, false
@@ -774,6 +795,12 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
+
+        // Not sure how best to do this, not implementing for now
+        if (contexts[0].listOnChain) {
+            _notImplemented();
+        }
+
         LibNFTOrder.ERC721Order[] memory orders = new LibNFTOrder.ERC721Order[](
             contexts.length
         );
@@ -811,13 +838,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             });
         }
 
-        // Not sure how best to do this, not implementing for now
-        if (contexts[0].listOnChain) {
-            _notImplemented();
-        }
-
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.batchBuyERC721s.selector, orders, sigs, callbacks, false
@@ -835,6 +858,12 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
+
+        // Not sure how best to do this, not implementing for now
+        if (contexts[0].listOnChain) {
+            _notImplemented();
+        }
+
         LibNFTOrder.ERC721Order[] memory orders = new LibNFTOrder.ERC721Order[](
             contexts.length
         );
@@ -872,13 +901,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             });
         }
 
-        // Not sure how best to do this, not implementing for now
-        if (contexts[0].listOnChain) {
-            _notImplemented();
-        }
-
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(zeroEx),
+            false,
             0,
             abi.encodeWithSelector(
                 IZeroEx.batchBuyERC721s.selector, orders, sigs, callbacks, false

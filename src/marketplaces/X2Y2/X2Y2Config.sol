@@ -7,7 +7,7 @@ import { Market } from "./interfaces/MarketConstants.sol";
 import { X2Y2TypeHashes } from "./lib/X2Y2TypeHashes.sol";
 import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    CallParameters,
+    Call,
     Item20,
     Item721,
     Item1155,
@@ -214,8 +214,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder =
-            CallParameters(address(X2Y2), ethAmount, payload);
+        execution.executeOrder = Call(address(X2Y2), false, ethAmount, payload);
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
@@ -242,7 +241,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
@@ -269,7 +268,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
@@ -296,7 +295,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
@@ -323,7 +322,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
@@ -356,9 +355,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(
-            address(X2Y2), priceEthAmount + feeEthAmount, payload
-        );
+        execution.executeOrder =
+            Call(address(X2Y2), false, priceEthAmount + feeEthAmount, payload);
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
@@ -399,8 +397,9 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(X2Y2),
+            false,
             priceEthAmount + feeEthAmount1 + feeEthAmount2,
             payload
         );
@@ -427,8 +426,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             fees
         );
 
-        execution.executeOrder =
-            CallParameters(address(X2Y2), ethAmount, payload);
+        execution.executeOrder = Call(address(X2Y2), false, ethAmount, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
@@ -444,7 +442,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, ethAmounts, address(0), Market.INTENT_SELL
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), ethSum, payload);
+        execution.executeOrder = Call(address(X2Y2), false, ethSum, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
@@ -461,7 +459,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, erc20Amounts, erc20Address, Market.INTENT_SELL
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
@@ -478,6 +476,6 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
             contexts, nfts, erc20Amounts, erc20Address, Market.INTENT_SELL
         );
 
-        execution.executeOrder = CallParameters(address(X2Y2), 0, payload);
+        execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 }

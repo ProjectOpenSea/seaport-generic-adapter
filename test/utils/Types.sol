@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import { CallParameters } from "../../src/lib/AdapterHelperLib.sol";
+import { Call, OrderContext } from "../../src/lib/AdapterHelperLib.sol";
+
+struct TestOrderContext {
+    bool listOnChain;
+    bool routeThroughAdapter;
+    OrderContext orderContext;
+}
 
 struct SetupCall {
     address sender;
@@ -11,7 +17,7 @@ struct SetupCall {
 
 struct TestOrderPayload {
     // Call needed to submit order on-chain without signature
-    CallParameters submitOrder;
+    Call submitOrder;
     // Call needed to actually execute the order
-    CallParameters executeOrder;
+    Call executeOrder;
 }

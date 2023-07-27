@@ -7,7 +7,7 @@ import {
     Item721,
     Item1155,
     Item20,
-    CallParameters,
+    Call,
     OrderContext
 } from "../../lib/AdapterHelperLib.sol";
 import "./lib/OrderStructs.sol";
@@ -255,8 +255,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 IBlurExchange.execute.selector, makerInput, takerInput
@@ -289,7 +290,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = CallParameters(
+    //     execution.executeOrder = Call(
     //         address(blur),
     //         ethAmount,
     //         abi.encodeWithSelector(
@@ -326,8 +327,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             0,
             abi.encodeWithSelector(
                 IBlurExchange.execute.selector, makerInput, takerInput
@@ -359,8 +361,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             0,
             abi.encodeWithSelector(
                 IBlurExchange.execute.selector, takerInput, makerInput
@@ -415,7 +418,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = CallParameters(
+    //     execution.executeOrder = Call(
     //         address(blur),
     //         priceEthAmount + feeEthAmount,
     //         abi.encodeWithSelector(
@@ -472,7 +475,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //         _notImplemented();
     //     }
 
-    //     execution.executeOrder = CallParameters(
+    //     execution.executeOrder = Call(
     //         address(blur),
     //         priceEthAmount + feeEthAmount1 + feeEthAmount2,
     //         abi.encodeWithSelector(
@@ -531,8 +534,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             }
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             infra.sumEthAmount,
             abi.encodeWithSelector(
                 IBlurExchange.bulkExecute.selector, infra.executions
@@ -580,8 +584,9 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
             }
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             0,
             abi.encodeWithSelector(
                 IBlurExchange.bulkExecute.selector, executions

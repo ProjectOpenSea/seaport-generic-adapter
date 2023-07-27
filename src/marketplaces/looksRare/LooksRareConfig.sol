@@ -11,7 +11,7 @@ import {
     Item721,
     Item1155,
     Item20,
-    CallParameters,
+    Call,
     OrderContext
 } from "../../lib/AdapterHelperLib.sol";
 import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
@@ -158,8 +158,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         if (context.listOnChain) {
             _notImplemented();
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchAskWithTakerBidUsingETHAndWETH.selector,
@@ -189,8 +190,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         if (context.listOnChain) {
             _notImplemented();
         }
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             ethAmount,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchAskWithTakerBidUsingETHAndWETH.selector,
@@ -221,8 +223,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchAskWithTakerBid.selector,
@@ -253,8 +256,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchAskWithTakerBid.selector,
@@ -285,8 +289,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchAskWithTakerBid.selector,
@@ -317,8 +322,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchBidWithTakerAsk.selector,
@@ -349,8 +355,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchBidWithTakerAsk.selector,
@@ -381,8 +388,9 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             _notImplemented();
         }
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(looksRare),
+            false,
             0,
             abi.encodeWithSelector(
                 ILooksRareExchange.matchBidWithTakerAsk.selector,

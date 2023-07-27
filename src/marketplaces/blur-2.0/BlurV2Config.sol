@@ -14,7 +14,7 @@ import {
     Item721,
     Item1155,
     Item20,
-    CallParameters,
+    Call,
     OrderContext
 } from "../../lib/AdapterHelperLib.sol";
 
@@ -396,8 +396,9 @@ contract BlurV2Config is
             nativeTokenAmount
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             nativeTokenAmount,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeAskSingle.selector,
@@ -425,8 +426,9 @@ contract BlurV2Config is
             nativeTokenAmount
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             nativeTokenAmount,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeAskSingle.selector,
@@ -454,8 +456,9 @@ contract BlurV2Config is
             context, nft.token, nft.identifier, AssetType.ERC721, erc20.amount
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             0,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeAskSinglePool.selector,
@@ -577,8 +580,9 @@ contract BlurV2Config is
             context, nft.token, nft.identifier, AssetType.ERC721, erc20.amount
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             0,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeBidSingle.selector,
@@ -713,8 +717,9 @@ contract BlurV2Config is
             contexts, nfts, AssetType.ERC721, nativeTokenAmounts
         );
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             nativeTokenAmount,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeAsk.selector, takeAsk, oracleSignature
@@ -832,8 +837,9 @@ contract BlurV2Config is
         (TakeAsk memory takeAsk, bytes memory oracleSignature) =
         buildArgumentsBuyTen(context, nfts, AssetType.ERC721, nativeTokenAmount);
 
-        execution.executeOrder = CallParameters(
+        execution.executeOrder = Call(
             address(blur),
+            false,
             nativeTokenAmount,
             abi.encodeWithSelector(
                 IBlurExchangeV2.takeAsk.selector, takeAsk, oracleSignature
