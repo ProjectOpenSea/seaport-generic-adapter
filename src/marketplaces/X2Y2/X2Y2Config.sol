@@ -5,15 +5,14 @@ import { IX2Y2Marketplace } from "./interfaces/IX2Y2Marketplace.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 import { Market } from "./interfaces/MarketConstants.sol";
 import { X2Y2TypeHashes } from "./lib/X2Y2TypeHashes.sol";
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    SetupCall,
     CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
+    Item20,
     Item721,
     Item1155,
-    Item20
-} from "../../../test/utils/Types.sol";
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
@@ -69,7 +68,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function encodeFillOrderDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] memory nfts,
         uint256[] memory prices,
         address currency,
@@ -77,7 +76,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     ) internal view returns (bytes memory payload, uint256 ethSum) {
         Market.RunInput memory input;
 
-        input.shared.user = contexts[0].fulfiller;
+        input.shared.user = contexts[0].castOfCharacters.fulfiller;
         input.shared.deadline = block.timestamp + 1;
 
         Market.Order[] memory orders = new Market.Order[](nfts.length);
@@ -90,7 +89,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
                 ethSum += prices[i];
             }
             {
-                orders[i].user = contexts[i].offerer;
+                orders[i].user = contexts[i].castOfCharacters.offerer;
                 orders[i].network = 1;
                 orders[i].intent = intent;
                 orders[i].delegateType = 1;
@@ -106,8 +105,10 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
                 orders[i].items = items;
 
-                (orders[i].v, orders[i].r, orders[i].s) =
-                    _sign(contexts[i].offerer, _deriveOrderDigest(orders[i]));
+                (orders[i].v, orders[i].r, orders[i].s) = _sign(
+                    contexts[i].castOfCharacters.offerer,
+                    _deriveOrderDigest(orders[i])
+                );
                 orders[i].signVersion = Market.SIGN_V1;
             }
             {
@@ -190,7 +191,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -204,8 +205,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             ethAmount,
             address(0),
@@ -218,7 +219,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -232,8 +233,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             erc20.amount,
             erc20.token,
@@ -245,7 +246,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -259,8 +260,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             erc20.amount,
             erc20.token,
@@ -272,7 +273,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -286,8 +287,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             erc20.amount,
             erc20.token,
@@ -299,7 +300,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -313,8 +314,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             erc20.amount,
             erc20.token,
@@ -326,7 +327,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
@@ -346,8 +347,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             priceEthAmount + feeEthAmount,
             address(0),
@@ -361,7 +362,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
@@ -389,8 +390,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             priceEthAmount + feeEthAmount1 + feeEthAmount2,
             address(0),
@@ -406,7 +407,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -417,8 +418,8 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         Market.Fee[] memory fees = new Market.Fee[](0);
 
         bytes memory payload = encodeFillOrder(
-            context.offerer,
-            context.fulfiller,
+            context.castOfCharacters.offerer,
+            context.castOfCharacters.fulfiller,
             nfts,
             ethAmount,
             address(0),
@@ -431,7 +432,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -447,7 +448,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -464,7 +465,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts

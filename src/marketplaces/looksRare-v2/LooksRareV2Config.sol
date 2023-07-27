@@ -8,15 +8,14 @@ import { CollectionType } from "./lib/CollectionType.sol";
 import { ILooksRareProtocol } from "./interfaces/ILooksRareProtocol.sol";
 import { ITransferManager } from "./interfaces/ITransferManager.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
     Item721,
     Item1155,
     Item20,
-    SetupCall
-} from "../../../test/utils/Types.sol";
+    CallParameters,
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
@@ -197,7 +196,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     // //////////////////////////////////////////////////////////////*/
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -208,7 +207,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: ETH,
             price: ethAmount,
             collectionType: CollectionType.ERC721,
@@ -217,7 +216,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -236,7 +235,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -247,7 +246,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: ETH,
             price: ethAmount,
             collectionType: CollectionType.ERC1155,
@@ -256,7 +255,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -275,7 +274,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -286,7 +285,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC721,
@@ -295,7 +294,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -314,7 +313,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -325,7 +324,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC721,
@@ -334,7 +333,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -353,7 +352,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -364,7 +363,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC1155,
@@ -373,7 +372,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -392,7 +391,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -403,7 +402,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Bid,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC721,
@@ -412,7 +411,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -431,7 +430,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -442,7 +441,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Bid,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC721,
@@ -451,7 +450,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -470,7 +469,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -481,7 +480,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Bid,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: erc20.token,
             price: erc20.amount,
             collectionType: CollectionType.ERC1155,
@@ -490,7 +489,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             itemId: nft.identifier
         });
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -509,7 +508,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -521,7 +520,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderStructs.Maker memory makerOrder = buildMakerOrder({
             quoteType: QuoteType.Ask,
             orderNonce: 0,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             currency: ETH,
             price: ethAmount,
             collectionType: CollectionType.ERC721,
@@ -538,7 +537,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         }
 
         OrderStructs.Taker memory takerOrder =
-            buildTakerOrder(context.fulfiller);
+            buildTakerOrder(context.castOfCharacters.fulfiller);
         bytes memory makerSignature = buildMakerSignature(makerOrder);
         OrderStructs.MerkleTree memory merkleTree;
 
@@ -557,7 +556,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -577,7 +576,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             params.makerAsks[i] = buildMakerOrder({
                 quoteType: QuoteType.Ask,
                 orderNonce: i,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 currency: ETH,
                 price: ethAmounts[i],
                 collectionType: CollectionType.ERC721,
@@ -586,7 +585,8 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 itemId: nfts[i].identifier
             });
             params.makerSignatures[i] = buildMakerSignature(params.makerAsks[i]);
-            params.takerBids[i] = buildTakerOrder(contexts[i].fulfiller);
+            params.takerBids[i] =
+                buildTakerOrder(contexts[i].castOfCharacters.fulfiller);
             params.ethValue += ethAmounts[i];
         }
 
@@ -606,7 +606,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -627,7 +627,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             params.makerAsks[i] = buildMakerOrder({
                 quoteType: QuoteType.Ask,
                 orderNonce: i,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 currency: erc20Address,
                 price: erc20Amounts[i],
                 collectionType: CollectionType.ERC721,
@@ -636,7 +636,8 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 itemId: nfts[i].identifier
             });
             params.makerSignatures[i] = buildMakerSignature(params.makerAsks[i]);
-            params.takerBids[i] = buildTakerOrder(contexts[i].fulfiller);
+            params.takerBids[i] =
+                buildTakerOrder(contexts[i].castOfCharacters.fulfiller);
         }
 
         execution.executeOrder = CallParameters(
@@ -655,7 +656,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -676,7 +677,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
             params.makerAsks[i] = buildMakerOrder({
                 quoteType: QuoteType.Ask,
                 orderNonce: i,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 currency: erc20Address,
                 price: erc20Amounts[i],
                 collectionType: CollectionType.ERC721,
@@ -685,7 +686,8 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 itemId: nfts[i].identifier
             });
             params.makerSignatures[i] = buildMakerSignature(params.makerAsks[i]);
-            params.takerBids[i] = buildTakerOrder(contexts[i].fulfiller);
+            params.takerBids[i] =
+                buildTakerOrder(contexts[i].castOfCharacters.fulfiller);
         }
 
         execution.executeOrder = CallParameters(

@@ -24,7 +24,6 @@ import {
     AdapterHelperLib,
     Approval,
     Call,
-    CastOfCharacters,
     Flashloan,
     ItemTransfer
 } from "../src/lib/AdapterHelperLib.sol";
@@ -54,14 +53,15 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
+import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+
 import {
     CallParameters,
     Item20,
     Item721,
     Item1155,
-    TestOrderContext,
-    TestOrderPayload
-} from "./utils/Types.sol";
+    OrderContext
+} from "../src/lib/AdapterHelperLib.sol";
 
 import { GenericMarketplaceTest } from "./GenericMarketplaceTest.t.sol";
 
@@ -193,11 +193,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     struct BenchmarkAggregatedInfra {
         string testLabel;
         BaseMarketConfig[] configs;
-        TestOrderContext context;
+        OrderContext context;
         CallParameters[] executionPayloads;
         AdvancedOrder[] adapterOrders;
         Fulfillment[] adapterFulfillments;
-        CastOfCharacters castOfCharacters;
         OfferItem[] adapterOfferArray;
         ConsiderationItem[] adapterConsiderationArray;
         ItemTransfer[] itemTransfers;
@@ -212,13 +211,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
             testLabel: "Mixed aggregated through Seaport",
             configs: configs,
-            context: TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-                ),
+            context: OrderContext(true, true, stdCastOfCharacters),
             executionPayloads: new CallParameters[](3),
             adapterOrders: new AdvancedOrder[](3),
             adapterFulfillments: new Fulfillment[](2),
-            castOfCharacters: stdCastOfCharacters,
             adapterOfferArray: new OfferItem[](3),
             adapterConsiderationArray: new ConsiderationItem[](2),
             itemTransfers: new ItemTransfer[](3),
@@ -277,8 +273,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         // Stick the items into the adapter so that seaport can yank them out.
         infra.itemTransfers[0] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC721.token,
             identifier: standardERC721.identifier,
             amount: 1,
@@ -286,8 +282,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[1] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC721.token,
             identifier: standardERC721Two.identifier,
             amount: 1,
@@ -295,8 +291,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[2] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC1155.token,
             identifier: standardERC1155.identifier,
             amount: 1,
@@ -307,7 +303,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         (infra.adapterOrders, infra.adapterFulfillments) = AdapterHelperLib
             .createSeaportWrappedCallParametersReturnGranular(
             infra.executionPayloads,
-            infra.castOfCharacters,
+            infra.context.castOfCharacters,
             new Call[](0),
             new Call[](0),
             new Flashloan[](0), // The helper will automatically create one.
@@ -424,13 +420,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
             testLabel: "Mixed aggregated through Seaport Fulfill Available",
             configs: configs,
-            context: TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-                ),
+            context: OrderContext(false, true, stdCastOfCharacters),
             executionPayloads: new CallParameters[](3),
             adapterOrders: new AdvancedOrder[](1),
             adapterFulfillments: new Fulfillment[](0),
-            castOfCharacters: stdCastOfCharacters,
             adapterOfferArray: new OfferItem[](3),
             adapterConsiderationArray: new ConsiderationItem[](1),
             itemTransfers: new ItemTransfer[](3),
@@ -492,8 +485,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[0] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC721.token,
             identifier: standardERC721.identifier,
             amount: 1,
@@ -501,8 +494,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[1] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC721.token,
             identifier: 2,
             amount: 1,
@@ -510,8 +503,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         });
 
         infra.itemTransfers[2] = ItemTransfer({
-            from: infra.castOfCharacters.sidecar,
-            to: infra.castOfCharacters.adapter,
+            from: infra.context.castOfCharacters.sidecar,
+            to: infra.context.castOfCharacters.adapter,
             token: standardERC721.token,
             identifier: 3,
             amount: 1,
@@ -527,7 +520,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         AdapterHelperLib
             .createSeaportWrappedCallParametersReturnGranularFulfillAvailable_TEMP(
             infra.executionPayloads,
-            infra.castOfCharacters,
+            infra.context.castOfCharacters,
             new Call[](0),
             new Call[](0),
             infra.adapterOfferArray,
@@ -665,7 +658,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         // configs[2] = looksRareV2Config;
         // configs[3] = seaportOnePointFiveConfig;
         // LR, and X2Y2 require that the taker is the sender.
-        infra.context.fulfiller = sidecar;
+        infra.context.castOfCharacters.fulfiller = sidecar;
 
         try infra.configs[0].getPayload_BuyOfferedERC721WithERC20(
             infra.context, standardERC721, standardERC20
@@ -679,7 +672,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             _logNotSupported(infra.configs[0].name(), infra.testLabel);
         }
 
-        infra.context.fulfiller = bob;
+        infra.context.castOfCharacters.fulfiller = bob;
 
         try infra.configs[1].getPayload_BuyOfferedERC721WithERC20(
             infra.context, Item721(_test721Address, 2), standardERC20
@@ -693,7 +686,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             _logNotSupported(infra.configs[0].name(), infra.testLabel);
         }
 
-        infra.context.fulfiller = sidecar;
+        infra.context.castOfCharacters.fulfiller = sidecar;
 
         try infra.configs[2].getPayload_BuyOfferedERC721WithERC20(
             infra.context, Item721(_test721Address, 3), standardERC20
@@ -707,7 +700,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             _logNotSupported(infra.configs[0].name(), infra.testLabel);
         }
 
-        infra.context.fulfiller = bob;
+        infra.context.castOfCharacters.fulfiller = bob;
     }
 
     function _prepareExternalCalls(BenchmarkAggregatedInfra memory infra)
@@ -764,9 +757,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             _logNotSupported(infra.configs[1].name(), infra.testLabel);
         }
 
-        infra.context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        infra.context = OrderContext(false, true, stdCastOfCharacters);
 
         test721_1.mint(alice, 2);
         hevm.deal(bob, 100);
@@ -775,7 +766,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         // Change the fulfiller to the sidecar to sneak through blur on an ad
         // hoc sig.
-        infra.context.fulfiller = sidecar;
+        infra.context.castOfCharacters.fulfiller = sidecar;
 
         // Start with all buy offered NFT with X. But eventually test a mix of
         // offered X for NFT. The helper will need more detail about each NFT
@@ -783,7 +774,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         try infra.configs[2].getPayload_BuyOfferedERC721WithWETH(
             infra.context, standardERC721Two, standardWeth
         ) returns (TestOrderPayload memory payload) {
-            infra.context.fulfiller = bob;
+            infra.context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(2), alice);
             assertEq(weth.balanceOf(bob), 100);
             assertEq(weth.balanceOf(alice), 0);

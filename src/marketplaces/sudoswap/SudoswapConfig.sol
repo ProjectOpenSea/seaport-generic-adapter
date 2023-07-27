@@ -4,19 +4,20 @@ pragma solidity ^0.8.14;
 import "solmate/tokens/ERC20.sol";
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    SetupCall,
     CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
+    Item20,
     Item721,
-    Item1155,
-    Item20
-} from "../../../test/utils/Types.sol";
+    Item1155
+} from "../../lib/AdapterHelperLib.sol";
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
 import { IPairFactory } from "./interfaces/IPairFactory.sol";
-import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
+import {
+    CastOfCharacters,
+    OrderContext
+} from "../../../src/lib/AdapterHelperLib.sol";
 
 contract SudoswapConfig is BaseMarketConfig {
     IPairFactory constant PAIR_FACTORY =
@@ -140,7 +141,7 @@ contract SudoswapConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
     ) external override returns (TestOrderPayload memory execution) {
@@ -158,7 +159,7 @@ contract SudoswapConfig is BaseMarketConfig {
             value: 0,
             data: abi.encodeWithSignature(
                 "safeTransferFrom(address,address,uint256)",
-                context.offerer,
+                context.castOfCharacters.offerer,
                 address(ethNftPool),
                 nft.identifier
                 )
@@ -175,7 +176,7 @@ contract SudoswapConfig is BaseMarketConfig {
                 IPair.swapTokenForSpecificNFTs.selector,
                 nftIds,
                 type(uint256).max,
-                context.fulfiller,
+                context.castOfCharacters.fulfiller,
                 false,
                 address(0)
                 )
@@ -183,7 +184,7 @@ contract SudoswapConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external override returns (TestOrderPayload memory execution) {
@@ -202,7 +203,7 @@ contract SudoswapConfig is BaseMarketConfig {
             value: 0,
             data: abi.encodeWithSignature(
                 "safeTransferFrom(address,address,uint256)",
-                context.offerer,
+                context.castOfCharacters.offerer,
                 address(erc20NftPool),
                 nft.identifier
                 )
@@ -226,14 +227,14 @@ contract SudoswapConfig is BaseMarketConfig {
                 IRouter.swapERC20ForSpecificNFTs.selector,
                 swapList,
                 erc20.amount,
-                context.fulfiller,
+                context.castOfCharacters.fulfiller,
                 type(uint256).max
                 )
         });
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external override returns (TestOrderPayload memory execution) {
@@ -273,14 +274,14 @@ contract SudoswapConfig is BaseMarketConfig {
                 IRouter.swapNFTsForToken.selector,
                 swapList,
                 0,
-                context.fulfiller,
+                context.castOfCharacters.fulfiller,
                 type(uint256).max
                 )
         });
     }
 
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
     ) external override returns (TestOrderPayload memory execution) {
@@ -318,7 +319,7 @@ contract SudoswapConfig is BaseMarketConfig {
                 IPair.swapTokenForSpecificNFTs.selector,
                 ids,
                 type(uint256).max,
-                context.fulfiller,
+                context.castOfCharacters.fulfiller,
                 false,
                 address(0)
                 )
@@ -326,7 +327,7 @@ contract SudoswapConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -377,8 +378,8 @@ contract SudoswapConfig is BaseMarketConfig {
             data: abi.encodeWithSelector(
                 IRouter.swapETHForSpecificNFTs.selector,
                 swapList,
-                contexts[0].offerer,
-                contexts[0].fulfiller,
+                contexts[0].castOfCharacters.offerer,
+                contexts[0].castOfCharacters.fulfiller,
                 type(uint256).max
                 )
         });

@@ -5,14 +5,15 @@ import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 
 import { IFoundation } from "./interfaces/IFoundation.sol";
 
+import { TestOrderPayload } from "../../../test/utils/Types.sol";
+
 import {
     CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
+    Item20,
     Item721,
     Item1155,
-    Item20
-} from "../../../test/utils/Types.sol";
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 
 import { AdapterHelperLib } from "../../lib/AdapterHelperLib.sol";
 
@@ -37,7 +38,7 @@ contract FoundationConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         uint256 ethAmount
     ) external pure override returns (TestOrderPayload memory execution) {
@@ -69,7 +70,7 @@ contract FoundationConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
@@ -103,7 +104,7 @@ contract FoundationConfig is BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory,
         uint256,
         address,

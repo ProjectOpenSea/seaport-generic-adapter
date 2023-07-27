@@ -9,15 +9,14 @@ import { Merkle } from "./lib/Merkle.sol";
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
 
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
     Item721,
     Item1155,
     Item20,
-    SetupCall
-} from "../../../test/utils/Types.sol";
+    CallParameters,
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 
 import { TestERC20 } from "../../contracts/test/TestERC20.sol";
 
@@ -282,7 +281,7 @@ contract BlurV2Config is
     }
 
     function buildArgumentsTakeAskSingle(
-        TestOrderContext memory context,
+        OrderContext memory context,
         address nftToken,
         uint256 identifier,
         AssetType assetType,
@@ -319,7 +318,8 @@ contract BlurV2Config is
 
         // Create the order.
         infra.order = buildOrder(
-            context.offerer, // The seller of an NFT is the "trader" here.
+            context.castOfCharacters.offerer, // The seller of an NFT is the
+                // "trader" here.
             nftToken, // This is "collection" in Blur parlance.
             bytes32(0), // Listings root (merkle tree root of hashed listings),
                 // set below.
@@ -352,8 +352,9 @@ contract BlurV2Config is
         infra.order.listingsRoot = buildListingsRoot(infra.exchanges);
 
         {
-            infra.orderSignature =
-                _getOrderSignature(context.offerer, infra.order, OrderType.ASK);
+            infra.orderSignature = _getOrderSignature(
+                context.castOfCharacters.offerer, infra.order, OrderType.ASK
+            );
         }
 
         takeAskSingle = TakeAskSingle({
@@ -361,12 +362,13 @@ contract BlurV2Config is
             exchange: infra.exchange,
             takerFee: infra.feeRate,
             signature: infra.orderSignature,
-            tokenRecipient: context.fulfiller
+            tokenRecipient: context.castOfCharacters.fulfiller
         });
 
         {
-            infra.oracleHash =
-                blur.hashTakeAskSingle(takeAskSingle, context.fulfiller);
+            infra.oracleHash = blur.hashTakeAskSingle(
+                takeAskSingle, context.castOfCharacters.fulfiller
+            );
 
             signature = oracleContract.produceOracleSignature(
                 infra.oracleHash, uint32(block.number)
@@ -377,7 +379,7 @@ contract BlurV2Config is
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 nativeTokenAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -406,7 +408,7 @@ contract BlurV2Config is
     }
 
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 memory nft,
         uint256 nativeTokenAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -439,7 +441,7 @@ contract BlurV2Config is
     // See
     // https://etherscan.io/address/0xb38827497daf7f28261910e33e22219de087c8f5#code#F1#L594.
     function getPayload_BuyOfferedERC721WithBETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
@@ -465,7 +467,7 @@ contract BlurV2Config is
     }
 
     function buildArgumentsTakeBidSingle(
-        TestOrderContext memory context,
+        OrderContext memory context,
         address nftToken,
         uint256 identifier,
         AssetType assetType,
@@ -502,7 +504,8 @@ contract BlurV2Config is
 
         // Create the order.
         infra.order = buildOrder(
-            context.offerer, // The seller of an NFT is the "trader" here.
+            context.castOfCharacters.offerer, // The seller of an NFT is the
+                // "trader" here.
             nftToken, // This is "collection" in Blur parlance.
             bytes32(0), // Listings root (merkle tree root of hashed listings),
                 // set below.
@@ -535,8 +538,9 @@ contract BlurV2Config is
         infra.order.listingsRoot = buildListingsRoot(infra.exchanges);
 
         {
-            infra.orderSignature =
-                _getOrderSignature(context.offerer, infra.order, OrderType.BID);
+            infra.orderSignature = _getOrderSignature(
+                context.castOfCharacters.offerer, infra.order, OrderType.BID
+            );
         }
 
         takeBidSingle = TakeBidSingle({
@@ -547,8 +551,9 @@ contract BlurV2Config is
         });
 
         {
-            infra.oracleHash =
-                blur.hashTakeBidSingle(takeBidSingle, context.fulfiller);
+            infra.oracleHash = blur.hashTakeBidSingle(
+                takeBidSingle, context.castOfCharacters.fulfiller
+            );
 
             signature = oracleContract.produceOracleSignature(
                 infra.oracleHash, uint32(block.number)
@@ -559,7 +564,7 @@ contract BlurV2Config is
     }
 
     function getPayload_BuyOfferedBETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -584,7 +589,7 @@ contract BlurV2Config is
     }
 
     function buildArgumentsDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         AssetType assetType,
         uint256[] memory tokenAmounts
@@ -617,7 +622,8 @@ contract BlurV2Config is
         for (uint256 i; i < nfts.length; ++i) {
             // Create an order.
             infra.order = buildOrder(
-                contexts[i].offerer, // The seller of an NFT is the "trader"
+                contexts[i].castOfCharacters.offerer, // The seller of an NFT is
+                    // the "trader"
                     // here.
                 nfts[i].token, // This is "collection" in Blur parlance.
                 bytes32(0), // Listings root (merkle tree root of hashed
@@ -656,7 +662,9 @@ contract BlurV2Config is
 
             {
                 bytes memory singleSignature = _getOrderSignature(
-                    contexts[i].offerer, infra.orders[i], OrderType.ASK
+                    contexts[i].castOfCharacters.offerer,
+                    infra.orders[i],
+                    OrderType.ASK
                 );
 
                 infra.orderSignature =
@@ -669,11 +677,13 @@ contract BlurV2Config is
             exchanges: infra.exchanges,
             takerFee: infra.feeRate,
             signatures: infra.orderSignature,
-            tokenRecipient: contexts[0].fulfiller
+            tokenRecipient: contexts[0].castOfCharacters.fulfiller
         });
 
         {
-            infra.oracleHash = blur.hashTakeAsk(takeAsk, contexts[0].fulfiller);
+            infra.oracleHash = blur.hashTakeAsk(
+                takeAsk, contexts[0].castOfCharacters.fulfiller
+            );
 
             signature = oracleContract.produceOracleSignature(
                 infra.oracleHash, uint32(block.number)
@@ -684,7 +694,7 @@ contract BlurV2Config is
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata nativeTokenAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -713,7 +723,7 @@ contract BlurV2Config is
     }
 
     function buildArgumentsBuyTen(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         AssetType assetType,
         uint256 tokenAmount
@@ -745,7 +755,8 @@ contract BlurV2Config is
 
         // Create the order.
         infra.order = buildOrder(
-            context.offerer, // The seller of an NFT is the "trader" here.
+            context.castOfCharacters.offerer, // The seller of an NFT is the
+                // "trader" here.
             nfts[0].token, // This is "collection" in Blur parlance.
             bytes32(0), // Listings root (merkle tree root of hashed listings),
                 // set below.
@@ -782,8 +793,9 @@ contract BlurV2Config is
         infra.order.listingsRoot = buildListingsRoot(infra.exchanges);
 
         {
-            infra.orderSignature =
-                _getOrderSignature(context.offerer, infra.order, OrderType.ASK);
+            infra.orderSignature = _getOrderSignature(
+                context.castOfCharacters.offerer, infra.order, OrderType.ASK
+            );
         }
 
         infra.orders[0] = infra.order;
@@ -793,11 +805,12 @@ contract BlurV2Config is
             exchanges: infra.exchanges,
             takerFee: infra.feeRate,
             signatures: infra.orderSignature,
-            tokenRecipient: context.fulfiller
+            tokenRecipient: context.castOfCharacters.fulfiller
         });
 
         {
-            infra.oracleHash = blur.hashTakeAsk(takeAsk, context.fulfiller);
+            infra.oracleHash =
+                blur.hashTakeAsk(takeAsk, context.castOfCharacters.fulfiller);
 
             signature = oracleContract.produceOracleSignature(
                 infra.oracleHash, uint32(block.number)
@@ -808,7 +821,7 @@ contract BlurV2Config is
     }
 
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 nativeTokenAmount
     ) external view override returns (TestOrderPayload memory execution) {

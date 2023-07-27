@@ -66,15 +66,15 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
+import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+
 import {
-    SetupCall,
     CallParameters,
     Item20,
     Item721,
     Item1155,
-    TestOrderContext,
-    TestOrderPayload
-} from "./utils/Types.sol";
+    OrderContext
+} from "../src/lib/AdapterHelperLib.sol";
 
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 
@@ -331,11 +331,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEther_ListOnChain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            standardERC721,
-            100
+            OrderContext(true, false, stdCastOfCharacters), standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -374,21 +370,20 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEther_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         // This causes the adapter to be set as the token recipient.
         if (transfersToSpecifiedTaker) {
-            context.fulfiller = adapter;
+            context.castOfCharacters.fulfiller = adapter;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -448,11 +443,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEther)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            standardERC721,
-            100
+            OrderContext(false, false, stdCastOfCharacters), standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
@@ -479,22 +470,21 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEther_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
         bool requiresTakesIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakesIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), alice);
 
@@ -535,11 +525,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithEther_ListOnChain)";
         test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            standardERC1155,
-            100
+            OrderContext(true, false, stdCastOfCharacters), standardERC1155, 100
         ) returns (TestOrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -576,9 +562,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC1155WithEther_ListOnChain_Adapter)";
         test1155_1.mint(alice, 1, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, standardERC1155, 100
@@ -633,9 +618,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithEther)";
         test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             100
         ) returns (TestOrderPayload memory payload) {
@@ -664,22 +647,21 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithEther_Adapter)";
         test1155_1.mint(alice, 1, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         // LR requires that the msg.sender is also the taker.
         bool requiresTakesIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isBlurV2(config);
 
         if (requiresTakesIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, standardERC1155, 100
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
@@ -720,9 +702,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
         ) returns (TestOrderPayload memory payload) {
@@ -766,9 +746,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC721WithERC20_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config);
@@ -780,7 +759,7 @@ contract GenericMarketplaceTest is
         // Seaport can yoink them out and enforce that the caller gets what the
         // caller expects.
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         bool transfersToSpecifiedTaker = _isSudo(config);
@@ -788,7 +767,7 @@ contract GenericMarketplaceTest is
         // This causes the adapter to be set as the token recipient, so no
         // transfers from the sidecar are necessary.
         if (transfersToSpecifiedTaker) {
-            context.fulfiller = adapter;
+            context.castOfCharacters.fulfiller = adapter;
         }
 
         test721_1.mint(alice, 1);
@@ -797,7 +776,7 @@ contract GenericMarketplaceTest is
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardERC20
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -861,9 +840,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
         ) returns (TestOrderPayload memory payload) {
@@ -895,15 +872,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC721WithERC20_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         test721_1.mint(alice, 1);
@@ -912,7 +888,7 @@ contract GenericMarketplaceTest is
             context, standardERC721, standardERC20
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
@@ -960,9 +936,7 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
         try config.getPayload_BuyOfferedERC721WithERC20(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
         ) returns (TestOrderPayload memory payload) {
@@ -1012,22 +986,21 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithWETH(
             context, standardERC721, standardWeth
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
@@ -1079,9 +1052,8 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         beth.deposit{ value: 100 }();
 
-        TestOrderContext memory context = TestOrderContext(
-            false, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, false, stdCastOfCharacters);
 
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, Item721(address(test721_1), 1), Item20(address(beth), 100)
@@ -1124,20 +1096,19 @@ contract GenericMarketplaceTest is
         // hevm.prank(bob);
         // beth.deposit{ value: 100 }();
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, Item721(address(test721_1), 1), Item20(address(beth), 100)
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(alice.balance, 0);
@@ -1156,7 +1127,7 @@ contract GenericMarketplaceTest is
                 amount: uint88(100),
                 itemType: ItemType.NATIVE,
                 shouldCallback: true,
-                recipient: context.adapter
+                recipient: context.castOfCharacters.adapter
             });
 
             flashloans[0] = flashloan;
@@ -1219,22 +1190,21 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
 
         // These aren't actually working. They're not implemented yet.
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardWeth
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1299,9 +1269,7 @@ contract GenericMarketplaceTest is
         weth.deposit{ value: 100 }();
 
         try config.getPayload_BuyOfferedERC721WithWETH(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
         ) returns (TestOrderPayload memory payload) {
@@ -1335,9 +1303,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
         ) returns (TestOrderPayload memory payload) {
@@ -1377,9 +1343,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC1155WithERC20_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
@@ -1439,9 +1404,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
         ) returns (TestOrderPayload memory payload) {
@@ -1473,15 +1436,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC1155WithERC20_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         test1155_1.mint(alice, 1, 1);
@@ -1490,7 +1452,7 @@ contract GenericMarketplaceTest is
             context, standardERC1155, standardERC20
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
@@ -1536,9 +1498,7 @@ contract GenericMarketplaceTest is
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
         ) returns (TestOrderPayload memory payload) {
@@ -1582,9 +1542,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         // Turns out X2Y2 doesn't support this, but if it did, it would need
         // this.
@@ -1592,13 +1551,13 @@ contract GenericMarketplaceTest is
 
         // X2Y2 requires that the taker is the msg.sender.
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         if (transfersToSpecifiedTaker) {
-            context.fulfiller = adapter;
+            context.castOfCharacters.fulfiller = adapter;
         }
 
         test20.mint(alice, 100);
@@ -1606,7 +1565,7 @@ contract GenericMarketplaceTest is
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1668,9 +1627,7 @@ contract GenericMarketplaceTest is
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
         ) returns (TestOrderPayload memory payload) {
@@ -1702,15 +1659,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC20WithERC721_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         test20.mint(alice, 100);
@@ -1719,7 +1675,7 @@ contract GenericMarketplaceTest is
             context, standardERC20, standardERC721
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
@@ -1767,9 +1723,7 @@ contract GenericMarketplaceTest is
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
         ) returns (TestOrderPayload memory payload) {
@@ -1813,9 +1767,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedWETHWithERC721_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         hevm.deal(alice, 100);
         hevm.prank(alice);
@@ -1888,9 +1841,7 @@ contract GenericMarketplaceTest is
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
         ) returns (TestOrderPayload memory payload) {
@@ -1922,15 +1873,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedWETHWithERC721_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         hevm.deal(alice, 100);
@@ -1940,7 +1890,7 @@ contract GenericMarketplaceTest is
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
@@ -1987,9 +1937,7 @@ contract GenericMarketplaceTest is
         beth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedBETHWithERC721(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             Item20(address(beth), 100),
             Item721(address(test721_1), 1)
         ) returns (TestOrderPayload memory payload) {
@@ -2025,14 +1973,13 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         hevm.deal(bob, 0);
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isBlurV2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedBETHWithERC721(
@@ -2110,9 +2057,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC20WithERC1155_ListOnChain)";
-        TestOrderContext memory context = TestOrderContext(
-            true, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, false, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -2154,9 +2100,8 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC20WithERC1155_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -2212,9 +2157,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC20WithERC1155)";
-        TestOrderContext memory context = TestOrderContext(
-            false, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, false, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -2248,16 +2192,15 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC20WithERC1155_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config);
 
         // Cheat the context for LR.
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         test20.mint(alice, 100);
@@ -2266,7 +2209,7 @@ contract GenericMarketplaceTest is
             context, standardERC20, standardERC1155
         ) returns (TestOrderPayload memory payload) {
             // Put the context back.
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
@@ -2309,9 +2252,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC721WithERC1155_ListOnChain)";
-        TestOrderContext memory context = TestOrderContext(
-            true, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, false, stdCastOfCharacters);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
@@ -2355,8 +2297,8 @@ contract GenericMarketplaceTest is
         _logNotSupported(config.name(), testLabel);
         return 0;
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // OrderContext memory context = OrderContext(
+        //     true, true, stdCastOfCharacters
         // );
         // test721_1.mint(alice, 1);
         // test1155_1.mint(bob, 1, 1);
@@ -2395,9 +2337,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC721WithERC1155)";
-        TestOrderContext memory context = TestOrderContext(
-            false, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, false, stdCastOfCharacters);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
@@ -2433,8 +2374,8 @@ contract GenericMarketplaceTest is
         _logNotSupported(config.name(), testLabel);
         return 0;
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // OrderContext memory context = OrderContext(
+        //     false, true, stdCastOfCharacters
         // );
         // test721_1.mint(alice, 1);
         // test1155_1.mint(bob, 1, 1);
@@ -2466,9 +2407,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC1155WithERC721_ListOnChain)";
-        TestOrderContext memory context = TestOrderContext(
-            true, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, false, stdCastOfCharacters);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
@@ -2512,8 +2452,8 @@ contract GenericMarketplaceTest is
         _logNotSupported(config.name(), testLabel);
         return 0;
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     true, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // OrderContext memory context = OrderContext(
+        //     true, true, stdCastOfCharacters
         // );
         // test1155_1.mint(alice, 1, 1);
         // test721_1.mint(bob, 1);
@@ -2552,9 +2492,8 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC1155WithERC721)";
-        TestOrderContext memory context = TestOrderContext(
-            false, false, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, false, stdCastOfCharacters);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
@@ -2590,8 +2529,8 @@ contract GenericMarketplaceTest is
         _logNotSupported(config.name(), testLabel);
         return 0;
 
-        // TestOrderContext memory context = TestOrderContext(
-        //     false, true, alice, bob, flashloanOfferer, adapter, sidecar
+        // OrderContext memory context = OrderContext(
+        //     false, true, stdCastOfCharacters
         // );
         // test1155_1.mint(alice, 1, 1);
         // test721_1.mint(bob, 1);
@@ -2605,10 +2544,10 @@ contract GenericMarketplaceTest is
         //     payload.executeOrder = AdapterHelperLib
         //         .createSeaportWrappedCallParameters(
         //         payload.executeOrder,
-        //         address(context.fulfiller),
+        //         address(context.castOfCharacters.fulfiller),
         //         seaportAddress,
         //         address(context.flashloanOfferer),
-        //         address(context.adapter),
+        //         address(context.castOfCharacters.adapter),
         //         sidecar,
         //
         //         standardERC721
@@ -2638,9 +2577,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEtherFee_ListOnChain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
@@ -2685,9 +2622,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherFee_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context,
@@ -2756,9 +2692,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEtherFee)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             100,
             feeReciever1,
@@ -2791,20 +2725,19 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEtherFee_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
@@ -2851,9 +2784,7 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             100,
             feeReciever1,
@@ -2902,9 +2833,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
@@ -2970,9 +2900,7 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEtherFeeTwoRecipients)";
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
+            OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             100,
             feeReciever1,
@@ -3008,20 +2936,19 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherFeeTwoRecipients_Adapter)";
         test721_1.mint(alice, 1);
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender = _isX2y2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
         ) returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
@@ -3077,11 +3004,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            nfts,
-            100
+            OrderContext(true, false, stdCastOfCharacters), nfts, 100
         ) returns (TestOrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3123,14 +3046,13 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEther_ListOnChain_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            true, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(true, true, stdCastOfCharacters);
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         if (transfersToSpecifiedTaker) {
-            context.fulfiller = adapter;
+            context.castOfCharacters.fulfiller = adapter;
         }
 
         Item721[] memory nfts = new Item721[](10);
@@ -3225,11 +3147,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            ),
-            nfts,
-            100
+            OrderContext(false, false, stdCastOfCharacters), nfts, 100
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
@@ -3259,15 +3177,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyTenOfferedERC721WithEther_Adapter)";
 
-        TestOrderContext memory context = TestOrderContext(
-            false, true, alice, bob, flashloanOfferer, adapter, sidecar
-        );
+        OrderContext memory context =
+            OrderContext(false, true, stdCastOfCharacters);
 
         bool requiresTakerIsSender =
             _isBlurV2(config) || _isX2y2(config) || _isLooksRareV2(config);
 
         if (requiresTakerIsSender) {
-            context.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller = sidecar;
         }
 
         Item721[] memory nfts = new Item721[](10);
@@ -3278,7 +3195,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
         returns (TestOrderPayload memory payload) {
-            context.fulfiller = bob;
+            context.castOfCharacters.fulfiller = bob;
 
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
@@ -3340,16 +3257,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyTenOfferedERC721WithEtherDistinctOrders)";
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
         }
 
@@ -3386,22 +3301,17 @@ contract GenericMarketplaceTest is
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false,
-                true,
-                alice,
-                requiresTakerIsSender ? sidecar : bob,
-                flashloanOfferer,
-                adapter,
-                sidecar
-            );
+            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
+
+            contexts[i].castOfCharacters.fulfiller =
+                requiresTakerIsSender ? sidecar : bob;
             ethAmounts[i] = 100 + i;
         }
 
@@ -3409,7 +3319,7 @@ contract GenericMarketplaceTest is
             contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
-                contexts[i].fulfiller = bob;
+                contexts[i].castOfCharacters.fulfiller = bob;
             }
 
             for (uint256 i = 1; i <= 10; i++) {
@@ -3483,16 +3393,14 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
         }
 
@@ -3536,22 +3444,17 @@ contract GenericMarketplaceTest is
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true,
-                true,
-                alice,
-                transfersToSpecifiedTaker ? adapter : bob,
-                flashloanOfferer,
-                adapter,
-                sidecar
-            );
+            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
+
+            contexts[i].castOfCharacters.fulfiller =
+                transfersToSpecifiedTaker ? adapter : bob;
 
             // There's something screwy with the ETH amounts here. For some
             // reason, this needs to be 101 instead of 100 like it is in its
@@ -3564,7 +3467,7 @@ contract GenericMarketplaceTest is
             contexts, nfts, ethAmounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
-                contexts[i].fulfiller = bob;
+                contexts[i].castOfCharacters.fulfiller = bob;
             }
 
             gasUsed = _benchmarkCallWithParams(
@@ -3654,16 +3557,14 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyTenOfferedERC721WithErc20DistinctOrders)";
 
         test20.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -3699,16 +3600,14 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
         test20.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -3717,7 +3616,8 @@ contract GenericMarketplaceTest is
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = address(contexts[i].sidecar);
+                contexts[i].castOfCharacters.fulfiller =
+                    address(contexts[i].castOfCharacters.sidecar);
             }
         }
 
@@ -3725,7 +3625,7 @@ contract GenericMarketplaceTest is
             contexts, _test20Address, nfts, erc20Amounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = bob;
+                contexts[i].castOfCharacters.fulfiller = bob;
             }
 
             for (uint256 i = 1; i <= 10; i++) {
@@ -3800,16 +3700,14 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
         test20.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -3849,7 +3747,7 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
         test20.mint(bob, 1045);
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
@@ -3860,16 +3758,15 @@ contract GenericMarketplaceTest is
         // a no-op for now.
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = address(contexts[i].sidecar);
+                contexts[i].castOfCharacters.fulfiller =
+                    address(contexts[i].castOfCharacters.sidecar);
             }
         }
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
         }
 
@@ -3877,7 +3774,7 @@ contract GenericMarketplaceTest is
             contexts, _test20Address, nfts, erc20Amounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = bob;
+                contexts[i].castOfCharacters.fulfiller = bob;
             }
 
             gasUsed = _benchmarkCallWithParams(
@@ -3960,16 +3857,14 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
@@ -4007,16 +3902,14 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                false, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
@@ -4025,7 +3918,7 @@ contract GenericMarketplaceTest is
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = sidecar;
+                contexts[i].castOfCharacters.fulfiller = sidecar;
             }
         }
 
@@ -4033,7 +3926,7 @@ contract GenericMarketplaceTest is
             contexts, wethAddress, nfts, wethAmounts
         ) returns (TestOrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].fulfiller = bob;
+                contexts[i].castOfCharacters.fulfiller = bob;
             }
 
             for (uint256 i = 1; i <= 10; i++) {
@@ -4109,16 +4002,14 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true, false, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
@@ -4161,16 +4052,14 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        TestOrderContext[] memory contexts = new TestOrderContext[](10);
+        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = TestOrderContext(
-                true, true, alice, bob, flashloanOfferer, adapter, sidecar
-            );
+            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
@@ -4231,17 +4120,44 @@ contract GenericMarketplaceTest is
         test721_1.mint(cal, 2);
         test721_1.mint(bob, 3);
 
-        TestOrderContext[] memory contexts = new TestOrderContext[](3);
+        OrderContext[] memory contexts = new OrderContext[](3);
         Item721[] memory nfts = new Item721[](3);
 
-        contexts[0] = TestOrderContext(
-            false, false, alice, address(0), flashloanOfferer, adapter, sidecar
+        contexts[0] = OrderContext(
+            false,
+            false,
+            CastOfCharacters({
+                offerer: alice,
+                fulfiller: address(0),
+                seaport: address(0),
+                flashloanOfferer: flashloanOfferer,
+                adapter: adapter,
+                sidecar: sidecar
+            })
         );
-        contexts[1] = TestOrderContext(
-            false, false, cal, address(0), flashloanOfferer, adapter, sidecar
+        contexts[1] = OrderContext(
+            false,
+            false,
+            CastOfCharacters({
+                offerer: cal,
+                fulfiller: address(0),
+                seaport: address(0),
+                flashloanOfferer: flashloanOfferer,
+                adapter: adapter,
+                sidecar: sidecar
+            })
         );
-        contexts[2] = TestOrderContext(
-            false, false, bob, address(0), flashloanOfferer, adapter, sidecar
+        contexts[2] = OrderContext(
+            false,
+            false,
+            CastOfCharacters({
+                offerer: bob,
+                fulfiller: address(0),
+                seaport: address(0),
+                flashloanOfferer: flashloanOfferer,
+                adapter: adapter,
+                sidecar: sidecar
+            })
         );
 
         nfts[0] = standardERC721;
@@ -4287,17 +4203,17 @@ contract GenericMarketplaceTest is
         // test721_1.mint(cal, 2);
         // test721_1.mint(bob, 3);
 
-        // TestOrderContext[] memory contexts = new TestOrderContext[](3);
+        // OrderContext[] memory contexts = new OrderContext[](3);
         // Item721[] memory nfts = new Item721[](3);
 
-        // contexts[0] = TestOrderContext(
+        // contexts[0] = OrderContext(
         //     false, true, alice, address(0), flashloanOfferer, adapter,
         // sidecar
         // );
-        // contexts[1] = TestOrderContext(
+        // contexts[1] = OrderContext(
         //     false, true, cal, address(0), flashloanOfferer, adapter, sidecar
         // );
-        // contexts[2] = TestOrderContext(
+        // contexts[2] = OrderContext(
         //     false, true, bob, address(0), flashloanOfferer, adapter, sidecar
         // );
 

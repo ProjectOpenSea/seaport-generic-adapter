@@ -34,14 +34,35 @@ import {
     OrderParameters
 } from "seaport-sol/SeaportStructs.sol";
 
-import {
-    CallParameters,
-    Item20,
-    Item721,
-    Item1155
-} from "../../test/utils/Types.sol";
-
 import "forge-std/console.sol";
+
+struct Item721 {
+    address token;
+    uint256 identifier;
+}
+
+struct Item1155 {
+    address token;
+    uint256 identifier;
+    uint256 amount;
+}
+
+struct Item20 {
+    address token;
+    uint256 amount;
+}
+
+struct CallParameters {
+    address target;
+    uint256 value;
+    bytes data;
+}
+
+struct OrderContext {
+    bool listOnChain;
+    bool routeThroughAdapter;
+    CastOfCharacters castOfCharacters;
+}
 
 /**
  * @dev A Flashloan is a struct that specifies the amount, type, and recipient

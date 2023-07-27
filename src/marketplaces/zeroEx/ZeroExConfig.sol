@@ -5,15 +5,14 @@ import "solmate/tokens/ERC20.sol";
 import "forge-std/Test.sol";
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    SetupCall,
     CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
+    Item20,
     Item721,
     Item1155,
-    Item20
-} from "../../../test/utils/Types.sol";
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 import { IZeroEx } from "./interfaces/IZeroEx.sol";
 import "./lib/LibNFTOrder.sol";
 import "./lib/LibSignature.sol";
@@ -49,14 +48,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -109,14 +108,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -172,14 +171,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -231,14 +230,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -290,14 +289,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -352,14 +351,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -418,14 +417,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -484,14 +483,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -552,7 +551,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
@@ -569,7 +568,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -622,7 +621,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
@@ -646,7 +645,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
-            maker: context.offerer,
+            maker: context.castOfCharacters.offerer,
             taker: address(0),
             expiry: block.timestamp + 120,
             nonce: testNonce,
@@ -700,7 +699,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -730,7 +729,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             // Prepare the order
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
@@ -766,7 +765,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -787,7 +786,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             // Prepare the order
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
@@ -827,7 +826,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -848,7 +847,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             // Prepare the order
             orders[i] = LibNFTOrder.ERC721Order({
                 direction: LibNFTOrder.TradeDirection.SELL_NFT,
-                maker: contexts[i].offerer,
+                maker: contexts[i].castOfCharacters.offerer,
                 taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,

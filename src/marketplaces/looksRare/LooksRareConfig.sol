@@ -6,15 +6,14 @@ import { OrderTypes } from "./lib/OrderTypes.sol";
 import { ILooksRareExchange } from "./interfaces/ILooksRareExchange.sol";
 import { ICurrencyManager } from "./interfaces/ICurrencyManager.sol";
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
 import {
-    CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
     Item721,
     Item1155,
     Item20,
-    SetupCall
-} from "../../../test/utils/Types.sol";
+    CallParameters,
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 import { CastOfCharacters } from "../../../src/lib/AdapterHelperLib.sol";
 
 contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
@@ -140,15 +139,21 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     //////////////////////////////////////////////////////////////*/
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
-            true, context.offerer, WETH, ethAmount, nft.token, 1, nft.identifier
+            true,
+            context.castOfCharacters.offerer,
+            WETH,
+            ethAmount,
+            nft.token,
+            1,
+            nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -165,13 +170,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
-            context.offerer,
+            context.castOfCharacters.offerer,
             WETH,
             ethAmount,
             nft.token,
@@ -179,7 +184,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -196,13 +201,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -210,7 +215,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -228,13 +233,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -242,7 +247,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -260,13 +265,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         Item20 calldata erc20
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -274,7 +279,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -292,13 +297,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -306,7 +311,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -324,13 +329,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -338,7 +343,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();
@@ -356,13 +361,13 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     }
 
     function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 calldata erc20,
         Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
-            context.offerer,
+            context.castOfCharacters.offerer,
             erc20.token,
             erc20.amount,
             nft.token,
@@ -370,7 +375,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
             nft.identifier
         );
         OrderTypes.TakerOrder memory takerOrder =
-            buildTakerOrder(context.fulfiller, makerOrder);
+            buildTakerOrder(context.castOfCharacters.fulfiller, makerOrder);
 
         if (context.listOnChain) {
             _notImplemented();

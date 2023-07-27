@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+
 import {
-    SetupCall,
-    TestOrderPayload,
-    TestOrderContext,
     CallParameters,
     Item20,
     Item721,
     Item1155
-} from "./utils/Types.sol";
+} from "../src/lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { AdapterHelperLib } from "../src/lib/AdapterHelperLib.sol";
+import { AdapterHelperLib, OrderContext } from "../src/lib/AdapterHelperLib.sol";
 
 import { FlashloanOffererInterface } from
     "../src/interfaces/FlashloanOffererInterface.sol";
@@ -112,7 +111,7 @@ abstract contract BaseMarketConfig {
      * @ param ethAmount Amount of Ether to be received for the NFT.
      */
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 calldata,
         uint256
     ) external virtual returns (TestOrderPayload memory) {
@@ -132,7 +131,7 @@ abstract contract BaseMarketConfig {
      * @ param ethAmount Amount of Ether to be received for the NFT.
      */
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item1155 calldata,
         uint256
     ) external view virtual returns (TestOrderPayload memory) {
@@ -152,7 +151,7 @@ abstract contract BaseMarketConfig {
      * @ param erc20 Address and amount for ERC20 to be received for nft.
      */
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 calldata,
         Item20 calldata
     ) external virtual returns (TestOrderPayload memory) {
@@ -180,7 +179,7 @@ abstract contract BaseMarketConfig {
      * @ param erc20 Address and amount for WETH to be received for nft.
      */
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 calldata,
         Item20 calldata
     ) external virtual returns (TestOrderPayload memory) {
@@ -188,7 +187,7 @@ abstract contract BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedERC721WithBETH(
-        TestOrderContext calldata, /* context */
+        OrderContext calldata, /* context */
         Item721 calldata, /* nft */
         Item20 calldata /* erc20*/
     ) external virtual returns (TestOrderPayload memory /*execution*/ ) {
@@ -208,7 +207,7 @@ abstract contract BaseMarketConfig {
      * @ param erc20 Address and amount for ERC20 to be received for nft.
      */
     function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item1155 calldata,
         Item20 calldata
     ) external view virtual returns (TestOrderPayload memory) {
@@ -228,7 +227,7 @@ abstract contract BaseMarketConfig {
      * @ param nft Address and ID for 721 token to be received for ERC20.
      */
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item20 calldata,
         Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
@@ -247,7 +246,7 @@ abstract contract BaseMarketConfig {
      * @ param nft Address and ID for 721 token to be received for WETH.
      */
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item20 calldata,
         Item721 calldata
     ) external virtual returns (TestOrderPayload memory) {
@@ -255,7 +254,7 @@ abstract contract BaseMarketConfig {
     }
 
     function getPayload_BuyOfferedBETHWithERC721(
-        TestOrderContext calldata, /* context */
+        OrderContext calldata, /* context */
         Item20 calldata, /* erc20 */
         Item721 calldata /* nft */
     ) external virtual returns (TestOrderPayload memory /* execution */ ) {
@@ -276,7 +275,7 @@ abstract contract BaseMarketConfig {
      * ERC20.
      */
     function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item20 calldata,
         Item1155 calldata
     ) external view virtual returns (TestOrderPayload memory) {
@@ -297,7 +296,7 @@ abstract contract BaseMarketConfig {
      * ERC721.
      */
     function getPayload_BuyOfferedERC721WithERC1155(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 calldata,
         Item1155 calldata
     ) external view virtual returns (TestOrderPayload memory) {
@@ -318,7 +317,7 @@ abstract contract BaseMarketConfig {
      * ERC1155.
      */
     function getPayload_BuyOfferedERC1155WithERC721(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item1155 calldata,
         Item721 calldata
     ) external view virtual returns (TestOrderPayload memory) {
@@ -340,7 +339,7 @@ abstract contract BaseMarketConfig {
      * @ param feeEthAmount Amount of Ether to send for fee.
      */
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 memory,
         uint256,
         address,
@@ -366,7 +365,7 @@ abstract contract BaseMarketConfig {
      * @ param feeEthAmount2 Amount of Ether to send for second fee.
      */
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721 memory,
         uint256,
         address,
@@ -390,7 +389,7 @@ abstract contract BaseMarketConfig {
      * @ param ethAmount Amount of Ether to be received for the NFT.
      */
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata,
+        OrderContext calldata,
         Item721[] calldata,
         uint256
     ) external virtual returns (TestOrderPayload memory) {
@@ -409,7 +408,7 @@ abstract contract BaseMarketConfig {
      * each order
      */
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata,
+        OrderContext[] calldata,
         Item721[] calldata,
         uint256[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
@@ -429,7 +428,7 @@ abstract contract BaseMarketConfig {
      * in each order
      */
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata,
+        OrderContext[] calldata,
         address,
         Item721[] calldata,
         uint256[] calldata
@@ -450,7 +449,7 @@ abstract contract BaseMarketConfig {
      * each order
      */
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-        TestOrderContext[] calldata,
+        OrderContext[] calldata,
         address,
         Item721[] calldata,
         uint256[] calldata
@@ -470,14 +469,14 @@ abstract contract BaseMarketConfig {
      * @ param nfts Array of NFTs in the order A, B, C...
      */
     function getPayload_MatchOrders_ABCA(
-        TestOrderContext[] calldata,
+        OrderContext[] calldata,
         Item721[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();
     }
 
     function getPayload_MatchOrders_Aggregate(
-        TestOrderContext[] calldata,
+        OrderContext[] calldata,
         Item721[] calldata
     ) external view virtual returns (TestOrderPayload memory) {
         _notImplemented();

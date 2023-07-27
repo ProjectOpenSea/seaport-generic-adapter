@@ -2,14 +2,15 @@
 pragma solidity >=0.8.7;
 
 import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { TestOrderPayload } from "../../../test/utils/Types.sol";
+
 import {
     CallParameters,
-    TestOrderContext,
-    TestOrderPayload,
     Item721,
     Item1155,
-    Item20
-} from "../../../test/utils/Types.sol";
+    Item20,
+    OrderContext
+} from "../../lib/AdapterHelperLib.sol";
 import "seaport-types/lib/ConsiderationStructs.sol";
 import "./lib/ConsiderationTypeHashes.sol";
 import { ConsiderationInterface as ISeaport } from
@@ -185,7 +186,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function buildOrderAndFulfillmentManyDistinctOrders(
-        TestOrderContext[] memory contexts,
+        OrderContext[] memory contexts,
         address paymentTokenAddress,
         Item721[] memory nfts,
         uint256[] memory amounts
@@ -219,12 +220,14 @@ contract SeaportOnePointFiveConfig is
                     0,
                     amounts[i],
                     amounts[i],
-                    payable(contexts[i].offerer)
+                    payable(contexts[i].castOfCharacters.offerer)
                 );
             }
             {
                 orders[i] = buildOrder(
-                    contexts[i].offerer, offerItems, considerationItems
+                    contexts[i].castOfCharacters.offerer,
+                    offerItems,
+                    considerationItems
                 );
             }
             {
@@ -234,7 +237,7 @@ contract SeaportOnePointFiveConfig is
                     nfts[i].identifier,
                     1,
                     1,
-                    payable(contexts[i].fulfiller)
+                    payable(contexts[i].castOfCharacters.fulfiller)
                 );
             }
             {
@@ -304,7 +307,7 @@ contract SeaportOnePointFiveConfig is
             sumAmounts
         );
         orders[nfts.length] = buildOrder(
-            contexts[0].fulfiller,
+            contexts[0].castOfCharacters.fulfiller,
             fulfillerOfferItems,
             fulfillerConsiderationItems
         );
@@ -320,14 +323,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ETH_TO_ERC721,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
             ConsiderationItem(
                 ItemType.NATIVE,
@@ -335,7 +338,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 ethAmount,
                 ethAmount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -361,14 +364,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC1155WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 memory nft,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ETH_TO_ERC1155,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(
                 ItemType.ERC1155,
                 nft.token,
@@ -382,7 +385,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 ethAmount,
                 ethAmount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -433,14 +436,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC20_TO_ERC721,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
             ConsiderationItem(
                 ItemType.ERC20,
@@ -448,7 +451,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 erc20.amount,
                 erc20.amount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -474,14 +477,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithWETH(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC20_TO_ERC721,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
             ConsiderationItem(
                 ItemType.ERC20,
@@ -489,7 +492,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 erc20.amount,
                 erc20.amount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -543,14 +546,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC1155WithERC20(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 calldata nft,
         Item20 memory erc20
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC20_TO_ERC1155,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(
                 ItemType.ERC1155,
                 nft.token,
@@ -564,7 +567,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 erc20.amount,
                 erc20.amount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -590,14 +593,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC20WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC721_TO_ERC20,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(
                 ItemType.ERC20, erc20.token, 0, erc20.amount, erc20.amount
             ),
@@ -607,7 +610,7 @@ contract SeaportOnePointFiveConfig is
                 nft.identifier,
                 1,
                 1,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -633,14 +636,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedWETHWithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC721_TO_ERC20,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(
                 ItemType.ERC20, erc20.token, 0, erc20.amount, erc20.amount
             ),
@@ -650,7 +653,7 @@ contract SeaportOnePointFiveConfig is
                 nft.identifier,
                 1,
                 1,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -703,14 +706,14 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC20WithERC1155(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item20 memory erc20,
         Item1155 calldata nft
     ) external view override returns (TestOrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ERC1155_TO_ERC20,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(
                 ItemType.ERC20, erc20.token, 0, erc20.amount, erc20.amount
             ),
@@ -720,7 +723,7 @@ contract SeaportOnePointFiveConfig is
                 nft.identifier,
                 nft.amount,
                 nft.amount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             )
         );
         if (context.listOnChain) {
@@ -746,7 +749,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithERC1155(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory sellNft,
         Item1155 calldata buyNft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -763,11 +766,12 @@ contract SeaportOnePointFiveConfig is
             buyNft.identifier,
             buyNft.amount,
             buyNft.amount,
-            payable(context.offerer)
+            payable(context.castOfCharacters.offerer)
         );
 
-        Order memory order =
-            buildOrder(context.offerer, offerItems, considerationItems);
+        Order memory order = buildOrder(
+            context.castOfCharacters.offerer, offerItems, considerationItems
+        );
 
         if (context.listOnChain) {
             order.signature = "";
@@ -788,7 +792,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC1155WithERC721(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item1155 memory sellNft,
         Item721 calldata buyNft
     ) external view override returns (TestOrderPayload memory execution) {
@@ -810,11 +814,12 @@ contract SeaportOnePointFiveConfig is
             buyNft.identifier,
             1,
             1,
-            payable(context.offerer)
+            payable(context.castOfCharacters.offerer)
         );
 
-        Order memory order =
-            buildOrder(context.offerer, offerItems, considerationItems);
+        Order memory order = buildOrder(
+            context.castOfCharacters.offerer, offerItems, considerationItems
+        );
 
         if (context.listOnChain) {
             order.signature = "";
@@ -835,7 +840,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient,
@@ -848,7 +853,7 @@ contract SeaportOnePointFiveConfig is
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ETH_TO_ERC721,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
             ConsiderationItem(
                 ItemType.NATIVE,
@@ -856,7 +861,7 @@ contract SeaportOnePointFiveConfig is
                 0,
                 priceEthAmount,
                 priceEthAmount,
-                payable(context.offerer)
+                payable(context.castOfCharacters.offerer)
             ),
             additionalRecipients
         );
@@ -883,7 +888,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721 memory nft,
         uint256 priceEthAmount,
         address feeRecipient1,
@@ -904,12 +909,12 @@ contract SeaportOnePointFiveConfig is
             0,
             priceEthAmount,
             priceEthAmount,
-            payable(context.offerer)
+            payable(context.castOfCharacters.offerer)
         );
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
             BasicOrderRouteType.ETH_TO_ERC721,
-            context.offerer,
+            context.castOfCharacters.offerer,
             OfferItem(ItemType.ERC721, nft.token, nft.identifier, 1, 1),
             consideration,
             additionalRecipients
@@ -937,7 +942,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedManyERC721WithEther(
-        TestOrderContext calldata context,
+        OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
     ) external view override returns (TestOrderPayload memory execution) {
@@ -959,11 +964,12 @@ contract SeaportOnePointFiveConfig is
             0,
             ethAmount,
             ethAmount,
-            payable(context.offerer)
+            payable(context.castOfCharacters.offerer)
         );
 
-        Order memory order =
-            buildOrder(context.offerer, offerItems, considerationItems);
+        Order memory order = buildOrder(
+            context.castOfCharacters.offerer, offerItems, considerationItems
+        );
 
         if (context.listOnChain) {
             order.signature = "";
@@ -985,7 +991,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (TestOrderPayload memory execution) {
@@ -1031,7 +1037,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -1074,7 +1080,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
@@ -1117,7 +1123,7 @@ contract SeaportOnePointFiveConfig is
     }
 
     function getPayload_MatchOrders_ABCA(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts
     ) external view override returns (TestOrderPayload memory execution) {
         require(contexts.length == nfts.length, "invalid input");
@@ -1142,10 +1148,12 @@ contract SeaportOnePointFiveConfig is
                     nfts[wrappedIndex].identifier,
                     1,
                     1,
-                    payable(contexts[i].offerer)
+                    payable(contexts[i].castOfCharacters.offerer)
                 );
                 orders[i] = buildOrder(
-                    contexts[i].offerer, offerItems, considerationItems
+                    contexts[i].castOfCharacters.offerer,
+                    offerItems,
+                    considerationItems
                 );
             }
             // Set fulfillment
@@ -1184,7 +1192,7 @@ contract SeaportOnePointFiveConfig is
     // their corresponding mirror orders, and the adapter order to execute
     // the aggregated orders from other marketplaces.
     function getPayload_MatchOrders_Aggregate(
-        TestOrderContext[] calldata contexts,
+        OrderContext[] calldata contexts,
         Item721[] calldata nfts
     ) external view override returns (TestOrderPayload memory execution) {
         require(contexts.length == nfts.length, "invalid input");
@@ -1209,10 +1217,12 @@ contract SeaportOnePointFiveConfig is
                     nfts[wrappedIndex].identifier,
                     1,
                     1,
-                    payable(contexts[i].offerer)
+                    payable(contexts[i].castOfCharacters.offerer)
                 );
                 orders[i] = buildOrder(
-                    contexts[i].offerer, offerItems, considerationItems
+                    contexts[i].castOfCharacters.offerer,
+                    offerItems,
+                    considerationItems
                 );
             }
             // Set fulfillment
