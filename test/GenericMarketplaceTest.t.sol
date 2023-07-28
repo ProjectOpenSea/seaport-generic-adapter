@@ -474,10 +474,10 @@ contract GenericMarketplaceTest is
             OrderContext(false, true, stdCastOfCharacters);
 
         // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
-        bool requiresTakesIsSender = _isBlur(config) || _isBlurV2(config)
+        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
-        if (requiresTakesIsSender) {
+        if (requiresTakerIsSender) {
             context.castOfCharacters.fulfiller = sidecar;
         }
 
@@ -651,10 +651,10 @@ contract GenericMarketplaceTest is
             OrderContext(false, true, stdCastOfCharacters);
 
         // LR requires that the msg.sender is also the taker.
-        bool requiresTakesIsSender =
+        bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isBlurV2(config);
 
-        if (requiresTakesIsSender) {
+        if (requiresTakerIsSender) {
             context.castOfCharacters.fulfiller = sidecar;
         }
 
