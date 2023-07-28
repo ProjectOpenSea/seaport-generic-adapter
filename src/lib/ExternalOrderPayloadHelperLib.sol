@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.14;
 
-import { StdCheats } from "forge-std/StdCheats.sol";
-
-import { Vm } from "forge-std/Vm.sol";
-
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
 import { OfferItemLib } from "seaport-sol/lib/OfferItemLib.sol";
@@ -39,9 +35,6 @@ import {
     Call
 } from "../interfaces/GenericAdapterSidecarInterface.sol";
 
-import { ConsiderationInterface as ISeaport } from
-    "seaport-types/interfaces/ConsiderationInterface.sol";
-
 import { BaseMarketConfig } from "../marketplaces/BaseMarketConfig.sol";
 
 import { BlurConfig } from "../marketplaces/blur/BlurConfig.sol";
@@ -65,7 +58,7 @@ import { X2Y2Config } from "../marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../marketplaces/zeroEx/ZeroExConfig.sol";
 
-import { SetupCall, OrderPayload } from "../utils/Types.sol";
+import { OrderPayload } from "../utils/Types.sol";
 
 import {
     Call,
@@ -80,11 +73,9 @@ import { ConsiderationTypeHashes } from
 
 import "forge-std/console.sol";
 
-address constant VM_ADDRESS =
-    address(uint160(uint256(keccak256("hevm cheat code"))));
-Vm constant vm = Vm(VM_ADDRESS);
+// NOTE: I might need something from ConsiderationTypeHashes.sol
 
-library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
+library ExternalOrderPayloadHelperLib {
     using ConsiderationItemLib for ConsiderationItem;
     using ConsiderationItemLib for ConsiderationItem[];
     using OfferItemLib for OfferItem;
@@ -172,7 +163,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
 
@@ -187,12 +178,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             context, standardERC721, 100
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
@@ -214,14 +199,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -230,19 +208,12 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(false, false, stdCastOfCharacters), standardERC721, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -251,7 +222,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithEther_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -283,14 +254,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -299,19 +263,12 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithEther_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(true, false, stdCastOfCharacters), standardERC1155, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -319,7 +276,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC1155WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC1155WithEther_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -342,14 +299,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -358,21 +308,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -381,7 +324,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithEther_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -413,14 +356,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -429,27 +365,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC20_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -457,7 +380,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithERC20_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -489,12 +412,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
@@ -515,14 +432,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -531,21 +441,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC20(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -554,7 +457,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC20_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -586,14 +489,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -602,27 +498,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithWETH_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -631,7 +514,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithWETH_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -666,14 +549,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -682,7 +558,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithBETH(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         beth.deposit{ value: 100 }();
 
@@ -692,14 +568,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, Item721(address(test721_1), 1), Item20(address(beth), 100)
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -708,12 +577,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithBETH_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         // Bob doesn't deposit BETH for this, he sends native tokens, gets a
         // flashloan, which goes from adapter to sidecar to BETH's deposit
         // function, and then the sidecar uses the BETH to fulfill the listing.
-        // hevm.prank(bob);
         // beth.deposit{ value: 100 }();
 
         OrderContext memory context =
@@ -778,14 +646,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
             payload.executeOrder.value = 100;
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -793,7 +654,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithWETH_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithWETH_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -812,12 +673,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
             ConsiderationItem[] memory adapterOrderConsideration =
             ConsiderationItemLib.fromDefaultMany(
                 "standardWethConsiderationArray"
@@ -835,14 +690,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -851,21 +699,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithWETH(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithWETH(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -874,21 +715,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithERC20_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC1155WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -896,7 +730,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC1155WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC1155WithERC20_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -919,14 +753,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -935,21 +762,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithERC20(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC1155WithERC20(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -958,7 +778,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithERC20_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -990,14 +810,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1006,7 +819,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC721_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(true, false, stdCastOfCharacters),
@@ -1019,14 +832,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                     || test20.balanceOf(config.market()) == 100
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1034,7 +840,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC20WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -1084,14 +890,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1100,21 +899,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1123,7 +915,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC721_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1155,14 +947,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1171,7 +956,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedWETHWithERC721_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(true, false, stdCastOfCharacters),
@@ -1181,14 +966,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             // Allow the market to escrow after listing
             assert();
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1196,7 +974,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedWETHWithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedWETHWithERC721_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -1209,7 +987,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             assert();
 
             // Look into why test20 requires an explicit approval lol.
-            vm.prank(sidecar);
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standardWethTransfer;
@@ -1225,14 +1002,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1241,21 +1011,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedWETHWithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(false, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1264,7 +1027,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedWETHWithERC721_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1295,14 +1058,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1318,14 +1074,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             Item20(address(beth), 100),
             Item721(address(test721_1), 1)
         ) returns (OrderPayload memory payload) {
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1393,14 +1142,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1409,21 +1151,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC1155_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1431,7 +1166,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC20WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC20WithERC1155_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -1453,14 +1188,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1469,21 +1197,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC1155(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1492,7 +1213,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC20WithERC1155_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1525,14 +1246,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1541,21 +1255,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC1155_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1563,7 +1270,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithERC1155_ListOnChain_Adapter)";
 
         // Only seaport, skip for now.
@@ -1605,21 +1312,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC1155(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1628,7 +1328,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithERC1155_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         // Only seaport, skip for now.
         _logNotSupported();
@@ -1662,21 +1362,14 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithERC721_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1684,63 +1377,25 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC1155WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC1155WithERC721_ListOnChain_Adapter)";
 
         // Only seaport so skipping here.
         _logNotSupported();
         return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     true, true, stdCastOfCharacters
-        // );
-        // try config.getPayload_BuyOfferedERC1155WithERC721(
-        //     context,
-        //     standardERC1155,
-        //     standardERC721
-        // ) returns (OrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        // } catch {
-        //     _logNotSupported();
-        // }
     }
 
     function buyOfferedERC1155WithERC721(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1749,54 +1404,17 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC1155WithERC721_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
-        // Only seaport so skipping here.
+        // Only seaport so skipping here for now.
         _logNotSupported();
-        return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     false, true, stdCastOfCharacters
-        // );
-
-        // try config.getPayload_BuyOfferedERC1155WithERC721(
-        //     context, standardERC1155, standardERC721
-        // ) returns (OrderPayload memory payload) {
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-        //     payload.executeOrder = AdapterHelperLib
-        //         .createSeaportWrappedCallParameters(
-        //         payload.executeOrder,
-        //         address(context.castOfCharacters.fulfiller),
-        //         seaportAddress,
-        //         address(context.flashloanOfferer),
-        //         address(context.castOfCharacters.adapter),
-        //         sidecar,
-        //
-        //         standardERC721
-        //     );
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-        //         true,
-        //         true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        // } catch {
-        //     _logNotSupported();
-        // }
+        return payload;
     }
 
     function buyOfferedERC721WithEtherFee_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(true, false, stdCastOfCharacters),
@@ -1805,20 +1423,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             feeReciever1,
             5
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1826,7 +1431,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithEtherFee_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithEtherFee_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -1839,12 +1444,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             feeReciever1,
             5
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
                 1
@@ -1865,14 +1464,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1881,7 +1473,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithEtherFee(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(false, false, stdCastOfCharacters),
@@ -1890,14 +1482,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             feeReciever1,
             5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1906,7 +1491,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithEtherFee_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1942,14 +1527,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1957,7 +1535,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain)";
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(true, false, stdCastOfCharacters),
@@ -1968,20 +1546,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             feeReciever2,
             5
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -1989,7 +1554,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -2023,14 +1588,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -2039,7 +1597,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyOfferedERC721WithEtherFeeTwoRecipients(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(false, false, stdCastOfCharacters),
@@ -2050,14 +1608,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             feeReciever2,
             5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fullfil /w Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -2065,7 +1616,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyOfferedERC721WithEtherFeeTwoRecipients_Adapter)";
 
         OrderContext memory context =
@@ -2102,14 +1653,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -2118,7 +1662,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithEther_ListOnChain(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
@@ -2136,14 +1680,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 );
             }
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
             for (uint256 i = 0; i < 10; i++) { }
         } catch {
@@ -2153,7 +1690,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithEther_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -2216,14 +1753,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
             for (uint256 i = 0; i < 10; i++) { }
         } catch {
@@ -2234,7 +1764,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithEther(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
@@ -2244,18 +1774,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithEther(
             OrderContext(false, false, stdCastOfCharacters), nfts, 100
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) { }
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sig")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
-
-            for (uint256 i = 0; i < 10; i++) { }
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -2264,7 +1783,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithEther_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -2319,14 +1838,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
             for (uint256 i = 0; i < 10; i++) { }
         } catch {
@@ -2337,7 +1849,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithEtherDistinctOrders(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -2352,18 +1864,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2371,7 +1876,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithEtherDistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
@@ -2397,7 +1902,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
             uint256 flashloanAmount;
 
@@ -2443,16 +1948,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2460,7 +1958,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -2479,16 +1977,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             // @dev checking ownership here (when nfts are escrowed in different
             // contracts) is messy so we skip it for now
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2496,7 +1987,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
         bool transfersToSpecifiedTaker = _isSudo(config);
@@ -2579,16 +2070,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
             payload.executeOrder.value = flashloanAmount;
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2597,7 +2081,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithErc20DistinctOrders(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -2612,18 +2096,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2631,7 +2108,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithErc20DistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -2661,7 +2138,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
             ConsiderationItem[] memory adapterOrderConsideration =
                 new ConsiderationItem[](1);
@@ -2706,16 +2183,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2723,7 +2193,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -2739,16 +2209,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2756,7 +2219,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -2832,16 +2295,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2850,7 +2306,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function buyTenOfferedERC721WithWETHDistinctOrders(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
@@ -2865,18 +2321,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2884,9 +2333,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithWETHDistinctOrders_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
-        "(buyTenOfferedERC721WithWETHDistinctOrders_Adapter)";
-
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
@@ -2913,7 +2360,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
 
             uint256 totalWethAmount;
 
@@ -2957,16 +2404,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 sidecarItemTransfers
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -2974,7 +2414,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
 
     function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -2990,16 +2430,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -3008,7 +2441,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     // This is a no-op for now.
     function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
+    ) internal prepareTest(config) returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -3041,16 +2474,9 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                 new ItemTransfer[](0)
             );
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
 
-            for (uint256 i = 1; i <= 10; i++) { }
+            
         } catch {
             _logNotSupported();
         }
@@ -3059,7 +2485,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function benchmark_MatchOrders_ABCA(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         OrderContext[] memory contexts = new OrderContext[](3);
         Item721[] memory nfts = new Item721[](3);
@@ -3108,14 +2534,7 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
             OrderPayload memory payload
         ) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill /w Sigs")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
+            return payload;
         } catch {
             _logNotSupported();
         }
@@ -3124,118 +2543,21 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
     function benchmark_MatchOrders_ABCA_Adapter(BaseMarketConfig config)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
         // Seaport only.
         _logNotSupported();
         return 0;
-
-        // OrderContext[] memory contexts = new OrderContext[](3);
-        // Item721[] memory nfts = new Item721[](3);
-
-        // contexts[0] = OrderContext(
-        //     false, true, alice, address(0), flashloanOfferer, adapter,
-        // sidecar
-        // );
-        // contexts[1] = OrderContext(
-        //     false, true, cal, address(0), flashloanOfferer, adapter, sidecar
-        // );
-        // contexts[2] = OrderContext(
-        //     false, true, bob, address(0), flashloanOfferer, adapter, sidecar
-        // );
-
-        // nfts[0] = standardERC721;
-        // nfts[1] = standardERC721Two;
-        // nfts[2] = Item721(_test721Address, 3);
-
-        // try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-        //     OrderPayload memory payload
-        // ) {
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test721_1.ownerOf(2), cal);
-        //     assertEq(test721_1.ownerOf(3), bob);
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test721_1.ownerOf(2), alice);
-        //     assertEq(test721_1.ownerOf(3), cal);
-        // } catch {
-        //     _logNotSupported();
-        // }
     }
 
     /*//////////////////////////////////////////////////////////////
                           Helpers
     //////////////////////////////////////////////////////////////*/
 
-    function setUp() public virtual override {
-        super.setUp();
-    }
+    // Note: this is where `_setApprovals` in `prepareTest` was.
+    // TODO: Think about making a nice tool to set up necessary approvals.
 
-    modifier prepareTest(BaseMarketConfig config) {
-        _resetStorageAndEth(config.market());
-        require(
-            config.sellerErc20ApprovalTarget() != address(0)
-                && config.sellerNftApprovalTarget() != address(0)
-                && config.buyerErc20ApprovalTarget() != address(0)
-                && config.buyerNftApprovalTarget() != address(0),
-            "BaseMarketplaceTester::prepareTest: approval target not set"
-        );
-        _setApprovals(
-            alice,
-            config.sellerErc20ApprovalTarget(),
-            config.sellerNftApprovalTarget(),
-            config.sellerErc1155ApprovalTarget()
-        );
-        _setApprovals(
-            cal,
-            config.sellerErc20ApprovalTarget(),
-            config.sellerNftApprovalTarget(),
-            config.sellerErc1155ApprovalTarget()
-        );
-        _setApprovals(
-            bob,
-            config.buyerErc20ApprovalTarget(),
-            config.buyerNftApprovalTarget(),
-            config.buyerErc1155ApprovalTarget()
-        );
-        // This simulates passing in a Call that approves some target
-        // marketplace.
-        _setApprovals(
-            sidecar,
-            config.buyerErc20ApprovalTarget(),
-            config.buyerNftApprovalTarget(),
-            config.buyerErc1155ApprovalTarget()
-        );
-        _setApprovals(
-            sidecar,
-            config.sellerErc20ApprovalTarget(),
-            config.sellerNftApprovalTarget(),
-            config.sellerErc1155ApprovalTarget()
-        );
-        _;
-    }
-
-    function signDigest(address signer, bytes32 digest)
-        external
-        returns (uint8 v, bytes32 r, bytes32 s)
-    {
-        (v, r, s) = hevm.sign(privateKeys[signer], digest);
-    }
-
-    function _signDigest(address signer, bytes32 digest)
-        internal
-        returns (uint8 v, bytes32 r, bytes32 s)
-    {
-        (v, r, s) = hevm.sign(privateKeys[signer], digest);
-    }
-
+    // TODO: make this a script that initializes the contracts.
     function _setAdapterSpecificApprovals() internal {
         // This is where the users of the adapter approve the adapter to
         // transfer their tokens.
@@ -3269,7 +2591,6 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
                         )
                 }
 
-                vm.prank(adapterUsers[i]);
                 (success,) = address(approval.token).call(
                     abi.encodeWithSelector(
                         bytes4(bytes32(selector << 224)), adapter, approvalValue
@@ -3294,14 +2615,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         );
 
         // Prank seaport to allow hitting the adapter directly.
-        vm.prank(seaportAddress);
         testAdapter.generateOrder(
             address(this), new SpentItem[](0), new SpentItem[](0), contextArg
         );
 
-        vm.startPrank(sidecar);
         test20.approve(sidecar, type(uint256).max);
-        vm.stopPrank();
     }
 
     function _doSetup() internal {
@@ -3312,16 +2630,12 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
             )
         );
 
-        vm.recordLogs();
-
         testAdapter = GenericAdapterInterface(
             deployCode(
                 "out/GenericAdapter.sol/GenericAdapter.json",
                 abi.encode(seaportAddress, address(testFlashloanOfferer))
             )
         );
-
-        Vm.Log[] memory entries = vm.getRecordedLogs();
 
         testSidecar = GenericAdapterSidecarInterface(
             abi.decode(entries[0].data, (address))
@@ -3331,175 +2645,8 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         adapter = address(testAdapter);
         sidecar = address(testSidecar);
         wethAddress = address(weth);
-        _test20Address = address(test20);
-        _test721Address = address(test721_1);
-        _test1155Address = address(test1155_1);
 
-        standardWeth = Item20(wethAddress, 100);
-        standardERC20 = Item20(_test20Address, 100);
-        standardERC721 = Item721(_test721Address, 1);
-        standardERC721Two = Item721(_test721Address, 2);
-        standardERC1155 = Item1155(_test1155Address, 1, 1);
-
-        standardWethTransfer = ItemTransfer({
-            from: sidecar,
-            to: adapter,
-            token: standardWeth.token,
-            identifier: 0,
-            amount: standardWeth.amount,
-            itemType: ItemType.ERC20
-        });
-        standard20Transfer = ItemTransfer({
-            from: sidecar,
-            to: adapter,
-            token: standardERC20.token,
-            identifier: 0,
-            amount: standardERC20.amount,
-            itemType: ItemType.ERC20
-        });
-        standard721Transfer = ItemTransfer({
-            from: sidecar,
-            to: adapter,
-            token: standardERC721.token,
-            identifier: standardERC721.identifier,
-            amount: 1,
-            itemType: ItemType.ERC721
-        });
-        standard1155Transfer = ItemTransfer({
-            from: sidecar,
-            to: adapter,
-            token: standardERC1155.token,
-            identifier: standardERC1155.identifier,
-            amount: 1,
-            itemType: ItemType.ERC1155
-        });
-
-        vm.deal(flashloanOfferer, type(uint128).max);
-
-        stdCastOfCharacters = CastOfCharacters({
-            offerer: alice,
-            fulfiller: bob,
-            seaport: seaportAddress,
-            flashloanOfferer: flashloanOfferer,
-            adapter: adapter,
-            sidecar: sidecar
-        });
-
-        OfferItem memory standardNativeOffer = OfferItemLib.empty().withItemType(
-            ItemType.NATIVE
-        ).withToken(address(0)).withIdentifierOrCriteria(0).withStartAmount(100)
-            .withEndAmount(100).saveDefault("standardNativeOfferItem");
-        ConsiderationItem memory standardNativeConsideration =
-        ConsiderationItemLib.empty().withItemType(ItemType.NATIVE).withToken(
-            address(0)
-        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-            .withRecipient(address(0)).saveDefault(
-            "standardNativeConsiderationItem"
-        );
-
-        OfferItem memory standardWethOffer = OfferItemLib.empty().withItemType(
-            ItemType.ERC20
-        ).withToken(wethAddress).withIdentifierOrCriteria(0).withStartAmount(
-            100
-        ).withEndAmount(100).saveDefault("standardWethOfferItem");
-        ConsiderationItem memory standardWethConsideration =
-        ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
-            wethAddress
-        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-            .withRecipient(address(0)).saveDefault("standardWethConsiderationItem");
-
-        OfferItem memory standardERC20Offer = OfferItemLib.empty().withItemType(
-            ItemType.ERC20
-        ).withToken(_test20Address).withIdentifierOrCriteria(0).withStartAmount(
-            100
-        ).withEndAmount(100).saveDefault("standardERC20OfferItem");
-        ConsiderationItem memory standardERC20Consideration =
-        ConsiderationItemLib.empty().withItemType(ItemType.ERC20).withToken(
-            _test20Address
-        ).withIdentifierOrCriteria(0).withStartAmount(100).withEndAmount(100)
-            .withRecipient(address(0)).saveDefault("standardERC20ConsiderationItem");
-
-        OfferItem memory standardERC721Offer = OfferItemLib.empty().withItemType(
-            ItemType.ERC721
-        ).withToken(_test721Address).withIdentifierOrCriteria(1).withStartAmount(
-            1
-        ).withEndAmount(1).saveDefault("standardERC721OfferItem");
-        ConsiderationItem memory standardERC721Consideration =
-        ConsiderationItemLib.empty().withItemType(ItemType.ERC721).withToken(
-            _test721Address
-        ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-            .withRecipient(address(0)).saveDefault("standard721ConsiderationItem");
-
-        OfferItem memory standardERC1155Offer = OfferItemLib.empty()
-            .withItemType(ItemType.ERC1155).withToken(_test1155Address)
-            .withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-            .saveDefault("standard1155OfferItem");
-
-        ConsiderationItem memory standardERC1155Consideration =
-        ConsiderationItemLib.empty().withItemType(ItemType.ERC1155).withToken(
-            _test1155Address
-        ).withIdentifierOrCriteria(1).withStartAmount(1).withEndAmount(1)
-            .withRecipient(address(0)).saveDefault("standard1155ConsiderationItem");
-
-        OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
-        ConsiderationItem[] memory adapterOrderConsideration =
-            new ConsiderationItem[](1);
-
-        adapterOrderOffer[0] = standardNativeOffer;
-        adapterOrderOffer.saveDefaultMany("standardNativeOfferArray");
-        adapterOrderConsideration[0] = standardNativeConsideration;
-        adapterOrderConsideration.saveDefaultMany(
-            "standardNativeConsiderationArray"
-        );
-
-        adapterOrderOffer[0] = standardWethOffer;
-        adapterOrderOffer.saveDefaultMany("standardWethOfferArray");
-        adapterOrderConsideration[0] = standardWethConsideration;
-        adapterOrderConsideration.saveDefaultMany(
-            "standardWethConsiderationArray"
-        );
-
-        adapterOrderOffer[0] = standardERC20Offer;
-        adapterOrderOffer.saveDefaultMany("standardERC20OfferArray");
-        adapterOrderConsideration[0] = standardERC20Consideration;
-        adapterOrderConsideration.saveDefaultMany(
-            "standardERC20ConsiderationArray"
-        );
-
-        adapterOrderOffer[0] = standardERC721Offer;
-        adapterOrderOffer.saveDefaultMany("standardERC721OfferArray");
-        adapterOrderConsideration[0] = standardERC721Consideration;
-        adapterOrderConsideration.saveDefaultMany(
-            "standardERC721ConsiderationArray"
-        );
-
-        adapterOrderOffer[0] = standardERC1155Offer;
-        adapterOrderOffer.saveDefaultMany("standardERC1155OfferArray");
-        adapterOrderConsideration[0] = standardERC1155Consideration;
-        adapterOrderConsideration.saveDefaultMany(
-            "standardERC1155ConsiderationArray"
-        );
-    }
-
-    function beforeAllPrepareMarketplaceTest(BaseMarketConfig config)
-        internal
-    {
-        // Get requested call from marketplace. Needed by Wyvern to deploy proxy
-        SetupCall[] memory setupCalls = config.beforeAllPrepareMarketplaceCall(
-            stdCastOfCharacters, erc20Addresses, erc721Addresses
-        );
-
-        for (uint256 i = 0; i < setupCalls.length; i++) {
-            (bool avoidWarning, bytes memory data) =
-                (setupCalls[i].target).call(setupCalls[i].data);
-            if (!avoidWarning || data.length != 0) {
-                uint256 stopPlease;
-                stopPlease += 1;
-            }
-        }
-
-        // Do any final setup within config
-        config.beforeAllPrepareMarketplace(alice, bob);
+        // TODO: set up the live contracts.
     }
 
     function _isSudo(BaseMarketConfig config) internal view returns (bool) {
@@ -3542,75 +2689,11 @@ library ExternalOrderPayloadHelperLib is StdCheats, ConsiderationTypeHashes {
         return keccak256(bytes(name1)) == keccak256(bytes(name2));
     }
 
-    function _formatLog(string memory name, string memory label)
-        internal
-        pure
-        returns (string memory)
-    {
-        return string(abi.encodePacked("[", name, "] ", label, " -- gas"));
-    }
-
     function _logNotSupported(string memory name, string memory label)
         internal
     {
         console.log(
             "Not currently supported. See <some_README> for details on how to add support."
         );
-    }
-
-    function _benchmarkCallWithParams(
-        string memory name,
-        string memory label,
-        bool shouldLog,
-        bool shouldLogGasDelta,
-        address sender,
-        Call memory params
-    ) internal returns (uint256 gasUsed) {
-        uint256 gasDelta;
-        bool success;
-        assembly {
-            let to := mload(params)
-            let value := mload(add(params, 0x40))
-            let data := mload(add(params, 0x60))
-            let ptr := add(data, 0x20)
-            let len := mload(data)
-            let g1 := gas()
-            success := call(gas(), to, value, ptr, len, 0, 0)
-            let g2 := gas()
-            gasDelta := sub(g1, g2)
-            if iszero(success) {
-                returndatacopy(0, 0, returndatasize())
-                revert(0, returndatasize())
-            }
-        }
-
-        gasUsed = gasDelta + _additionalGasFee(params.callData);
-
-        if (shouldLog) {
-            emit log_named_uint(_formatLog(name, label), gasUsed);
-
-            // After the && is just safety.
-            if (shouldLogGasDelta && gasUsed > costOfLastCall) {
-                emit log_named_uint("gas delta", gasUsed - costOfLastCall);
-                // Separate a matched pair visually.
-                console.log("");
-            }
-
-            costOfLastCall = gasUsed;
-        }
-    }
-
-    function _additionalGasFee(bytes memory callData)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 sum = 21000;
-        for (uint256 i = 0; i < callData.length; i++) {
-            // zero bytes = 4, non-zero = 16
-            sum += callData[i] == 0 ? 4 : 16;
-        }
-        // Remove call opcode cost
-        return sum - 2600;
     }
 }
