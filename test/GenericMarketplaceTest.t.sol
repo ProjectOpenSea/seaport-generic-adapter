@@ -1126,6 +1126,7 @@ contract GenericMarketplaceTest is
             Flashloan memory flashloan = Flashloan({
                 amount: uint88(100),
                 itemType: ItemType.NATIVE,
+                token: address(0),
                 shouldCallback: true,
                 recipient: context.castOfCharacters.adapter
             });
@@ -1144,16 +1145,16 @@ contract GenericMarketplaceTest is
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standard721Transfer;
 
-            Call[] memory callParametersArray;
-            callParametersArray = new Call[](1);
-            callParametersArray[0] = payload.executeOrder;
+            Call[] memory sidecarMarketplaceCalls;
+            sidecarMarketplaceCalls = new Call[](1);
+            sidecarMarketplaceCalls[0] = payload.executeOrder;
 
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedCallParameters(
-                callParametersArray,
-                stdCastOfCharacters,
+                sidecarMarketplaceCalls,
                 sidecarSetUpCalls,
                 new Call[](0),
+                stdCastOfCharacters,
                 flashloans,
                 OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
                 adapterOrderConsideration,
@@ -2016,16 +2017,16 @@ contract GenericMarketplaceTest is
             sidecarWrapUpCalls[0] = bethCall;
             sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
 
-            Call[] memory callParametersArray;
-            callParametersArray = new Call[](1);
-            callParametersArray[0] = payload.executeOrder;
+            Call[] memory sidecarMarketplaceCalls;
+            sidecarMarketplaceCalls = new Call[](1);
+            sidecarMarketplaceCalls[0] = payload.executeOrder;
 
             payload.executeOrder = AdapterHelperLib
                 .createSeaportWrappedCallParameters(
-                callParametersArray,
-                stdCastOfCharacters,
+                sidecarMarketplaceCalls,
                 new Call[](0),
                 sidecarWrapUpCalls,
+                stdCastOfCharacters,
                 new Flashloan[](0),
                 adapterOrderOffer,
                 ConsiderationItemLib.fromDefaultMany(

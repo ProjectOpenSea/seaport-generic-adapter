@@ -171,7 +171,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         );
     }
 
-    function testMixedAggregatedThroughSeaport() external {
+    function testMixedAggregatedThroughSeaportMatchAdvanced() external {
         BaseMarketConfig[] memory configs = new BaseMarketConfig[](4);
         configs[0] = foundationConfig;
         configs[1] = zeroExConfig;
@@ -182,7 +182,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         _setAdapterSpecificApprovals();
         _prepareMarketplaces(configs);
 
-        uint256 gasUsed = benchmarkMixedAggregatedThroughSeaport(configs);
+        uint256 gasUsed =
+            benchmarkMixedAggregatedThroughSeaportMatchAdvanced(configs);
 
         emit log_named_uint(
             "Total gas for fulfilling orders aggregated through Seaport",
@@ -205,7 +206,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         Fulfillment[] finalFulfillments;
     }
 
-    function benchmarkMixedAggregatedThroughSeaport(
+    function benchmarkMixedAggregatedThroughSeaportMatchAdvanced(
         BaseMarketConfig[] memory configs
     ) public prepareAggregationTest(configs) returns (uint256) {
         BenchmarkAggregatedInfra memory infra = BenchmarkAggregatedInfra({
@@ -214,13 +215,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             context: OrderContext(true, true, stdCastOfCharacters),
             executionPayloads: new Call[](3),
             adapterOrders: new AdvancedOrder[](3),
-            adapterFulfillments: new Fulfillment[](2),
+            adapterFulfillments: new Fulfillment[](4),
             adapterOfferArray: new OfferItem[](3),
             adapterConsiderationArray: new ConsiderationItem[](2),
             itemTransfers: new ItemTransfer[](3),
             item1155: standardERC1155,
-            finalOrders: new AdvancedOrder[](5),
-            finalFulfillments: new Fulfillment[](4)
+            finalOrders: new AdvancedOrder[](7),
+            finalFulfillments: new Fulfillment[](6)
         });
 
         // Set up the orders. The Seaport order should be passed in normally,
@@ -299,14 +300,38 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             itemType: ItemType.ERC1155
         });
 
+        // Just testing that support for multiple works. TODO: come back, pull
+        // this out into a separate library test, and switch this back to using
+        // a single flashloan for better gas benchmarking.
+        Flashloan[] memory flashloans = new Flashloan[](2);
+        {
+            Flashloan memory flashloanOne = Flashloan({
+                amount: uint88(uint256(305)),
+                itemType: ItemType.NATIVE,
+                token: address(0),
+                shouldCallback: false,
+                recipient: infra.context.castOfCharacters.adapter
+            });
+            Flashloan memory flashloanTwo = Flashloan({
+                amount: uint88(uint256(300)),
+                itemType: ItemType.ERC20,
+                token: address(weth),
+                shouldCallback: true,
+                recipient: infra.context.castOfCharacters.adapter
+            });
+
+            flashloans[0] = flashloanOne;
+            flashloans[1] = flashloanTwo;
+        }
+
         // This should provide all the info required for the aggregated orders.
         (infra.adapterOrders, infra.adapterFulfillments) = AdapterHelperLib
-            .createSeaportWrappedCallParametersReturnGranular(
+            .createAdapterOrdersAndFulfillments(
             infra.executionPayloads,
+            new Call[](0),
+            new Call[](0),
             infra.context.castOfCharacters,
-            new Call[](0),
-            new Call[](0),
-            new Flashloan[](0), // The helper will automatically create one.
+            flashloans,
             infra.adapterOfferArray,
             infra.adapterConsiderationArray,
             infra.itemTransfers
@@ -331,11 +356,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         }
 
         {
-            infra.finalOrders[0] = infra.adapterOrders[0];
-            infra.finalOrders[1] = infra.adapterOrders[1];
-            infra.finalOrders[2] = infra.adapterOrders[2];
-            infra.finalOrders[3] = orderOffer1155;
-            infra.finalOrders[4] = orderConsider1155;
+            infra.finalOrders[0] = infra.adapterOrders[0]; // flashloan
+            infra.finalOrders[1] = infra.adapterOrders[1]; // mirror
+            infra.finalOrders[2] = infra.adapterOrders[2]; // flashloan
+            infra.finalOrders[3] = infra.adapterOrders[3]; // mirror
+            infra.finalOrders[4] = infra.adapterOrders[4]; // adapter
+            infra.finalOrders[5] = orderOffer1155;
+            infra.finalOrders[6] = orderConsider1155;
         }
 
         _createFulfillmentsForAggregatedTest(infra);
@@ -346,7 +373,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             finalCallParams = Call(
                 seaportAddress, // target will definitely be seaport
                 false, // allowFailure, ignored in this context
-                605, // value will be sum of all the values
+                305, // value will be sum of all the values
                 abi.encodeWithSelector(
                     ISeaport.matchAdvancedOrders.selector,
                     infra.finalOrders,
@@ -358,6 +385,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         }
 
         vm.deal(bob, 605);
+        hevm.prank(bob);
+        weth.deposit{ value: 300 }();
 
         uint256 gasUsed = _benchmarkCallWithParams(
             configs[3].name(),
@@ -517,13 +546,11 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         FulfillmentComponent[][] memory considerationFulfillments =
             new FulfillmentComponent[][](1);
 
-        (infra.adapterOrders, offerFulfillments, considerationFulfillments) =
-        AdapterHelperLib
-            .createSeaportWrappedCallParametersReturnGranularFulfillAvailable_TEMP(
+        infra.adapterOrders = AdapterHelperLib.createAdapterOrder(
             infra.executionPayloads,
+            new Call[](0),
+            new Call[](0),
             infra.context.castOfCharacters,
-            new Call[](0),
-            new Call[](0),
             infra.adapterOfferArray,
             infra.adapterConsiderationArray,
             infra.itemTransfers
@@ -531,20 +558,18 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         AdvancedOrder memory orderOffer721FourForERC20;
 
-        {
-            BasicOrderParameters memory params = configs[3]
-                .getComponents_BuyOfferedERC721WithERC20(
-                alice, Item721(_test721Address, 4), standardERC20
-            );
+        BasicOrderParameters memory params = configs[3]
+            .getComponents_BuyOfferedERC721WithERC20(
+            alice, Item721(_test721Address, 4), standardERC20
+        );
 
-            orderOffer721FourForERC20 =
-                _createSeaportOrderFromBasicParams(params);
-        }
+        orderOffer721FourForERC20 = _createSeaportOrderFromBasicParams(params);
 
-        {
-            infra.finalOrders[0] = orderOffer721FourForERC20;
-            infra.finalOrders[1] = infra.adapterOrders[0];
-        }
+        infra.finalOrders[0] = orderOffer721FourForERC20;
+        infra.finalOrders[1] = infra.adapterOrders[0];
+
+        (offerFulfillments, considerationFulfillments) =
+            _createFulfillmentComponents();
 
         Call memory finalCallParams;
 
@@ -705,6 +730,43 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         infra.context.castOfCharacters.fulfiller = bob;
     }
 
+    function _createFulfillmentComponents()
+        internal
+        pure
+        returns (
+            FulfillmentComponent[][] memory offerFulfillments,
+            FulfillmentComponent[][] memory considerationFulfillments
+        )
+    {
+        // The first order is the native Seaport order.
+        // The second order is the adapter order.
+
+        FulfillmentComponent memory first_first =
+            FulfillmentComponent({ orderIndex: 0, itemIndex: 0 });
+
+        FulfillmentComponent memory second_first =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 0 });
+
+        FulfillmentComponent memory second_second =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 1 });
+
+        FulfillmentComponent memory second_third =
+            FulfillmentComponent({ orderIndex: 1, itemIndex: 2 });
+
+        offerFulfillments = new FulfillmentComponent[][](1);
+
+        offerFulfillments[0] = new FulfillmentComponent[](1);
+        offerFulfillments[0][0] = first_first;
+
+        considerationFulfillments = new FulfillmentComponent[][](1);
+
+        considerationFulfillments[0] = new FulfillmentComponent[](4);
+        considerationFulfillments[0][0] = first_first;
+        considerationFulfillments[0][1] = second_first;
+        considerationFulfillments[0][2] = second_second;
+        considerationFulfillments[0][3] = second_third;
+    }
+
     function _prepareExternalCalls(BenchmarkAggregatedInfra memory infra)
         internal
     {
@@ -795,8 +857,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         FulfillmentComponent[] memory considerationComponentsPrime =
             new FulfillmentComponent[](1);
 
-        offerComponentsPrime[0] = FulfillmentComponent(3, 0);
-        considerationComponentsPrime[0] = FulfillmentComponent(4, 0);
+        offerComponentsPrime[0] = FulfillmentComponent(5, 0);
+        considerationComponentsPrime[0] = FulfillmentComponent(6, 0);
 
         Fulfillment memory primeFulfillment = Fulfillment({
             offerComponents: offerComponentsPrime,
@@ -808,8 +870,8 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         FulfillmentComponent[] memory considerationComponentsMirror =
             new FulfillmentComponent[](1);
 
-        offerComponentsMirror[0] = FulfillmentComponent(4, 0);
-        considerationComponentsMirror[0] = FulfillmentComponent(3, 0);
+        offerComponentsMirror[0] = FulfillmentComponent(6, 0);
+        considerationComponentsMirror[0] = FulfillmentComponent(5, 0);
 
         Fulfillment memory mirrorFulfillment = Fulfillment({
             offerComponents: offerComponentsMirror,
@@ -818,8 +880,10 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         infra.finalFulfillments[0] = infra.adapterFulfillments[0];
         infra.finalFulfillments[1] = infra.adapterFulfillments[1];
-        infra.finalFulfillments[2] = primeFulfillment;
-        infra.finalFulfillments[3] = mirrorFulfillment;
+        infra.finalFulfillments[2] = infra.adapterFulfillments[2];
+        infra.finalFulfillments[3] = infra.adapterFulfillments[3];
+        infra.finalFulfillments[4] = primeFulfillment;
+        infra.finalFulfillments[5] = mirrorFulfillment;
     }
 
     function _createFulfillmentsForFulfillAvailableTest(

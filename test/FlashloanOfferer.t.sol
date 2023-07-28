@@ -545,6 +545,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         Flashloan memory flashloan = Flashloan(
             uint88(flashloanValueRequested),
             ItemType.NATIVE,
+            address(0),
             true,
             address(this)
         );
@@ -622,7 +623,11 @@ contract FlashloanOffererTest is BaseOrderTest {
         maximumSpent[0] = spentItemMaxSpent;
 
         Flashloan memory flashloan = Flashloan(
-            uint88(flashloanValueRequested), ItemType.ERC20, true, address(this)
+            uint88(flashloanValueRequested),
+            ItemType.ERC20,
+            address(weth),
+            true,
+            address(this)
         );
         Flashloan[] memory flashloans = new Flashloan[](1);
         flashloans[0] = flashloan;
@@ -693,7 +698,8 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         Flashloan memory flashloan = Flashloan(
             uint88(flashloanValueRequested),
-            ItemType.NATIVE,
+            ItemType.ERC20,
+            address(test20),
             true,
             address(this)
         );
@@ -723,6 +729,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         flashloan = Flashloan(
             uint88(flashloanValueRequested),
             ItemType.NATIVE,
+            address(0),
             true,
             address(this)
         );
@@ -809,6 +816,7 @@ contract FlashloanOffererTest is BaseOrderTest {
         Flashloan memory flashloan = Flashloan(
             uint88(flashloanValueRequested),
             ItemType.NATIVE,
+            address(0),
             true,
             address(this)
         );
