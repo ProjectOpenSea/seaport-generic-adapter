@@ -98,9 +98,9 @@ library ExternalOrderPayloadHelperLib {
     BaseMarketConfig x2y2Config;
     BaseMarketConfig zeroExConfig;
 
-    FlashloanOffererInterface testFlashloanOfferer;
-    GenericAdapterInterface testAdapter;
-    GenericAdapterSidecarInterface testSidecar;
+    FlashloanOffererInterface flashloanOffererInterface;
+    GenericAdapterInterface adapterInterface;
+    GenericAdapterSidecarInterface sidecarInterface;
 
     address public flashloanOfferer;
     address public adapter;
@@ -781,10 +781,9 @@ library ExternalOrderPayloadHelperLib {
             context.castOfCharacters.fulfiller = sidecar;
         }
 
+        // TODO: Come back and check to make sure this is OK.
         try config.getPayload_BuyOfferedERC721WithBETH(
-            context,
-            Item721(address(test721_1), 1),
-            Item20(address(beth), price)
+            context, desiredItem, Item20(address(beth), price)
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
@@ -1368,8 +1367,8 @@ library ExternalOrderPayloadHelperLib {
     ) internal {
         try config.getPayload_BuyOfferedBETHWithERC721(
             OrderContext(false, false, castOfCharacters),
-            Item20(address(beth), price),
-            Item721(address(test721_1), 1)
+            desiredPayment,
+            offeredItem
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -1396,9 +1395,7 @@ library ExternalOrderPayloadHelperLib {
         }
 
         try config.getPayload_BuyOfferedBETHWithERC721(
-            context,
-            Item20(address(beth), price),
-            Item721(address(test721_1), 1)
+            context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
             // Sidecar's not going to transfer anything.
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
@@ -2188,7 +2185,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, castOfCharacters);
             ethAmounts[i] = price + i;
         }
@@ -2216,7 +2212,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, castOfCharacters);
 
             contexts[i].castOfCharacters.fulfiller =
@@ -2303,7 +2298,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             ethAmounts[i] = price + i;
         }
@@ -2327,24 +2321,16 @@ library ExternalOrderPayloadHelperLib {
 
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory desiredItems = new Item721[](10);
-        uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
 
             contexts[i].castOfCharacters.fulfiller =
                 transfersToSpecifiedTaker ? adapter : castOfCharacters.fulfiller;
-
-            // There's something screwy with the ETH amounts here. For some
-            // reason, this needs to be 101 instead of 100 like it is in its
-            // sibling test. Only Sudo and Seaport are set up for this, and
-            // Seaport doesn't get tested. So, leaving it alone for now.
-            ethAmounts[i] = 101 + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, desiredItems, ethAmounts
+            contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2353,8 +2339,8 @@ library ExternalOrderPayloadHelperLib {
 
             uint256 flashloanAmount;
 
-            for (uint256 i; i < ethAmounts.length; i++) {
-                flashloanAmount += ethAmounts[i];
+            for (uint256 i; i < prices.length; i++) {
+                flashloanAmount += prices[i];
             }
 
             OfferItem[] memory itemsToBeOfferedByAdapter =
@@ -2489,9 +2475,10 @@ library ExternalOrderPayloadHelperLib {
                 totalERC20Amount += paymentAmounts[i];
             }
 
+            // TODO: Come back and make this more flexible.
             adapterOrderConsideration[0] = ConsiderationItem({
                 itemType: ItemType.ERC20,
-                token: _test20Address,
+                token: payments[0].token,
                 identifierOrCriteria: 0,
                 startAmount: totalERC20Amount,
                 endAmount: totalERC20Amount,
@@ -2550,13 +2537,13 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory paymentAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             paymentAmounts[i] = price + i;
         }
 
+        // TODO: Come back and refactor this.
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, desiredItems, paymentAmounts
+            contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2589,13 +2576,13 @@ library ExternalOrderPayloadHelperLib {
         }
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
             paymentAmounts[i] = price + i;
         }
 
+        // TODO: Come back and rework.
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, desiredItems, paymentAmounts
+            contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2615,7 +2602,7 @@ library ExternalOrderPayloadHelperLib {
             // ERC20s.
             adapterOrderConsideration[0] = ConsiderationItem({
                 itemType: ItemType.ERC20,
-                token: _test20Address,
+                token: payments[0].token,
                 identifierOrCriteria: 0,
                 startAmount: totalERC20Amount,
                 endAmount: totalERC20Amount,
@@ -2673,7 +2660,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, castOfCharacters);
             wethAmounts[i] = price + i;
         }
@@ -2698,7 +2684,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, castOfCharacters);
             wethAmounts[i] = price + i;
         }
@@ -2792,7 +2777,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             wethAmounts[i] = price + i;
         }
@@ -2819,7 +2803,6 @@ library ExternalOrderPayloadHelperLib {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
             wethAmounts[i] = price + i;
         }
@@ -2869,93 +2852,31 @@ library ExternalOrderPayloadHelperLib {
     // Note: this is where `_setApprovals` in `prepareTest` was.
     // TODO: Think about making a nice tool to set up necessary approvals.
 
-    // TODO: make this a script that initializes the contracts.
-    function _setAdapterSpecificApprovals() internal {
-        // This is where the users of the adapter approve the adapter to
-        // transfer their tokens.
-        address[] memory adapterUsers = new address[](3);
-        adapterUsers[0] = address(alice);
-        adapterUsers[1] = address(bob);
-        adapterUsers[2] = address(cal);
-
-        Approval[] memory approvalsOfTheAdapter = new Approval[](5);
-        approvalsOfTheAdapter[0] = Approval(_test20Address, ItemType.ERC20);
-        approvalsOfTheAdapter[1] = Approval(_test721Address, ItemType.ERC721);
-        approvalsOfTheAdapter[2] = Approval(_test1155Address, ItemType.ERC1155);
-        approvalsOfTheAdapter[3] = Approval(wethAddress, ItemType.ERC20);
-
-        for (uint256 i; i < adapterUsers.length; i++) {
-            for (uint256 j; j < approvalsOfTheAdapter.length; j++) {
-                Approval memory approval = approvalsOfTheAdapter[j];
-
-                bool success;
-
-                uint256 selector;
-                uint256 approvalValue;
-
-                assembly {
-                    let approvalType := gt(mload(add(0x20, approval)), 1)
-                    approvalValue := sub(approvalType, iszero(approvalType))
-                    selector :=
-                        add(
-                            mul(0x095ea7b3, iszero(approvalType)),
-                            mul(0xa22cb465, approvalType)
-                        )
-                }
-
-                (success,) = address(approval.token).call(
-                    abi.encodeWithSelector(
-                        bytes4(bytes32(selector << 224)), adapter, approvalValue
-                    )
-                );
-
-                if (!success) {
-                    revert("Generic adapter approval failed.");
-                }
-            }
-        }
-
-        // This is where the adapter approves Seaport.
-        Approval[] memory approvalsByTheAdapter = new Approval[](4);
-        approvalsByTheAdapter[0] = Approval(_test20Address, ItemType.ERC20);
-        approvalsByTheAdapter[1] = Approval(_test721Address, ItemType.ERC721);
-        approvalsByTheAdapter[2] = Approval(_test1155Address, ItemType.ERC1155);
-        approvalsByTheAdapter[3] = Approval(wethAddress, ItemType.ERC20);
-
-        bytes memory contextArg = AdapterHelperLib.createGenericAdapterContext(
-            approvalsByTheAdapter, new Call[](0)
-        );
-
-        // Prank seaport to allow hitting the adapter directly.
-        testAdapter.generateOrder(
-            address(this), new SpentItem[](0), new SpentItem[](0), contextArg
-        );
-
-        test20.approve(sidecar, type(uint256).max);
-    }
+    // TODO: make this a script that initializes the contracts kind of like what
+    // _setAdapterSpecificApprovals does.
 
     function _doSetup() internal {
-        testFlashloanOfferer = FlashloanOffererInterface(
+        flashloanOffererInterface = FlashloanOffererInterface(
             deployCode(
                 "out/FlashloanOfferer.sol/FlashloanOfferer.json",
                 abi.encode(seaportAddress)
             )
         );
 
-        testAdapter = GenericAdapterInterface(
+        adapterInterface = GenericAdapterInterface(
             deployCode(
                 "out/GenericAdapter.sol/GenericAdapter.json",
-                abi.encode(seaportAddress, address(testFlashloanOfferer))
+                abi.encode(seaportAddress, address(flashloanOffererInterface))
             )
         );
 
-        testSidecar = GenericAdapterSidecarInterface(
+        sidecarInterface = GenericAdapterSidecarInterface(
             abi.decode(entries[0].data, (address))
         );
 
-        flashloanOfferer = address(testFlashloanOfferer);
-        adapter = address(testAdapter);
-        sidecar = address(testSidecar);
+        flashloanOfferer = address(flashloanOffererInterface);
+        adapter = address(adapterInterface);
+        sidecar = address(sidecarInterface);
         wethAddress = address(weth);
 
         // TODO: set up the live contracts.
