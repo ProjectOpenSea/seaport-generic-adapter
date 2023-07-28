@@ -151,209 +151,19 @@ library ExternalOrderPayloadHelperLib is
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
     }
 
-    function testBlur() external virtual {
-        benchmarkMarket(blurConfig);
-    }
-
-    function testBlurV2() external virtual {
-        benchmarkMarket(blurV2Config);
-    }
-
-    function testFoundation() external virtual {
-        benchmarkMarket(foundationConfig);
-    }
-
-    function testLooksRare() external virtual {
-        benchmarkMarket(looksRareConfig);
-    }
-
-    function testLooksRareV2() external virtual {
-        benchmarkMarket(looksRareV2Config);
-    }
-
-    // Seaport doesn't get tested directly, since there's no need to route
-    // through the adapter for native Seaport orders. Also it's impossible bc
-    // of the prohibition on reentrant calls.
-    // function testSeaportOnePointFour() external {
-    //     benchmarkMarket(seaportOnePointFiveConfig);
-    // }
-
-    function testSudoswap() external virtual {
-        benchmarkMarket(sudoswapConfig);
-    }
-
-    function testX2Y2() external virtual {
-        benchmarkMarket(x2y2Config);
-    }
-
-    function testZeroEx() external virtual {
-        benchmarkMarket(zeroExConfig);
-    }
-
-    function benchmarkMarket(BaseMarketConfig config) public {
-        // This is kind of a weird spot for this setup, but the benchmarking
-        // repo that this is cribbed from relies on recording logs to wipe them
-        // out between function calls. So it's important to be careful where
-        // you record logs, because it seems that they collide.
-        _doSetup();
-        _setAdapterSpecificApprovals();
-
-        beforeAllPrepareMarketplaceTest(config);
-
-        buyOfferedERC1155WithERC20_ListOnChain(config);
-        buyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithERC20(config);
-        buyOfferedERC1155WithERC20_Adapter(config);
-
-        buyOfferedERC1155WithERC721_ListOnChain(config);
-        buyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithERC721(config);
-        buyOfferedERC1155WithERC721_Adapter(config);
-
-        buyOfferedERC1155WithEther_ListOnChain(config);
-        buyOfferedERC1155WithEther_ListOnChain_Adapter(config);
-
-        buyOfferedERC1155WithEther(config);
-        buyOfferedERC1155WithEther_Adapter(config);
-
-        buyOfferedERC20WithERC1155_ListOnChain(config);
-        buyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
-
-        buyOfferedERC20WithERC1155(config);
-        buyOfferedERC20WithERC1155_Adapter(config);
-
-        buyOfferedERC20WithERC721_ListOnChain(config);
-        // There's an issue with resetting storage for sudo, to just reset
-        // here.
-        if (_isSudo(config)) {
-            beforeAllPrepareMarketplaceTest(config);
-        }
-        buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedERC20WithERC721(config);
-        buyOfferedERC20WithERC721_Adapter(config);
-
-        buyOfferedERC721WithERC1155_ListOnChain(config);
-        buyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithERC1155(config);
-        buyOfferedERC721WithERC1155_Adapter(config);
-
-        buyOfferedERC721WithERC20_ListOnChain(config);
-        // There's an issue with resetting storage for sudo, to just reset
-        // here.
-        if (_isSudo(config)) {
-            beforeAllPrepareMarketplaceTest(config);
-        }
-        buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithERC20(config);
-        buyOfferedERC721WithERC20_Adapter(config);
-
-        buyOfferedERC721WithEther(config);
-        buyOfferedERC721WithEther_Adapter(config);
-
-        buyOfferedERC721WithEther_ListOnChain(config);
-        buyOfferedERC721WithEther_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithEtherFee(config);
-        buyOfferedERC721WithEtherFee_Adapter(config);
-
-        buyOfferedERC721WithEtherFee_ListOnChain(config);
-        buyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithEtherFeeTwoRecipients(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
-
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(config);
-
-        buyOfferedERC721WithWETH(config);
-        buyOfferedERC721WithWETH_Adapter(config);
-
-        buyOfferedERC721WithBETH(config);
-        buyOfferedERC721WithBETH_Adapter(config);
-
-        buyOfferedERC721WithWETH_ListOnChain(config);
-        buyOfferedERC721WithWETH_ListOnChain_Adapter(config);
-
-        buyOfferedWETHWithERC721_ListOnChain(config);
-        buyOfferedWETHWithERC721_ListOnChain_Adapter(config);
-
-        buyOfferedWETHWithERC721(config);
-        buyOfferedWETHWithERC721_Adapter(config);
-
-        buyOfferedBETHWithERC721(config);
-        buyOfferedBETHWithERC721_Adapter(config);
-
-        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithErc20DistinctOrders(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithEther(config);
-        buyTenOfferedERC721WithEther_Adapter(config);
-
-        buyTenOfferedERC721WithEther_ListOnChain(config);
-        buyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithEtherDistinctOrders(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(config);
-
-        buyTenOfferedERC721WithWETHDistinctOrders(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
-
-        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(config);
-
-        benchmark_MatchOrders_ABCA(config);
-        benchmark_MatchOrders_ABCA_Adapter(config);
-    }
-
     /*//////////////////////////////////////////////////////////////
-                        Tests
+                        Payload Getters
     //////////////////////////////////////////////////////////////*/
 
-    function buyOfferedERC721WithEther_ListOnChain(BaseMarketConfig config)
+    function buyOfferedERC721WithEther_ListOnChain(BaseMarketConfig config, Item721 memory desiredItem, uint256 price)
         internal
         prepareTest(config)
-        returns (uint256 gasUsed)
+        returns (OrderPayload memory payload)
     {
-        string memory testLabel = "(buyOfferedERC721WithEther_ListOnChain)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(true, false, stdCastOfCharacters), standardERC721, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
-
-            // Allow the market to escrow after listing
-            assert(
-                test721_1.ownerOf(1) == alice
-                    || test721_1.ownerOf(1) == config.market()
-            );
-
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill")),
-                true,
-                false,
-                bob,
-                payload.executeOrder
-            );
-
+            return payload;
         } catch {
             _logNotSupported(config.name(), testLabel);
         }
@@ -362,9 +172,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithEther_ListOnChain_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
@@ -381,14 +189,7 @@ library ExternalOrderPayloadHelperLib is
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -435,8 +236,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEther)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(false, false, stdCastOfCharacters), standardERC721, 100
         ) returns (OrderPayload memory payload) {
@@ -460,8 +259,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEther_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -513,19 +310,10 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithEther_ListOnChain)";
-        test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(true, false, stdCastOfCharacters), standardERC1155, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             gasUsed = _benchmarkCallWithParams(
@@ -545,9 +333,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC1155WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC1155WithEther_ListOnChain_Adapter)";
-        test1155_1.mint(alice, 1, 1);
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
@@ -555,14 +341,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, standardERC1155, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
@@ -598,8 +377,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithEther)";
-        test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
@@ -625,8 +402,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithEther_Adapter)";
-        test1155_1.mint(alice, 1, 1);
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -677,22 +452,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC20_ListOnChain)";
-        test721_1.mint(alice, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -717,7 +482,6 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithERC20_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -744,21 +508,12 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = adapter;
         }
 
-        test721_1.mint(alice, 1);
-        test20.mint(bob, 100);
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -805,9 +560,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC20)";
-        test721_1.mint(alice, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
@@ -833,7 +585,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC20_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -845,8 +596,6 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        test721_1.mint(alice, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
@@ -887,22 +636,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithWETH_ListOnChain)";
-        test721_1.mint(alice, 1);
-        weth.deposit{ value: 100 }();
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -929,10 +668,7 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithWETH_Adapter)";
 
-        test721_1.mint(alice, 1);
-        weth.deposit{ value: 100 }();
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -987,8 +723,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithBETH)";
-        test721_1.mint(alice, 1);
         beth.deposit{ value: 100 }();
 
         OrderContext memory context =
@@ -1017,8 +751,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithBETH_Adapter)";
-        test721_1.mint(alice, 1);
         // Bob doesn't deposit BETH for this, he sends native tokens, gets a
         // flashloan, which goes from adapter to sidecar to BETH's deposit
         // function, and then the sidecar uses the BETH to fulfill the listing.
@@ -1104,11 +836,8 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithWETH_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithWETH_ListOnChain_Adapter)";
 
-        test721_1.mint(alice, 1);
-        weth.deposit{ value: 100 }();
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
@@ -1126,14 +855,7 @@ library ExternalOrderPayloadHelperLib is
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -1177,9 +899,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithWETH)";
-        test721_1.mint(alice, 1);
-        weth.deposit{ value: 100 }();
 
         try config.getPayload_BuyOfferedERC721WithWETH(
             OrderContext(false, false, stdCastOfCharacters),
@@ -1206,22 +925,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC20_ListOnChain)";
-        test1155_1.mint(alice, 1, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             gasUsed = _benchmarkCallWithParams(
@@ -1241,25 +950,15 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC1155WithERC20_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC1155WithERC20_ListOnChain_Adapter)";
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
 
-        test1155_1.mint(alice, 1, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
@@ -1295,9 +994,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC20)";
-        test1155_1.mint(alice, 1, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
@@ -1323,7 +1019,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC20_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1335,8 +1030,6 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        test1155_1.mint(alice, 1, 1);
-        test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
@@ -1377,22 +1070,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC721_ListOnChain)";
-        test20.mint(alice, 100);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -1417,7 +1100,6 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC20WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC20WithERC721_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -1438,20 +1120,11 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = adapter;
         }
 
-        test20.mint(alice, 100);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -1496,9 +1169,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC721)";
-        test20.mint(alice, 100);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC20,
@@ -1524,7 +1194,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC721_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1536,8 +1205,6 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        test20.mint(alice, 100);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
@@ -1578,27 +1245,15 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedWETHWithERC721_ListOnChain)";
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(true, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
-                weth.balanceOf(alice) == 100
-                    || weth.balanceOf(config.market()) == 100
             );
 
             gasUsed = _benchmarkCallWithParams(
@@ -1618,36 +1273,23 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedWETHWithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedWETHWithERC721_ListOnChain_Adapter)";
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
 
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
 
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
-                weth.balanceOf(alice) == 100
-                    || weth.balanceOf(config.market()) == 100
             );
 
             // Look into why test20 requires an explicit approval lol.
             vm.prank(sidecar);
-            weth.approve(sidecar, 100);
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standardWethTransfer;
@@ -1682,9 +1324,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedWETHWithERC721)";
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(false, false, stdCastOfCharacters),
             standardWeth,
@@ -1710,7 +1349,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedWETHWithERC721_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1722,8 +1360,6 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        weth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
@@ -1762,9 +1398,7 @@ library ExternalOrderPayloadHelperLib is
         internal
         prepareTest(config)
     {
-        string memory testLabel = "(buyOfferedBETHWithERC721)";
         beth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedBETHWithERC721(
             OrderContext(false, false, stdCastOfCharacters),
             Item20(address(beth), 100),
@@ -1789,9 +1423,7 @@ library ExternalOrderPayloadHelperLib is
         internal
         prepareTest(config)
     {
-        string memory testLabel = "(buyOfferedBETHWithERC721_Adapter)";
         beth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1869,22 +1501,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC1155_ListOnChain)";
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
-        test20.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             gasUsed = _benchmarkCallWithParams(
@@ -1904,24 +1526,14 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC20WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC20WithERC1155_ListOnChain_Adapter)";
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
-        test20.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
@@ -1957,11 +1569,8 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC1155)";
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
-        test20.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
@@ -1985,7 +1594,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC20WithERC1155_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -1998,8 +1606,6 @@ library ExternalOrderPayloadHelperLib is
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        test20.mint(alice, 100);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
@@ -2040,22 +1646,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC1155_ListOnChain)";
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             gasUsed = _benchmarkCallWithParams(
@@ -2075,7 +1671,6 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithERC1155_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithERC1155_ListOnChain_Adapter)";
 
         // Only seaport, skip for now.
@@ -2085,8 +1680,6 @@ library ExternalOrderPayloadHelperLib is
         // OrderContext memory context = OrderContext(
         //     true, true, stdCastOfCharacters
         // );
-        // test721_1.mint(alice, 1);
-        // test1155_1.mint(bob, 1, 1);
         // try config.getPayload_BuyOfferedERC721WithERC1155(
         //     context,
         //     standardERC721,
@@ -2121,11 +1714,8 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC1155)";
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
-        test721_1.mint(alice, 1);
-        test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
@@ -2149,7 +1739,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithERC1155_Adapter)";
 
         // Only seaport, skip for now.
         _logNotSupported(config.name(), testLabel);
@@ -2158,8 +1747,6 @@ library ExternalOrderPayloadHelperLib is
         // OrderContext memory context = OrderContext(
         //     false, true, stdCastOfCharacters
         // );
-        // test721_1.mint(alice, 1);
-        // test1155_1.mint(bob, 1, 1);
         // try config.getPayload_BuyOfferedERC721WithERC1155(
         //     context,
         //     standardERC721,
@@ -2187,22 +1774,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC721_ListOnChain)";
         OrderContext memory context =
             OrderContext(true, false, stdCastOfCharacters);
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
 
             gasUsed = _benchmarkCallWithParams(
@@ -2222,7 +1799,6 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC1155WithERC721_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC1155WithERC721_ListOnChain_Adapter)";
 
         // Only seaport so skipping here.
@@ -2232,8 +1808,6 @@ library ExternalOrderPayloadHelperLib is
         // OrderContext memory context = OrderContext(
         //     true, true, stdCastOfCharacters
         // );
-        // test1155_1.mint(alice, 1, 1);
-        // test721_1.mint(bob, 1);
         // try config.getPayload_BuyOfferedERC1155WithERC721(
         //     context,
         //     standardERC1155,
@@ -2268,11 +1842,8 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC721)";
         OrderContext memory context =
             OrderContext(false, false, stdCastOfCharacters);
-        test1155_1.mint(alice, 1, 1);
-        test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
@@ -2296,7 +1867,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC1155WithERC721_Adapter)";
 
         // Only seaport so skipping here.
         _logNotSupported(config.name(), testLabel);
@@ -2305,8 +1875,6 @@ library ExternalOrderPayloadHelperLib is
         // OrderContext memory context = OrderContext(
         //     false, true, stdCastOfCharacters
         // );
-        // test1155_1.mint(alice, 1, 1);
-        // test721_1.mint(bob, 1);
 
         // try config.getPayload_BuyOfferedERC1155WithERC721(
         //     context, standardERC1155, standardERC721
@@ -2347,8 +1915,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee_ListOnChain)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
@@ -2356,14 +1922,7 @@ library ExternalOrderPayloadHelperLib is
             feeReciever1,
             5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -2388,9 +1947,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithEtherFee_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithEtherFee_ListOnChain_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
@@ -2402,14 +1959,7 @@ library ExternalOrderPayloadHelperLib is
             feeReciever1,
             5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -2456,8 +2006,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
@@ -2485,8 +2033,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -2539,9 +2085,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
@@ -2551,14 +2095,7 @@ library ExternalOrderPayloadHelperLib is
             feeReciever2,
             5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // Allow the market to escrow after listing
             assert(
@@ -2583,9 +2120,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(true, true, stdCastOfCharacters);
@@ -2593,14 +2128,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             assert(
                 test721_1.ownerOf(1) == alice
@@ -2646,8 +2174,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFeeTwoRecipients)";
-        test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
@@ -2675,9 +2201,7 @@ library ExternalOrderPayloadHelperLib is
     function buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyOfferedERC721WithEtherFeeTwoRecipients_Adapter)";
-        test721_1.mint(alice, 1);
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -2732,25 +2256,16 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithEther_ListOnChain)";
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
             OrderContext(true, false, stdCastOfCharacters), nfts, 100
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             for (uint256 i = 0; i < 10; i++) {
                 assertTrue(
@@ -2779,7 +2294,6 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithEther_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithEther_ListOnChain_Adapter)";
 
         OrderContext memory context =
@@ -2793,20 +2307,12 @@ library ExternalOrderPayloadHelperLib is
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
         returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             for (uint256 i = 0; i < 10; i++) {
                 assertTrue(
@@ -2873,11 +2379,9 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithEther)";
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
@@ -2908,7 +2412,6 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithEther_Adapter)";
 
         OrderContext memory context =
             OrderContext(false, true, stdCastOfCharacters);
@@ -2922,7 +2425,6 @@ library ExternalOrderPayloadHelperLib is
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
@@ -2986,14 +2488,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithEtherDistinctOrders)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
@@ -3024,7 +2524,6 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithEtherDistinctOrders_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
 
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
@@ -3035,7 +2534,6 @@ library ExternalOrderPayloadHelperLib is
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, stdCastOfCharacters);
 
@@ -3117,7 +2615,6 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
@@ -3125,7 +2622,6 @@ library ExternalOrderPayloadHelperLib is
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
@@ -3134,14 +2630,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             // @dev checking ownership here (when nfts are escrowed in different
             // contracts) is messy so we skip it for now
@@ -3165,7 +2654,6 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
 
         bool transfersToSpecifiedTaker = _isSudo(config);
@@ -3175,7 +2663,6 @@ library ExternalOrderPayloadHelperLib is
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, stdCastOfCharacters);
 
@@ -3196,14 +2683,7 @@ library ExternalOrderPayloadHelperLib is
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             uint256 flashloanAmount;
 
@@ -3279,15 +2759,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithErc20DistinctOrders)";
 
-        test20.mint(bob, 1045);
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
@@ -3318,16 +2795,13 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithErc20DistinctOrders_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
 
-        test20.mint(bob, 1045);
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
@@ -3415,16 +2889,13 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
-        test20.mint(bob, 1045);
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
@@ -3433,14 +2904,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3461,10 +2925,8 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
 
-        test20.mint(bob, 1045);
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
@@ -3482,7 +2944,6 @@ library ExternalOrderPayloadHelperLib is
         }
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, stdCastOfCharacters);
             erc20Amounts[i] = 100 + i;
@@ -3495,14 +2956,7 @@ library ExternalOrderPayloadHelperLib is
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             ConsiderationItem[] memory adapterOrderConsideration =
                 new ConsiderationItem[](1);
@@ -3569,15 +3023,12 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyTenOfferedERC721WithWETHDistinctOrders)";
 
-        weth.deposit{ value: 1045 }();
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
@@ -3608,16 +3059,13 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithWETHDistinctOrders_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithWETHDistinctOrders_Adapter)";
 
-        weth.deposit{ value: 1045 }();
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
@@ -3703,16 +3151,13 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain)";
 
-        weth.deposit{ value: 1045 }();
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
@@ -3721,14 +3166,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3750,16 +3188,13 @@ library ExternalOrderPayloadHelperLib is
     function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
             "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter)";
 
-        weth.deposit{ value: 1045 }();
         OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
@@ -3768,14 +3203,7 @@ library ExternalOrderPayloadHelperLib is
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " List")),
-                false,
-                false,
-                alice,
-                payload.submitOrder
-            );
+
 
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
@@ -3815,11 +3243,7 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(benchmark_MatchOrders_ABCA)";
 
-        test721_1.mint(alice, 1);
-        test721_1.mint(cal, 2);
-        test721_1.mint(bob, 3);
 
         OrderContext[] memory contexts = new OrderContext[](3);
         Item721[] memory nfts = new Item721[](3);
@@ -3888,15 +3312,11 @@ library ExternalOrderPayloadHelperLib is
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(benchmark_MatchOrders_ABCA_Adapter)";
 
         // Seaport only.
         _logNotSupported(config.name(), testLabel);
         return 0;
 
-        // test721_1.mint(alice, 1);
-        // test721_1.mint(cal, 2);
-        // test721_1.mint(bob, 3);
 
         // OrderContext[] memory contexts = new OrderContext[](3);
         // Item721[] memory nfts = new Item721[](3);
@@ -4069,7 +3489,6 @@ library ExternalOrderPayloadHelperLib is
 
         vm.startPrank(sidecar);
         test20.approve(sidecar, type(uint256).max);
-        weth.approve(sidecar, type(uint256).max);
         vm.stopPrank();
     }
 
