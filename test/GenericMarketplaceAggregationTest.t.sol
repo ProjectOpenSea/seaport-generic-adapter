@@ -546,16 +546,6 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         FulfillmentComponent[][] memory considerationFulfillments =
             new FulfillmentComponent[][](1);
 
-        infra.adapterOrders = AdapterHelperLib.createAdapterOrder(
-            infra.executionPayloads,
-            new Call[](0),
-            new Call[](0),
-            infra.context.castOfCharacters,
-            infra.adapterOfferArray,
-            infra.adapterConsiderationArray,
-            infra.itemTransfers
-        );
-
         AdvancedOrder memory orderOffer721FourForERC20;
 
         BasicOrderParameters memory params = configs[3]
@@ -566,7 +556,15 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         orderOffer721FourForERC20 = _createSeaportOrderFromBasicParams(params);
 
         infra.finalOrders[0] = orderOffer721FourForERC20;
-        infra.finalOrders[1] = infra.adapterOrders[0];
+        infra.finalOrders[1] = AdapterHelperLib.createAdapterOrder(
+            infra.executionPayloads,
+            new Call[](0),
+            new Call[](0),
+            infra.context.castOfCharacters,
+            infra.adapterOfferArray,
+            infra.adapterConsiderationArray,
+            infra.itemTransfers
+        );
 
         (offerFulfillments, considerationFulfillments) =
             _createFulfillmentComponents();

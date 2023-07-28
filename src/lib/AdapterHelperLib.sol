@@ -294,7 +294,7 @@ library AdapterHelperLib {
     }
 
     ////////////////////////////////////////////////////////////////////////////
-    //                      A bunch of different interfaces.                  //
+    //                      A few different interfaces.                       //
     //                  The meat is at the bottom of all these.               //
     ////////////////////////////////////////////////////////////////////////////
 
@@ -384,38 +384,16 @@ library AdapterHelperLib {
         wrappedCallParameters.target = castOfCharacters.seaport;
     }
 
-    struct AdapterWrapperInfra {
-        Call[] sidecarMarketplaceCalls;
-        CastOfCharacters castOfCharacters;
-        Call[] sidecarSetUpCalls;
-        Call[] sidecarWrapUpCalls;
-        ItemTransfer[] itemTransfers;
-        OfferItem[] adapterOffer;
-        ConsiderationItem[] adapterConsideration;
-        OrderParameters orderParameters;
-        AdvancedOrder order;
-        AdvancedOrder[] orders;
-        Flashloan flashloan;
-        Flashloan[] flashloans;
-        Call call;
-        Call[] calls;
-        bytes extraData;
-        Fulfillment[] fulfillments;
-        uint256 value;
-        uint256 totalFlashloanValueRequested;
-    }
-
     /**
      * @dev This function is used to create a set of orders and fulfillments
      *      that can be passed into matchAdvancedOrders to fulfill an arbitrary
      *      number of orders on external marketplaces. It expects that the calls
      *      to external marketplaces are pre-rolled into the
-     * sidecarMarketplaceCall
-     *      array. This function will wrap up those calls into an order that
-     *      hits the generic adapter, which passes them along to the sidecar. It
-     *      also creates a single pair of orders for an arbitrary number of
-     *      flashloans, if any are passed in. It returns the orders and
-     *      fulfillments separately.
+     *      sidecarMarketplaceCall array. This function will wrap up those calls
+     *      into an order that hits the generic adapter, which passes them along
+     *      to the sidecar. It also creates a single pair of orders for an
+     *      arbitrary number of flashloans, if any are passed in. It returns the
+     *      orders and fulfillments separately.
      *
      * @param sidecarSetUpCalls       An array of Call structs that contain
      *                                the calls to be made by the sidecar before
@@ -467,65 +445,60 @@ library AdapterHelperLib {
             Fulfillment[] memory fulfillments
         )
     {
-        AdapterWrapperInfra memory infra = AdapterWrapperInfra({
-            sidecarMarketplaceCalls: sidecarMarketplaceCalls,
-            sidecarSetUpCalls: sidecarSetUpCalls,
-            sidecarWrapUpCalls: sidecarWrapUpCalls,
-            castOfCharacters: castOfCharacters,
-            itemTransfers: itemTransfers,
-            adapterOffer: adapterOffer,
-            adapterConsideration: adapterConsideration,
-            orderParameters: OrderParametersLib.empty(),
-            order: AdvancedOrderLib.empty(),
-            orders: new AdvancedOrder[](0),
-            flashloan: Flashloan(0, ItemType.NATIVE, address(0), false, address(0)),
-            flashloans: flashloans,
-            call: Call(address(0), false, 0, bytes("")),
-            calls: new Call[](1),
-            extraData: new bytes(0),
-            fulfillments: new Fulfillment[](3),
-            value: 0,
-            totalFlashloanValueRequested: 0
-        });
+        uint256 value;
 
         // Set the value to send.
         for (uint256 i; i < sidecarMarketplaceCalls.length; ++i) {
-            infra.value += sidecarMarketplaceCalls[i].value;
+            value += sidecarMarketplaceCalls[i].value;
         }
 
         // Only create a default flashloan if it's necessary and none is passed
         // in explicitly.
-        if (infra.value > 0 && flashloans.length == 0) {
-            infra.flashloans = new Flashloan[](1);
+        if (value > 0 && flashloans.length == 0) {
+            flashloans = new Flashloan[](1);
             Flashloan memory flashloan = Flashloan({
-                amount: uint88(infra.value),
+                amount: uint88(value),
                 itemType: ItemType.NATIVE, // TODO: make this flexible (weth)
                 token: address(0),
                 shouldCallback: true,
                 recipient: castOfCharacters.adapter
             });
-            infra.flashloans[0] = flashloan;
+            flashloans[0] = flashloan;
         }
 
         // For now, assume it's just one adapter order.
-        uint256 totalOrderCount = infra.flashloans.length * 2 + 1;
+        uint256 flashloanOrderCount = flashloans.length * 2;
+        uint256 totalOrderCount = flashloanOrderCount + 1;
 
-        infra.orders = new AdvancedOrder[](totalOrderCount);
+        orders = new AdvancedOrder[](totalOrderCount);
 
-        if (infra.flashloans.length > 0) {
-            _createFlashloanOrders(infra);
+        if (flashloans.length > 0) {
+            AdvancedOrder[] memory flashloanOrders =
+                new AdvancedOrder[](flashloanOrderCount);
+            flashloanOrders =
+                _createFlashloanOrders(flashloans, castOfCharacters);
+
+            for (uint256 i; i < flashloanOrders.length; i++) {
+                orders[i] = flashloanOrders[i];
+            }
         }
 
-        // For now, assume that it's just one and it's going at the end.
-        _createAdapterOrder(infra, infra.orders.length - 1);
+        orders[orders.length - 1] = _createAdapterOrder(
+            sidecarMarketplaceCalls,
+            sidecarSetUpCalls,
+            sidecarWrapUpCalls,
+            castOfCharacters,
+            adapterOffer,
+            adapterConsideration,
+            itemTransfers
+        );
 
-        _createFulfillments(infra);
+        fulfillments = _createFulfillments(flashloans);
 
-        console.log();
-
-        return (infra.orders, infra.fulfillments);
+        return (orders, fulfillments);
     }
 
+    // Public wrapper for _createAdapterOrder.
     function createAdapterOrder(
         Call[] memory sidecarMarketplaceCalls,
         Call[] memory sidecarSetUpCalls,
@@ -534,133 +507,111 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (AdvancedOrder[] memory orders) {
-        AdapterWrapperInfra memory infra = AdapterWrapperInfra({
-            sidecarMarketplaceCalls: sidecarMarketplaceCalls,
-            castOfCharacters: castOfCharacters,
-            sidecarSetUpCalls: sidecarSetUpCalls,
-            sidecarWrapUpCalls: sidecarWrapUpCalls,
-            itemTransfers: itemTransfers,
-            adapterOffer: adapterOffer,
-            adapterConsideration: adapterConsideration,
-            orderParameters: OrderParametersLib.empty(),
-            order: AdvancedOrderLib.empty(),
-            orders: new AdvancedOrder[](1),
-            flashloan: Flashloan(0, ItemType.NATIVE, address(0), false, address(0)),
-            flashloans: new Flashloan[](0),
-            call: Call(address(0), false, 0, bytes("")),
-            calls: new Call[](1),
-            extraData: new bytes(0),
-            fulfillments: new Fulfillment[](3),
-            value: 0,
-            totalFlashloanValueRequested: 0
-        });
-
-        _createAdapterOrder(infra, 0);
-
-        return infra.orders;
+    ) public view returns (AdvancedOrder memory order) {
+        return _createAdapterOrder(
+            sidecarMarketplaceCalls,
+            sidecarSetUpCalls,
+            sidecarWrapUpCalls,
+            castOfCharacters,
+            adapterOffer,
+            adapterConsideration,
+            itemTransfers
+        );
     }
 
     function _createAdapterOrder(
-        AdapterWrapperInfra memory infra,
-        uint256 insertionIndex
-    ) internal view {
+        Call[] memory sidecarMarketplaceCalls,
+        Call[] memory sidecarSetUpCalls,
+        Call[] memory sidecarWrapUpCalls,
+        CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer,
+        ConsiderationItem[] memory adapterConsideration,
+        ItemTransfer[] memory itemTransfers
+    ) internal view returns (AdvancedOrder memory adapterOrder) {
         // Create the adapter order.
-        infra.order =
+        adapterOrder =
             AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
 
         {
-            infra.orderParameters = OrderParametersLib.empty().withOrderType(
-                OrderType.FULL_OPEN
-            ).withStartTime(block.timestamp).withEndTime(block.timestamp + 100)
+            OrderParameters memory orderParameters = OrderParametersLib.empty()
+                .withOrderType(OrderType.FULL_OPEN).withStartTime(block.timestamp)
+                .withEndTime(block.timestamp + 100)
                 .withTotalOriginalConsiderationItems(0).withOfferer(
-                infra.castOfCharacters.adapter
+                castOfCharacters.adapter
             );
-            infra.orderParameters = infra.orderParameters.withSalt(gasleft());
-            infra.orderParameters =
-                infra.orderParameters.withOrderType(OrderType.CONTRACT);
-            infra.orderParameters = infra.orderParameters.withOffer(
-                infra.adapterOffer
-            ).withConsideration(infra.adapterConsideration)
-                .withTotalOriginalConsiderationItems(
-                infra.adapterConsideration.length
-            );
+            orderParameters = orderParameters.withSalt(gasleft());
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withOffer(adapterOffer)
+                .withConsideration(adapterConsideration)
+                .withTotalOriginalConsiderationItems(adapterConsideration.length);
 
-            infra.order = infra.order.withParameters(infra.orderParameters);
+            adapterOrder = adapterOrder.withParameters(orderParameters);
         }
 
-        infra.calls =
-        new Call[](infra.sidecarSetUpCalls.length + infra.sidecarMarketplaceCalls.length + infra.itemTransfers.length + infra.sidecarWrapUpCalls.length);
+        Call[] memory calls =
+        new Call[](sidecarSetUpCalls.length + sidecarMarketplaceCalls.length + itemTransfers.length + sidecarWrapUpCalls.length);
 
         {
-            for (uint256 i; i < infra.sidecarSetUpCalls.length; i++) {
-                infra.calls[i] = infra.sidecarSetUpCalls[i];
+            for (uint256 i; i < sidecarSetUpCalls.length; i++) {
+                calls[i] = sidecarSetUpCalls[i];
             }
 
-            for (uint256 i = 0; i < infra.sidecarMarketplaceCalls.length; i++) {
-                infra.calls[infra.sidecarSetUpCalls.length + i] = Call(
-                    address(infra.sidecarMarketplaceCalls[i].target),
+            for (uint256 i = 0; i < sidecarMarketplaceCalls.length; i++) {
+                calls[sidecarSetUpCalls.length + i] = Call(
+                    address(sidecarMarketplaceCalls[i].target),
                     false,
-                    infra.sidecarMarketplaceCalls[i].value,
-                    infra.sidecarMarketplaceCalls[i].callData
+                    sidecarMarketplaceCalls[i].value,
+                    sidecarMarketplaceCalls[i].callData
                 );
             }
 
-            Call[] memory tokenCalls =
-                _createTokenTransferCalls(infra.itemTransfers);
+            Call[] memory tokenCalls = _createTokenTransferCalls(itemTransfers);
 
             // Populate the calls array with the NFT transfer calls from the
             // helper.
             for (uint256 i = 0; i < tokenCalls.length; i++) {
-                infra.calls[infra.sidecarSetUpCalls.length
-                    + infra.sidecarMarketplaceCalls.length + i] = tokenCalls[i];
+                calls[sidecarSetUpCalls.length + sidecarMarketplaceCalls.length
+                    + i] = tokenCalls[i];
             }
 
-            for (uint256 i = 0; i < infra.sidecarWrapUpCalls.length; i++) {
-                infra.calls[infra.sidecarSetUpCalls.length
-                    + infra.sidecarMarketplaceCalls.length + tokenCalls.length + i]
-                = infra.sidecarWrapUpCalls[i];
+            for (uint256 i = 0; i < sidecarWrapUpCalls.length; i++) {
+                calls[sidecarSetUpCalls.length + sidecarMarketplaceCalls.length
+                    + tokenCalls.length + i] = sidecarWrapUpCalls[i];
             }
         }
 
-        {
-            infra.extraData =
-                createGenericAdapterContext(new Approval[](0), infra.calls);
-        }
+        adapterOrder = adapterOrder.withExtraData(
+            createGenericAdapterContext(new Approval[](0), calls)
+        );
 
-        infra.order = infra.order.withExtraData(infra.extraData);
-
-        infra.orders[insertionIndex] = infra.order;
+        return adapterOrder;
     }
 
-    function _createFlashloanOrders(AdapterWrapperInfra memory infra)
-        internal
-        view
-    {
-        infra.order =
-            AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+    function _createFlashloanOrders(
+        Flashloan[] memory flashloans,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (AdvancedOrder[] memory orders) {
+        orders = new AdvancedOrder[](flashloans.length * 2);
 
-        for (uint256 i = 0; i < infra.flashloans.length; i++) {
+        for (uint256 i = 0; i < flashloans.length; i++) {
             {
                 // Build the flashloan request order.
                 ConsiderationItem[] memory flashloanRequestConsiderationTemp =
                     new ConsiderationItem[](1);
 
                 flashloanRequestConsiderationTemp[0] = ConsiderationItemLib
-                    .empty().withItemType(infra.flashloans[i].itemType).withToken(
-                    infra.flashloans[i].token
+                    .empty().withItemType(flashloans[i].itemType).withToken(
+                    flashloans[i].token
                 ).withIdentifierOrCriteria(0).withStartAmount(
-                    infra.flashloans[i].amount
-                ).withEndAmount(infra.flashloans[i].amount).withRecipient(
-                    address(0)
-                );
+                    flashloans[i].amount
+                ).withEndAmount(flashloans[i].amount).withRecipient(address(0));
 
                 OrderParameters memory orderParametersTemp =
                     OrderParametersLib.empty();
 
                 orderParametersTemp = orderParametersTemp.withSalt(gasleft());
                 orderParametersTemp = orderParametersTemp.withOfferer(
-                    address(infra.castOfCharacters.fulfiller)
+                    address(castOfCharacters.fulfiller)
                 );
                 orderParametersTemp = orderParametersTemp.withOrderType(
                     OrderType.FULL_OPEN
@@ -668,7 +619,7 @@ library AdapterHelperLib {
                 orderParametersTemp =
                     orderParametersTemp.withEndTime(block.timestamp + 100);
                 orderParametersTemp = orderParametersTemp.withOfferer(
-                    infra.castOfCharacters.flashloanOfferer
+                    castOfCharacters.flashloanOfferer
                 );
                 orderParametersTemp =
                     orderParametersTemp.withOrderType(OrderType.CONTRACT);
@@ -685,15 +636,15 @@ library AdapterHelperLib {
                     .withNumerator(1).withDenominator(1);
 
                 Flashloan[] memory tempFlashloans = new Flashloan[](1);
-                tempFlashloans[0] = infra.flashloans[i];
+                tempFlashloans[0] = flashloans[i];
 
                 bytes memory extraDataTemp = createFlashloanContext(
-                    address(infra.castOfCharacters.fulfiller), tempFlashloans
+                    address(castOfCharacters.fulfiller), tempFlashloans
                 );
 
                 // Add it all to the order.
                 orderTemp = orderTemp.withExtraData(extraDataTemp);
-                infra.orders[i * 2] = orderTemp;
+                orders[i * 2] = orderTemp;
             }
 
             {
@@ -702,11 +653,10 @@ library AdapterHelperLib {
                 // Create the parameters for the order.
                 OfferItem[] memory offerItems = new OfferItem[](1);
                 offerItems[0] = OfferItemLib.empty().withItemType(
-                    infra.flashloans[i].itemType
-                ).withToken(infra.flashloans[i].token).withIdentifierOrCriteria(
-                    0
-                ).withStartAmount(infra.flashloans[i].amount).withEndAmount(
-                    infra.flashloans[i].amount
+                    flashloans[i].itemType
+                ).withToken(flashloans[i].token).withIdentifierOrCriteria(0)
+                    .withStartAmount(flashloans[i].amount).withEndAmount(
+                    flashloans[i].amount
                 );
 
                 OrderParameters memory orderParametersTemp =
@@ -715,7 +665,7 @@ library AdapterHelperLib {
                 orderParametersTemp = OrderParametersLib.empty();
                 orderParametersTemp = orderParametersTemp.withSalt(gasleft());
                 orderParametersTemp = orderParametersTemp.withOfferer(
-                    address(infra.castOfCharacters.fulfiller)
+                    address(castOfCharacters.fulfiller)
                 );
                 orderParametersTemp =
                     orderParametersTemp.withOrderType(OrderType.FULL_OPEN);
@@ -733,21 +683,22 @@ library AdapterHelperLib {
                 AdvancedOrder memory orderTemp;
                 orderTemp = orderTemp.withNumerator(1).withDenominator(1);
                 orderTemp = orderTemp.withParameters(orderParametersTemp);
-                infra.orders[(i * 2) + 1] = orderTemp;
+                orders[(i * 2) + 1] = orderTemp;
             }
         }
     }
 
-    function _createFulfillments(AdapterWrapperInfra memory infra)
+    function _createFulfillments(Flashloan[] memory flashloans)
         internal
         view
+        returns (Fulfillment[] memory fulfillments)
     {
-        if (infra.flashloans.length > 0) {
+        if (flashloans.length > 0) {
             // Create the fulfillments.
-            uint256 fulfillmentsLength = infra.flashloans.length * 2;
-            infra.fulfillments = new Fulfillment[](fulfillmentsLength);
+            uint256 fulfillmentsLength = flashloans.length * 2;
+            fulfillments = new Fulfillment[](fulfillmentsLength);
 
-            for (uint256 i; i < infra.flashloans.length; i++) {
+            for (uint256 i; i < flashloans.length; i++) {
                 FulfillmentComponent[] memory offerComponentsFlashloan =
                     new FulfillmentComponent[](1);
                 FulfillmentComponent[] memory considerationComponentsFlashloan =
@@ -775,19 +726,15 @@ library AdapterHelperLib {
                 considerationComponentsMirror[0] =
                     FulfillmentComponent(flashloanOrderIndex, 0);
 
-                infra.fulfillments[flashloanOrderIndex] = Fulfillment(
+                fulfillments[flashloanOrderIndex] = Fulfillment(
                     offerComponentsFlashloan, considerationComponentsFlashloan
                 );
-                infra.fulfillments[mirrorOrderIndex] = Fulfillment(
+                fulfillments[mirrorOrderIndex] = Fulfillment(
                     offerComponentsMirror, considerationComponentsMirror
                 );
             }
         } else {
-            infra.orders = new AdvancedOrder[](1);
-            infra.orders[0] = infra.order;
-
-            // Create the fulfillments.
-            infra.fulfillments = new Fulfillment[](0);
+            fulfillments = new Fulfillment[](0);
         }
     }
 
