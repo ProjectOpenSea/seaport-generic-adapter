@@ -948,7 +948,7 @@ library ExternalOrderPayloadHelperLib {
     function getPayloadToBuyOfferedERC1155WithERC20_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
-        Item721 memory desiredItem,
+        Item1155 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC1155WithERC20(
@@ -963,7 +963,7 @@ library ExternalOrderPayloadHelperLib {
     function getPayloadToBuyOfferedERC1155WithERC20_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
-        Item721 memory desiredItem,
+        Item1155 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
@@ -1016,17 +1016,14 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedERC1155WithERC20(BaseMarketConfig config,
+    function getPayloadToBuyOfferedERC1155WithERC20(
+        BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
-        Item721 memory desiredItem,
-        Item20 memory payment)
-        internal
-        returns (OrderPayload memory payload)
-    {
+        Item1155 memory desiredItem,
+        Item20 memory payment
+    ) internal returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC1155WithERC20(
-            OrderContext(false, false, castOfCharacters),
-            desiredItem,
-            payment
+            OrderContext(false, false, castOfCharacters), desiredItem, payment
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -1037,7 +1034,7 @@ library ExternalOrderPayloadHelperLib {
     function getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
-        Item721 memory desiredItem,
+        Item1155 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
@@ -1104,12 +1101,13 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC721_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(true, false, castOfCharacters),
-            standardERC20,
-            standardERC721
+            desiredPayment,
+            offeredItem
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -1118,7 +1116,8 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC721_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
@@ -1168,14 +1167,16 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedERC20WithERC721(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedERC20WithERC721(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
+    ) internal returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC20WithERC721(
             OrderContext(false, false, castOfCharacters),
-            standardERC20,
-            standardERC721
+            desiredPayment,
+            offeredItem
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -1184,7 +1185,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1225,16 +1229,16 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedWETHWithERC721_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(true, false, castOfCharacters),
             standardWeth,
             standardERC721
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert();
-
             return payload;
         } catch {
             _logNotSupported();
@@ -1242,18 +1246,16 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedWETHWithERC721_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
-            // Allow the market to escrow after listing
-            assert();
-
-            // Look into why test20 requires an explicit approval lol.
-
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = standardWethTransfer;
 
@@ -1274,10 +1276,12 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedWETHWithERC721(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedWETHWithERC721(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
+    ) internal returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedWETHWithERC721(
             OrderContext(false, false, castOfCharacters),
             standardWeth,
@@ -1290,7 +1294,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1329,9 +1336,12 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedBETHWithERC721(BaseMarketConfig config)
-        internal
-    {
+    function getPayloadToBuyOfferedBETHWithERC721(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
+    ) internal {
         try config.getPayload_BuyOfferedBETHWithERC721(
             OrderContext(false, false, castOfCharacters),
             Item20(address(beth), price),
@@ -1344,7 +1354,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item721 memory offeredItem
     ) internal {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1413,7 +1426,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC1155_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(true, false, castOfCharacters);
@@ -1427,7 +1443,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC1155_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -1453,10 +1472,12 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedERC20WithERC1155(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedERC20WithERC1155(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item1155 memory offeredItem
+    ) internal returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, false, castOfCharacters);
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -1469,7 +1490,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item20 memory desiredPayment,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1511,7 +1535,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithERC1155_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(true, false, castOfCharacters);
@@ -1525,17 +1552,22 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithERC1155_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         // Only seaport, skip for now.
         _logNotSupported();
         return 0;
     }
 
-    function getPayloadToBuyOfferedERC721WithERC1155(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedERC721WithERC1155(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        Item1155 memory offeredItem
+    ) internal returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, false, castOfCharacters);
         try config.getPayload_BuyOfferedERC721WithERC1155(
@@ -1548,7 +1580,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithERC1155_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        Item1155 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         // Only seaport, skip for now.
         _logNotSupported();
@@ -1556,7 +1591,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC1155WithERC721_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item1155 memory desiredItem,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(true, false, castOfCharacters);
@@ -1570,17 +1608,22 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC1155WithERC721_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item1155 memory desiredItem,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         // Only seaport so skipping here.
         _logNotSupported();
         return 0;
     }
 
-    function getPayloadToBuyOfferedERC1155WithERC721(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedERC1155WithERC721(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item1155 memory desiredItem,
+        Item721 memory offeredItem
+    ) internal returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, false, castOfCharacters);
         try config.getPayload_BuyOfferedERC1155WithERC721(
@@ -1593,15 +1636,25 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC1155WithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item1155 memory desiredItem,
+        Item721 memory offeredItem
     ) public returns (OrderPayload memory payload) {
         // Only seaport so skipping here for now.
         _logNotSupported();
         return payload;
     }
 
+    // TODO: Make this a percentage, calculate it for the user, merge these into
+    // a single FeeInfo struct.
     function getPayloadToBuyOfferedERC721WithEtherFee_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(true, false, castOfCharacters),
@@ -1617,7 +1670,12 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithEtherFee_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
@@ -1661,10 +1719,14 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFee(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
+    function getPayloadToBuyOfferedERC721WithEtherFee(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount
+    ) internal returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             OrderContext(false, false, castOfCharacters),
             standardERC721,
@@ -1682,7 +1744,9 @@ library ExternalOrderPayloadHelperLib {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
-        uint256 price
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1734,7 +1798,14 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721 memory desiredItem,
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount1,
+        address feeReciever2,
+        uint256 feeAmount2
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(true, false, castOfCharacters),
@@ -1755,7 +1826,11 @@ library ExternalOrderPayloadHelperLib {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
-        uint256 price
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount1,
+        address feeReciever2,
+        uint256 feeAmount2
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
@@ -1801,7 +1876,12 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        address feeReciever1,
+        uint256 feeAmount1,
+        address feeReciever2,
+        uint256 feeAmount2
     ) public returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             OrderContext(false, false, castOfCharacters),
@@ -1822,7 +1902,11 @@ library ExternalOrderPayloadHelperLib {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
-        uint256 price
+        uint256 price,
+        address feeReciever1,
+        uint256 feeAmount1,
+        address feeReciever2,
+        uint256 feeAmount2
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -1874,34 +1958,25 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEther_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256 price
     ) public returns (OrderPayload memory payload) {
-        Item721[] memory nfts = new Item721[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
-        }
-
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            OrderContext(true, false, castOfCharacters), nfts, price
+            OrderContext(true, false, castOfCharacters), desiredItems, price
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
-                assertTrue(
-                    test721_1.ownerOf(i + 1) == alice
-                        || test721_1.ownerOf(i + 1) == config.market(),
-                    "Not owner"
-                );
-            }
-
             return payload;
-
-            for (uint256 i = 0; i < 10; i++) { }
         } catch {
             _logNotSupported();
         }
     }
 
     function getPayloadToBuyTenOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256 price
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
@@ -1911,40 +1986,28 @@ library ExternalOrderPayloadHelperLib {
             context.castOfCharacters.fulfiller = adapter;
         }
 
-        Item721[] memory nfts = new Item721[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
-        }
-
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            context, nfts, price
+            context, desiredItems, price
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
-                assertTrue(
-                    test721_1.ownerOf(i + 1) == alice
-                        || test721_1.ownerOf(i + 1) == config.market(),
-                    "Not owner"
-                );
-            }
-
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
 
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
+                new ItemTransfer[](desiredItems.length);
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -1969,17 +2032,14 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEther(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
-        Item721[] memory nfts = new Item721[](10);
-        for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
-        }
-
+    function getPayloadToBuyTenOfferedERC721WithEther(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256 price
+    ) internal returns (OrderPayload memory payload) {
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            OrderContext(false, false, castOfCharacters), nfts, price
+            OrderContext(false, false, castOfCharacters), desiredItems, price
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -1988,7 +2048,10 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEther_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256 price
     ) public returns (OrderPayload memory payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
@@ -2002,36 +2065,37 @@ library ExternalOrderPayloadHelperLib {
             context.castOfCharacters.fulfiller = sidecar;
         }
 
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
-            context, nfts, price
+            context, desiredItems, price
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
             for (uint256 i = 0; i < 10; i++) { }
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
 
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
+                new ItemTransfer[](desiredItems.length);
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2053,20 +2117,23 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256[] prices
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, castOfCharacters);
             ethAmounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, desiredItems, ethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2075,17 +2142,20 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256[] prices
     ) public returns (OrderPayload memory payload) {
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, castOfCharacters);
 
             contexts[i].castOfCharacters.fulfiller =
@@ -2094,7 +2164,7 @@ library ExternalOrderPayloadHelperLib {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, desiredItems, ethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2115,24 +2185,25 @@ library ExternalOrderPayloadHelperLib {
                 "standardNativeConsiderationItem"
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
 
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
+                new ItemTransfer[](desiredItems.length);
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2152,22 +2223,25 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256[] prices
     ) public returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             ethAmounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, desiredItems, ethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2176,16 +2250,19 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        uint256[] prices
     ) public returns (OrderPayload memory payload) {
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
 
             contexts[i].castOfCharacters.fulfiller =
@@ -2199,7 +2276,7 @@ library ExternalOrderPayloadHelperLib {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+            contexts, desiredItems, ethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2212,13 +2289,14 @@ library ExternalOrderPayloadHelperLib {
                 flashloanAmount += ethAmounts[i];
             }
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
 
-            for (uint256 i; i < nfts.length; i++) {
+            for (uint256 i; i < desiredItems.length; i++) {
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2231,13 +2309,13 @@ library ExternalOrderPayloadHelperLib {
             ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
+                new ItemTransfer[](desiredItems.length);
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
@@ -2266,20 +2344,23 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, castOfCharacters);
             erc20Amounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+            contexts, _test20Address, desiredItems, erc20Amounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2288,14 +2369,17 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, castOfCharacters);
             erc20Amounts[i] = price + i;
         }
@@ -2313,7 +2397,7 @@ library ExternalOrderPayloadHelperLib {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+            contexts, _test20Address, desiredItems, erc20Amounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2333,24 +2417,25 @@ library ExternalOrderPayloadHelperLib {
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
+                new ItemTransfer[](desiredItems.length);
 
-            for (uint256 i; i < nfts.length; i++) {
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2370,22 +2455,25 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             erc20Amounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+            contexts, _test20Address, desiredItems, erc20Amounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2394,10 +2482,13 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory erc20Amounts = new uint256[](10);
 
         bool requiresTakerIsSender =
@@ -2415,13 +2506,13 @@ library ExternalOrderPayloadHelperLib {
         }
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
             erc20Amounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+            contexts, _test20Address, desiredItems, erc20Amounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2441,25 +2532,26 @@ library ExternalOrderPayloadHelperLib {
                 "standardERC20ConsiderationItem"
             ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
 
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
+                new ItemTransfer[](desiredItems.length);
 
-            for (uint256 i; i < nfts.length; i++) {
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2479,20 +2571,23 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, false, castOfCharacters);
             wethAmounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+            contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2501,14 +2596,17 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(false, true, castOfCharacters);
             wethAmounts[i] = price + i;
         }
@@ -2525,7 +2623,7 @@ library ExternalOrderPayloadHelperLib {
         }
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+            contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller =
@@ -2544,24 +2642,25 @@ library ExternalOrderPayloadHelperLib {
                 "standardWethConsiderationItem"
             ).withStartAmount(totalWethAmount).withEndAmount(totalWethAmount);
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
+            OfferItem[] memory adapterOrderOffer =
+                new OfferItem[](desiredItems.length);
             ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
+                new ItemTransfer[](desiredItems.length);
 
-            for (uint256 i; i < nfts.length; i++) {
+            for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: sidecar,
                     to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
+                    token: desiredItems[i].token,
+                    identifier: desiredItems[i].identifier,
                     amount: 1,
                     itemType: ItemType.ERC721
                 });
 
                 adapterOrderOffer[i] = OfferItemLib.fromDefault(
                     "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
+                ).withToken(desiredItems[i].token).withIdentifierOrCriteria(
+                    desiredItems[i].identifier
                 );
             }
 
@@ -2581,22 +2680,25 @@ library ExternalOrderPayloadHelperLib {
     }
 
     function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain)";
 
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, false, castOfCharacters);
             wethAmounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+            contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2604,21 +2706,26 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
+    // TODO: either get rid of the "WithWETH" functions or convert them to
+    // automatically populate the WETH info so you can just pass in a price.
     function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
-        BaseMarketConfig config
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters,
+        Item721[] memory desiredItems,
+        Item20[] payments
     ) public returns (OrderPayload memory payload) {
         OrderContext[] memory contexts = new OrderContext[](10);
-        Item721[] memory nfts = new Item721[](10);
+        Item721[] memory desiredItems = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            nfts[i] = Item721(_test721Address, i + 1);
+            desiredItems[i] = Item721(_test721Address, i + 1);
             contexts[i] = OrderContext(true, true, castOfCharacters);
             wethAmounts[i] = price + i;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+            contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             ConsiderationItem[] memory considerationArray =
             new ConsiderationItem[](
@@ -2643,70 +2750,74 @@ library ExternalOrderPayloadHelperLib {
         }
     }
 
-    function benchmark_MatchOrders_ABCA(BaseMarketConfig config)
-        internal
-        returns (OrderPayload memory payload)
-    {
-        OrderContext[] memory contexts = new OrderContext[](3);
-        Item721[] memory nfts = new Item721[](3);
+    // TODO: come back and do ABCA later. Also maybe think about doing
+    // adapter-enabled ABCA, too.
+    // function benchmark_MatchOrders_ABCA(
+    //     BaseMarketConfig config,
+    //     CastOfCharacters memory castOfCharacters
+    // ) internal returns (OrderPayload memory payload) {
+    //     OrderContext[] memory contexts = new OrderContext[](3);
+    //     Item721[] memory desiredItems = new Item721[](3);
 
-        contexts[0] = OrderContext(
-            false,
-            false,
-            CastOfCharacters({
-                offerer: alice,
-                fulfiller: address(0),
-                seaport: address(0),
-                flashloanOfferer: flashloanOfferer,
-                adapter: adapter,
-                sidecar: sidecar
-            })
-        );
-        contexts[1] = OrderContext(
-            false,
-            false,
-            CastOfCharacters({
-                offerer: cal,
-                fulfiller: address(0),
-                seaport: address(0),
-                flashloanOfferer: flashloanOfferer,
-                adapter: adapter,
-                sidecar: sidecar
-            })
-        );
-        contexts[2] = OrderContext(
-            false,
-            false,
-            CastOfCharacters({
-                offerer: castOfCharacters.fulfiller,
-                fulfiller: address(0),
-                seaport: address(0),
-                flashloanOfferer: flashloanOfferer,
-                adapter: adapter,
-                sidecar: sidecar
-            })
-        );
+    //     contexts[0] = OrderContext(
+    //         false,
+    //         false,
+    //         CastOfCharacters({
+    //             offerer: alice,
+    //             fulfiller: address(0),
+    //             seaport: address(0),
+    //             flashloanOfferer: flashloanOfferer,
+    //             adapter: adapter,
+    //             sidecar: sidecar
+    //         })
+    //     );
+    //     contexts[1] = OrderContext(
+    //         false,
+    //         false,
+    //         CastOfCharacters({
+    //             offerer: cal,
+    //             fulfiller: address(0),
+    //             seaport: address(0),
+    //             flashloanOfferer: flashloanOfferer,
+    //             adapter: adapter,
+    //             sidecar: sidecar
+    //         })
+    //     );
+    //     contexts[2] = OrderContext(
+    //         false,
+    //         false,
+    //         CastOfCharacters({
+    //             offerer: castOfCharacters.fulfiller,
+    //             fulfiller: address(0),
+    //             seaport: address(0),
+    //             flashloanOfferer: flashloanOfferer,
+    //             adapter: adapter,
+    //             sidecar: sidecar
+    //         })
+    //     );
 
-        nfts[0] = standardERC721;
-        nfts[1] = standardERC721Two;
-        nfts[2] = Item721(_test721Address, 3);
+    //     desiredItems[0] = standardERC721;
+    //     desiredItems[1] = standardERC721Two;
+    //     desiredItems[2] = Item721(_test721Address, 3);
 
-        try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-            OrderPayload memory payload
-        ) {
-            return payload;
-        } catch {
-            _logNotSupported();
-        }
-    }
+    //     try config.getPayload_MatchOrders_ABCA(contexts, desiredItems)
+    // returns (
+    //         OrderPayload memory payload
+    //     ) {
+    //         return payload;
+    //     } catch {
+    //         _logNotSupported();
+    //     }
+    // }
 
-    function benchmark_MatchOrders_ABCA_FulfillThroughAdapter(
-        BaseMarketConfig config
-    ) public returns (OrderPayload memory payload) {
-        // Seaport only.
-        _logNotSupported();
-        return 0;
-    }
+    // function benchmark_MatchOrders_ABCA_FulfillThroughAdapter(
+    //     BaseMarketConfig config,
+    //     CastOfCharacters memory castOfCharacters
+    // ) public returns (OrderPayload memory payload) {
+    //     // Seaport only.
+    //     _logNotSupported();
+    //     return 0;
+    // }
 
     /*//////////////////////////////////////////////////////////////
                           Helpers
@@ -2807,35 +2918,45 @@ library ExternalOrderPayloadHelperLib {
         // TODO: set up the live contracts.
     }
 
-    function _isSudo(BaseMarketConfig config) internal view returns (bool) {
+    function _isSudo(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), sudoswapConfig.name());
     }
 
-    function _isBlur(BaseMarketConfig config) internal view returns (bool) {
+    function _isBlur(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), blurConfig.name());
     }
 
-    function _isBlurV2(BaseMarketConfig config) internal view returns (bool) {
+    function _isBlurV2(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), blurV2Config.name());
     }
 
-    function _isX2y2(BaseMarketConfig config) internal view returns (bool) {
+    function _isX2y2(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), x2y2Config.name());
     }
 
-    function _isLooksRare(BaseMarketConfig config)
-        internal
-        view
-        returns (bool)
-    {
+    function _isLooksRare(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), looksRareConfig.name());
     }
 
-    function _isLooksRareV2(BaseMarketConfig config)
-        internal
-        view
-        returns (bool)
-    {
+    function _isLooksRareV2(
+        BaseMarketConfig config,
+        CastOfCharacters memory castOfCharacters
+    ) internal view returns (bool) {
         return _sameName(config.name(), looksRareV2Config.name());
     }
 
