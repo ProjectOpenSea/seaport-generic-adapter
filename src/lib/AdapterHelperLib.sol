@@ -61,7 +61,6 @@ struct Item20 {
  *      provided. shouldCallback is a boolean that specifies whether the cleanup
  *      function on the adapter should be called. The recipient is the address
  *      that will receive the flashloan, e.g. the address of the adapter.
- *
  */
 struct Flashloan {
     uint88 amount;
@@ -74,7 +73,6 @@ struct Flashloan {
 /**
  * @dev A Fulfillment is a struct that specifies the address and item type of
  *      a token that needs to be approved.
- *
  */
 struct Approval {
     address token;
@@ -86,7 +84,6 @@ struct Approval {
  *      participants in a given order. The offerer is the address that created
  *      the liquidity that's being consumed. The fulfiller is the address that
  *      is calling Seaport to consume the liquidity.
- *
  */
 struct CastOfCharacters {
     address offerer;
@@ -97,6 +94,10 @@ struct CastOfCharacters {
     address sidecar;
 }
 
+/**
+ * @dev An ItemTransfer is a struct that specifies the details of a transfer of
+ *      an item by the sidecar.
+ */
 struct ItemTransfer {
     address from;
     address to;
@@ -690,7 +691,7 @@ library AdapterHelperLib {
 
     function _createFulfillments(Flashloan[] memory flashloans)
         internal
-        view
+        pure
         returns (Fulfillment[] memory fulfillments)
     {
         if (flashloans.length > 0) {
@@ -710,12 +711,6 @@ library AdapterHelperLib {
 
                 uint256 flashloanOrderIndex = i * 2;
                 uint256 mirrorOrderIndex = (i * 2) + 1;
-
-                console.log("flashloanOrderIndex");
-                console.log(flashloanOrderIndex);
-
-                console.log("mirrorOrderIndex");
-                console.log(mirrorOrderIndex);
 
                 offerComponentsFlashloan[0] =
                     FulfillmentComponent(flashloanOrderIndex, 0);

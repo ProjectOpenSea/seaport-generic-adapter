@@ -39,7 +39,7 @@ import {
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { BaseMarketConfig } from "../test/BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
 
 import { BlurConfig } from "../src/marketplaces/blur/BlurConfig.sol";
 

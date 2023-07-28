@@ -5,8 +5,8 @@ import { LooksRareTypeHashes } from "./lib/LooksRareTypeHashes.sol";
 import { OrderTypes } from "./lib/OrderTypes.sol";
 import { ILooksRareExchange } from "./interfaces/ILooksRareExchange.sol";
 import { ICurrencyManager } from "./interfaces/ICurrencyManager.sol";
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import {
     Item721,
     Item1155,
@@ -142,7 +142,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
             context.castOfCharacters.offerer,
@@ -174,7 +174,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item1155 calldata nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
             context.castOfCharacters.offerer,
@@ -206,7 +206,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
             context.castOfCharacters.offerer,
@@ -239,7 +239,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
             context.castOfCharacters.offerer,
@@ -272,7 +272,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item1155 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,
             context.castOfCharacters.offerer,
@@ -305,7 +305,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
             context.castOfCharacters.offerer,
@@ -338,7 +338,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
             context.castOfCharacters.offerer,
@@ -371,7 +371,7 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item1155 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             false,
             context.castOfCharacters.offerer,

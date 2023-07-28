@@ -15,7 +15,7 @@ struct SetupCall {
     bytes data;
 }
 
-struct TestOrderPayload {
+struct OrderPayload {
     // Call needed to submit order on-chain without signature
     Call submitOrder;
     // Call needed to actually execute the order

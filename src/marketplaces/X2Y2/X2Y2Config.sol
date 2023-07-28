@@ -2,10 +2,10 @@
 pragma solidity ^0.8.14;
 
 import { IX2Y2Marketplace } from "./interfaces/IX2Y2Marketplace.sol";
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
 import { Market } from "./interfaces/MarketConstants.sol";
 import { X2Y2TypeHashes } from "./lib/X2Y2TypeHashes.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import {
     Call,
     Item20,
@@ -194,7 +194,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -221,7 +221,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -248,7 +248,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -275,7 +275,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -302,7 +302,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -331,7 +331,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -367,7 +367,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         uint256 feeEthAmount1,
         address feeRecipient2,
         uint256 feeEthAmount2
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -409,7 +409,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -433,7 +433,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
@@ -450,7 +450,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
@@ -467,7 +467,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }

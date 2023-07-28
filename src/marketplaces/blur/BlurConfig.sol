@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.14;
 
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import {
     Item721,
     Item1155,
@@ -237,7 +237,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
             context.castOfCharacters.offerer,
             context.castOfCharacters.fulfiller,
@@ -276,7 +276,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //     OrderContext calldata context,
     //     Item1155 memory nft,
     //     uint256 ethAmount
-    // ) external pure override returns (TestOrderPayload memory execution) {
+    // ) external pure override returns (OrderPayload memory execution) {
     //     (Input memory makerInput, Input memory takerInput) = buildInputPair(
     //         context.castOfCharacters.offerer,
     //         context.castOfCharacters.fulfiller,
@@ -309,7 +309,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
             context.castOfCharacters.offerer,
             context.castOfCharacters.fulfiller,
@@ -341,7 +341,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         bool skipMakerSignature = context.routeThroughAdapter;
 
         (Input memory makerInput, Input memory takerInput) = buildInputPair(
@@ -381,7 +381,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         uint256,
         address,
         uint256
-    ) external pure override returns (TestOrderPayload memory) {
+    ) external pure override returns (OrderPayload memory) {
         // TODO: figure out why this isn't working
         _notImplemented();
     }
@@ -392,7 +392,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //     uint256 priceEthAmount,
     //     address feeRecipient,
     //     uint256 feeEthAmount
-    // ) external view override returns (TestOrderPayload memory execution) {
+    // ) external view override returns (OrderPayload memory execution) {
     //     // TODO: figure out why this isn't working
     //     _notImplemented();
 
@@ -435,7 +435,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         uint256,
         address,
         uint256
-    ) external pure override returns (TestOrderPayload memory) {
+    ) external pure override returns (OrderPayload memory) {
         // TODO: figure out why this isn't working
         _notImplemented();
     }
@@ -448,7 +448,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     //     uint256 feeEthAmount1,
     //     address feeRecipient2,
     //     uint256 feeEthAmount2
-    // ) external view override returns (TestOrderPayload memory execution) {
+    // ) external view override returns (OrderPayload memory execution) {
     //     // TODO: figure out why this isn't working
     //     _notImplemented();
 
@@ -493,7 +493,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
             "BlurConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
@@ -549,7 +549,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
             "BlurConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"

@@ -3,8 +3,8 @@ pragma solidity ^0.8.14;
 
 import "solmate/tokens/ERC20.sol";
 
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import { Call, Item20, Item721, Item1155 } from "../../lib/AdapterHelperLib.sol";
 import { IPair } from "./interfaces/IPair.sol";
 import { IRouter } from "./interfaces/IRouter.sol";
@@ -139,7 +139,7 @@ contract SudoswapConfig is BaseMarketConfig {
         OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external override returns (OrderPayload memory execution) {
         if (!context.listOnChain || nft.token != erc721Address) {
             _notImplemented();
         }
@@ -184,7 +184,7 @@ contract SudoswapConfig is BaseMarketConfig {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external override returns (OrderPayload memory execution) {
         if (
             !context.listOnChain || nft.token != erc721Address
                 || erc20.token != erc20Address || erc20.amount != NFT_PRICE
@@ -236,7 +236,7 @@ contract SudoswapConfig is BaseMarketConfig {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external override returns (OrderPayload memory execution) {
         if (
             !context.listOnChain || nft.token != erc721Address
                 || erc20.token != erc20Address || erc20.amount != NFT_PRICE
@@ -285,7 +285,7 @@ contract SudoswapConfig is BaseMarketConfig {
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
-    ) external override returns (TestOrderPayload memory execution) {
+    ) external override returns (OrderPayload memory execution) {
         if (!context.listOnChain) _notImplemented();
 
         // update market address so tests know where the ERC721 will be escrowed
@@ -333,7 +333,7 @@ contract SudoswapConfig is BaseMarketConfig {
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (!contexts[0].listOnChain) _notImplemented();
 
         address[] memory pools = new address[](nfts.length);

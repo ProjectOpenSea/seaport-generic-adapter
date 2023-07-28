@@ -7,9 +7,9 @@ import { StdCheats } from "forge-std/StdCheats.sol";
 
 import { Merkle } from "./lib/Merkle.sol";
 
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
 
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import {
     Item721,
     Item1155,
@@ -382,7 +382,7 @@ contract BlurV2Config is
         OrderContext calldata context,
         Item721 memory nft,
         uint256 nativeTokenAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -412,7 +412,7 @@ contract BlurV2Config is
         OrderContext calldata context,
         Item1155 memory nft,
         uint256 nativeTokenAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -446,7 +446,7 @@ contract BlurV2Config is
         OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -570,7 +570,7 @@ contract BlurV2Config is
         OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -701,7 +701,7 @@ contract BlurV2Config is
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata nativeTokenAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
@@ -829,7 +829,7 @@ contract BlurV2Config is
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 nativeTokenAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }

@@ -4,8 +4,8 @@ pragma solidity ^0.8.14;
 import "solmate/tokens/ERC20.sol";
 import "forge-std/Test.sol";
 
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { TestOrderPayload } from "../../../test/utils/Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { OrderPayload } from "../../utils/Types.sol";
 import {
     Call,
     Item20,
@@ -51,7 +51,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -113,7 +113,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item1155 memory nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -178,7 +178,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -239,7 +239,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item721 memory nft,
         Item20 memory erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -300,7 +300,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item1155 calldata nft,
         Item20 memory erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -364,7 +364,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
@@ -432,7 +432,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item20 memory erc20,
         Item721 memory nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC721Order memory order = LibNFTOrder.ERC721Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
@@ -500,7 +500,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext calldata context,
         Item20 memory erc20,
         Item1155 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.BUY_NFT,
@@ -572,7 +572,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare fees
         LibNFTOrder.Fee[] memory fees = new LibNFTOrder.Fee[](1);
         fees[0] = LibNFTOrder.Fee({
@@ -646,7 +646,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         uint256 feeEthAmount1,
         address feeRecipient2,
         uint256 feeEthAmount2
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         // Prepare fees
         LibNFTOrder.Fee[] memory fees = new LibNFTOrder.Fee[](2);
         fees[0] = LibNFTOrder.Fee({
@@ -722,7 +722,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
@@ -790,7 +790,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
@@ -853,7 +853,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
             "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"

@@ -31,7 +31,7 @@ import {
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { BaseMarketConfig } from "./BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
 
 import { BlurConfig } from "../src/marketplaces/blur/BlurConfig.sol";
 
@@ -53,7 +53,7 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
-import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+import { SetupCall, OrderPayload } from "../src/utils/Types.sol";
 
 import {
     Call,
@@ -687,7 +687,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         try infra.configs[0].getPayload_BuyOfferedERC721WithERC20(
             infra.context, standardERC721, standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 400);
@@ -701,7 +701,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         try infra.configs[1].getPayload_BuyOfferedERC721WithERC20(
             infra.context, Item721(_test721Address, 2), standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(2), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 400);
@@ -715,7 +715,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         try infra.configs[2].getPayload_BuyOfferedERC721WithERC20(
             infra.context, Item721(_test721Address, 3), standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(3), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 400);
@@ -774,7 +774,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Fire off the actual prep call to ready the order.
             _benchmarkCallWithParams(
                 infra.configs[0].name(),
@@ -801,7 +801,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
 
         try infra.configs[1].getPayload_BuyOfferedERC1155WithEther(
             infra.context, infra.item1155, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             _benchmarkCallWithParams(
                 infra.configs[1].name(),
                 string(abi.encodePacked(infra.testLabel, " List")),
@@ -835,7 +835,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         // transfer (sender, receiver, etc.)
         try infra.configs[2].getPayload_BuyOfferedERC721WithWETH(
             infra.context, standardERC721Two, standardWeth
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             infra.context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(2), alice);
             assertEq(weth.balanceOf(bob), 100);

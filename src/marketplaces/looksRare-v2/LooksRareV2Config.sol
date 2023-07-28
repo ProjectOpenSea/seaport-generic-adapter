@@ -7,8 +7,8 @@ import { QuoteType } from "./lib/QuoteType.sol";
 import { CollectionType } from "./lib/CollectionType.sol";
 import { ILooksRareProtocol } from "./interfaces/ILooksRareProtocol.sol";
 import { ITransferManager } from "./interfaces/ITransferManager.sol";
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
-import { SetupCall, TestOrderPayload } from "../../../test/utils/Types.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
+import { SetupCall, OrderPayload } from "../../utils/Types.sol";
 import {
     Item721,
     Item1155,
@@ -199,7 +199,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item721 memory nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -239,7 +239,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item1155 calldata nft,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -279,7 +279,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -319,7 +319,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item721 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -359,7 +359,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item1155 calldata nft,
         Item20 calldata erc20
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -399,7 +399,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -439,7 +439,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item721 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -479,7 +479,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item20 calldata erc20,
         Item1155 calldata nft
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -519,7 +519,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();
         }
@@ -568,7 +568,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
@@ -620,7 +620,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
@@ -671,7 +671,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         address erc20Address,
         Item721[] calldata nfts,
         uint256[] calldata erc20Amounts
-    ) external view override returns (TestOrderPayload memory execution) {
+    ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }

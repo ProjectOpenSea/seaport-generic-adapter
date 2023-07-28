@@ -42,7 +42,7 @@ import {
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { BaseMarketConfig } from "./BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
 
 import { BlurConfig } from "../src/marketplaces/blur/BlurConfig.sol";
 
@@ -66,7 +66,7 @@ import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
-import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+import { SetupCall, OrderPayload } from "../src/utils/Types.sol";
 
 import {
     Call,
@@ -332,7 +332,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(true, false, stdCastOfCharacters), standardERC721, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -382,7 +382,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
             gasUsed = _benchmarkCallWithParams(
@@ -444,7 +444,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(false, false, stdCastOfCharacters), standardERC721, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
             gasUsed = _benchmarkCallWithParams(
@@ -483,7 +483,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, standardERC721, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), alice);
@@ -526,7 +526,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(alice, 1, 1);
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(true, false, stdCastOfCharacters), standardERC1155, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -567,7 +567,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, standardERC1155, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -621,7 +621,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
             gasUsed = _benchmarkCallWithParams(
@@ -660,7 +660,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, standardERC1155, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
@@ -705,7 +705,7 @@ contract GenericMarketplaceTest is
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -775,7 +775,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -843,7 +843,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -886,7 +886,7 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Put the context back.
             context.castOfCharacters.fulfiller = bob;
 
@@ -939,7 +939,7 @@ contract GenericMarketplaceTest is
             OrderContext(true, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -998,7 +998,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithWETH(
             context, standardERC721, standardWeth
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Put the context back.
             context.castOfCharacters.fulfiller = bob;
 
@@ -1057,7 +1057,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, Item721(address(test721_1), 1), Item20(address(beth), 100)
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(alice.balance, 0);
@@ -1107,7 +1107,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, Item721(address(test721_1), 1), Item20(address(beth), 100)
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
@@ -1204,7 +1204,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, standardERC721, standardWeth
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
             gasUsed = _benchmarkCallWithParams(
@@ -1273,7 +1273,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardERC721,
             standardWeth
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
@@ -1307,7 +1307,7 @@ contract GenericMarketplaceTest is
             OrderContext(true, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1351,7 +1351,7 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, standardERC1155, standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1408,7 +1408,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardERC1155,
             standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -1451,7 +1451,7 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, standardERC1155, standardERC20
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Put the context back.
             context.castOfCharacters.fulfiller = bob;
 
@@ -1502,7 +1502,7 @@ contract GenericMarketplaceTest is
             OrderContext(true, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1565,7 +1565,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1631,7 +1631,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardERC20,
             standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -1674,7 +1674,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, standardERC20, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Put the context back.
             context.castOfCharacters.fulfiller = bob;
 
@@ -1727,7 +1727,7 @@ contract GenericMarketplaceTest is
             OrderContext(true, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1778,7 +1778,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1845,7 +1845,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             standardWeth,
             standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
@@ -1890,7 +1890,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, standardWeth, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
             assertEq(test721_1.ownerOf(1), bob);
@@ -1941,7 +1941,7 @@ contract GenericMarketplaceTest is
             OrderContext(false, false, stdCastOfCharacters),
             Item20(address(beth), 100),
             Item721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(beth.balanceOf(alice), 100);
             assertEq(beth.balanceOf(bob), 0);
@@ -1985,7 +1985,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedBETHWithERC721(
             context, Item20(address(beth), 100), Item721(address(test721_1), 1)
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(beth.balanceOf(alice), 100);
             assertEq(beth.balanceOf(bob), 0);
@@ -2064,7 +2064,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2107,7 +2107,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2164,7 +2164,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -2208,7 +2208,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, standardERC20, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             // Put the context back.
             context.castOfCharacters.fulfiller = bob;
 
@@ -2259,7 +2259,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2307,7 +2307,7 @@ contract GenericMarketplaceTest is
         //     context,
         //     standardERC721,
         //     standardERC1155
-        // ) returns (TestOrderPayload memory payload) {
+        // ) returns (OrderPayload memory payload) {
         //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
@@ -2344,7 +2344,7 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, standardERC721, standardERC1155
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test1155_1.balanceOf(bob, 1), 1);
 
@@ -2384,7 +2384,7 @@ contract GenericMarketplaceTest is
         //     context,
         //     standardERC721,
         //     standardERC1155
-        // ) returns (TestOrderPayload memory payload) {
+        // ) returns (OrderPayload memory payload) {
         //     assertEq(test721_1.ownerOf(1), alice);
         //     assertEq(test1155_1.balanceOf(bob, 1), 1);
 
@@ -2414,7 +2414,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2462,7 +2462,7 @@ contract GenericMarketplaceTest is
         //     context,
         //     standardERC1155,
         //     standardERC721
-        // ) returns (TestOrderPayload memory payload) {
+        // ) returns (OrderPayload memory payload) {
         //     gasUsed = _benchmarkCallWithParams(
         //         config.name(),
         //         string(abi.encodePacked(testLabel, " List")),
@@ -2499,7 +2499,7 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, standardERC1155, standardERC721
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
@@ -2538,7 +2538,7 @@ contract GenericMarketplaceTest is
 
         // try config.getPayload_BuyOfferedERC1155WithERC721(
         //     context, standardERC1155, standardERC721
-        // ) returns (TestOrderPayload memory payload) {
+        // ) returns (OrderPayload memory payload) {
         //     assertEq(test721_1.ownerOf(1), bob);
         //     assertEq(test1155_1.balanceOf(alice, 1), 1);
 
@@ -2583,7 +2583,7 @@ contract GenericMarketplaceTest is
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2632,7 +2632,7 @@ contract GenericMarketplaceTest is
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2698,7 +2698,7 @@ contract GenericMarketplaceTest is
             100,
             feeReciever1,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
@@ -2737,7 +2737,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
@@ -2792,7 +2792,7 @@ contract GenericMarketplaceTest is
             5,
             feeReciever2,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2839,7 +2839,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2908,7 +2908,7 @@ contract GenericMarketplaceTest is
             5,
             feeReciever2,
             5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
@@ -2948,7 +2948,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
@@ -3006,7 +3006,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
             OrderContext(true, false, stdCastOfCharacters), nfts, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3063,7 +3063,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
-        returns (TestOrderPayload memory payload) {
+        returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3149,7 +3149,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
             OrderContext(false, false, stdCastOfCharacters), nfts, 100
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
@@ -3195,7 +3195,7 @@ contract GenericMarketplaceTest is
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
-        returns (TestOrderPayload memory payload) {
+        returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = bob;
 
             for (uint256 i = 0; i < 10; i++) {
@@ -3271,7 +3271,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -3318,7 +3318,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
@@ -3407,7 +3407,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3466,7 +3466,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, nfts, ethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
@@ -3571,7 +3571,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -3624,7 +3624,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
@@ -3714,7 +3714,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3773,7 +3773,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
             contexts, _test20Address, nfts, erc20Amounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
@@ -3871,7 +3871,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -3925,7 +3925,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = bob;
             }
@@ -4016,7 +4016,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -4066,7 +4066,7 @@ contract GenericMarketplaceTest is
 
         try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
             contexts, wethAddress, nfts, wethAmounts
-        ) returns (TestOrderPayload memory payload) {
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -4166,7 +4166,7 @@ contract GenericMarketplaceTest is
         nfts[2] = Item721(_test721Address, 3);
 
         try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-            TestOrderPayload memory payload
+            OrderPayload memory payload
         ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test721_1.ownerOf(2), cal);
@@ -4223,7 +4223,7 @@ contract GenericMarketplaceTest is
         // nfts[2] = Item721(_test721Address, 3);
 
         // try config.getPayload_MatchOrders_ABCA(contexts, nfts) returns (
-        //     TestOrderPayload memory payload
+        //     OrderPayload memory payload
         // ) {
         //     assertEq(test721_1.ownerOf(1), alice);
         //     assertEq(test721_1.ownerOf(2), cal);

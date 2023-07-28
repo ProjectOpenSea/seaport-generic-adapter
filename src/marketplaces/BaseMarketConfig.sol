@@ -1,29 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { SetupCall, TestOrderPayload } from "./utils/Types.sol";
+import { SetupCall, OrderPayload } from "../utils/Types.sol";
 
-import {
-    Call, Item20, Item721, Item1155
-} from "../src/lib/AdapterHelperLib.sol";
+import { Call, Item20, Item721, Item1155 } from "../lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
-import { AdapterHelperLib, OrderContext } from "../src/lib/AdapterHelperLib.sol";
+import { AdapterHelperLib, OrderContext } from "../lib/AdapterHelperLib.sol";
 
 import { FlashloanOffererInterface } from
-    "../src/interfaces/FlashloanOffererInterface.sol";
+    "../interfaces/FlashloanOffererInterface.sol";
 
 import { GenericAdapterInterface } from
-    "../src/interfaces/GenericAdapterInterface.sol";
+    "../interfaces/GenericAdapterInterface.sol";
 
 import { GenericAdapterSidecarInterface } from
-    "../src/interfaces/GenericAdapterSidecarInterface.sol";
+    "../interfaces/GenericAdapterSidecarInterface.sol";
 
 import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
-import { CastOfCharacters } from "../src/lib/AdapterHelperLib.sol";
+import { CastOfCharacters } from "../lib/AdapterHelperLib.sol";
 
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
@@ -111,7 +109,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item721 calldata,
         uint256
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -131,7 +129,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item1155 calldata,
         uint256
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -151,7 +149,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item721 calldata,
         Item20 calldata
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -179,7 +177,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item721 calldata,
         Item20 calldata
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -187,7 +185,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata, /* context */
         Item721 calldata, /* nft */
         Item20 calldata /* erc20*/
-    ) external virtual returns (TestOrderPayload memory /*execution*/ ) {
+    ) external virtual returns (OrderPayload memory /*execution*/ ) {
         _notImplemented();
     }
 
@@ -207,7 +205,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item1155 calldata,
         Item20 calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -227,7 +225,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item20 calldata,
         Item721 calldata
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -246,7 +244,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item20 calldata,
         Item721 calldata
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -254,7 +252,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata, /* context */
         Item20 calldata, /* erc20 */
         Item721 calldata /* nft */
-    ) external virtual returns (TestOrderPayload memory /* execution */ ) {
+    ) external virtual returns (OrderPayload memory /* execution */ ) {
         _notImplemented();
     }
 
@@ -275,7 +273,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item20 calldata,
         Item1155 calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -296,7 +294,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item721 calldata,
         Item1155 calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -317,7 +315,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item1155 calldata,
         Item721 calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -341,7 +339,7 @@ abstract contract BaseMarketConfig {
         uint256,
         address,
         uint256
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -369,7 +367,7 @@ abstract contract BaseMarketConfig {
         uint256,
         address,
         uint256
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -389,7 +387,7 @@ abstract contract BaseMarketConfig {
         OrderContext calldata,
         Item721[] calldata,
         uint256
-    ) external virtual returns (TestOrderPayload memory) {
+    ) external virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -408,7 +406,7 @@ abstract contract BaseMarketConfig {
         OrderContext[] calldata,
         Item721[] calldata,
         uint256[] calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -429,7 +427,7 @@ abstract contract BaseMarketConfig {
         address,
         Item721[] calldata,
         uint256[] calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -450,7 +448,7 @@ abstract contract BaseMarketConfig {
         address,
         Item721[] calldata,
         uint256[] calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
@@ -468,14 +466,14 @@ abstract contract BaseMarketConfig {
     function getPayload_MatchOrders_ABCA(
         OrderContext[] calldata,
         Item721[] calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 
     function getPayload_MatchOrders_Aggregate(
         OrderContext[] calldata,
         Item721[] calldata
-    ) external view virtual returns (TestOrderPayload memory) {
+    ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
 

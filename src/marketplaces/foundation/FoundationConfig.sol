@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 pragma solidity >=0.8.7;
 
-import { BaseMarketConfig } from "../../../test/BaseMarketConfig.sol";
+import { BaseMarketConfig } from "../BaseMarketConfig.sol";
 
 import { IFoundation } from "./interfaces/IFoundation.sol";
 
-import { TestOrderPayload } from "../../../test/utils/Types.sol";
+import { OrderPayload } from "../../utils/Types.sol";
 
 import {
     Call,
@@ -41,7 +41,7 @@ contract FoundationConfig is BaseMarketConfig {
         OrderContext calldata context,
         Item721 calldata nft,
         uint256 ethAmount
-    ) external pure override returns (TestOrderPayload memory execution) {
+    ) external pure override returns (OrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
@@ -77,7 +77,7 @@ contract FoundationConfig is BaseMarketConfig {
         uint256 priceEthAmount,
         address feeRecipient,
         uint256 feeEthAmount
-    ) external pure override returns (TestOrderPayload memory execution) {
+    ) external pure override returns (OrderPayload memory execution) {
         if (!context.listOnChain) {
             _notImplemented();
         }
@@ -115,7 +115,7 @@ contract FoundationConfig is BaseMarketConfig {
         uint256,
         address,
         uint256
-    ) external pure override returns (TestOrderPayload memory) {
+    ) external pure override returns (OrderPayload memory) {
         if (!context.listOnChain) {
             _notImplemented();
         }
