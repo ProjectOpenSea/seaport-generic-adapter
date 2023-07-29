@@ -76,6 +76,9 @@ import {
     OrderContext
 } from "../src/lib/AdapterHelperLib.sol";
 
+import { ExternalOrderPayloadHelper } from
+    "../src/lib/ExternalOrderPayloadHelper.sol";
+
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 
 import { ConsiderationTypeHashes } from
@@ -115,6 +118,8 @@ contract GenericMarketplaceTest is
     GenericAdapterInterface testAdapter;
     GenericAdapterSidecarInterface testSidecar;
 
+    ExternalOrderPayloadHelper payloadHelper;
+
     address public flashloanOfferer;
     address public adapter;
     address public sidecar;
@@ -152,6 +157,8 @@ contract GenericMarketplaceTest is
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
+
+        payloadHelper = new ExternalOrderPayloadHelper();
     }
 
     function testBlur() external virtual {
@@ -330,8 +337,8 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC721WithEther_ListOnChain)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEther(
-            OrderContext(true, false, stdCastOfCharacters), standardERC721, 100
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEther_ListOnChain(
+            config, stdCastOfCharacters, standardERC721, 100
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -370,21 +377,10 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEther_ListOnChain_Adapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        bool transfersToSpecifiedTaker = _isSudo(config);
-
-        // This causes the adapter to be set as the token recipient.
-        if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithEther(
-            context, standardERC721, 100
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, 100
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -398,26 +394,6 @@ contract GenericMarketplaceTest is
             assert(
                 test721_1.ownerOf(1) == alice
                     || test721_1.ownerOf(1) == config.market()
-            );
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            if (transfersToSpecifiedTaker) {
-                // Sudo lets you send the NFT straight to the adapter and
-                // Seaport handles it from there.
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
             );
 
             gasUsed = _benchmarkCallWithParams(

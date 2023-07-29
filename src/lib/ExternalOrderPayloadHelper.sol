@@ -80,7 +80,7 @@ import "forge-std/console.sol";
 // NOTE: I might need something from ConsiderationTypeHashes.sol
 
 // TODO: think about whether this can be a library.
-contract ExternalOrderPayloadHelperLib {
+contract ExternalOrderPayloadHelper {
     using ConsiderationItemLib for ConsiderationItem;
     using ConsiderationItemLib for ConsiderationItem[];
     using OfferItemLib for OfferItem;
@@ -174,7 +174,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -193,7 +193,8 @@ contract ExternalOrderPayloadHelperLib {
         // This causes the adapter to be set as the token recipient in the
         // `getPayload_BuyOfferedERC721WithEther` function call.
         if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.adapter;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
@@ -204,7 +205,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -248,7 +249,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -263,7 +264,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -287,7 +288,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEther(
@@ -318,7 +320,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -336,7 +338,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -354,7 +356,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -410,7 +412,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -425,7 +427,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -445,7 +447,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC1155WithEther(
@@ -476,7 +479,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: desiredItem.amount,
@@ -494,7 +497,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -509,7 +512,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -534,7 +537,8 @@ contract ExternalOrderPayloadHelperLib {
         // caller expects.
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         bool transfersToSpecifiedTaker = _isSudo(config);
@@ -542,7 +546,8 @@ contract ExternalOrderPayloadHelperLib {
         // This causes the adapter to be set as the token recipient, so no
         // transfers from the sidecar are necessary.
         if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.adapter;
         }
 
         try config.getPayload_BuyOfferedERC721WithERC20(
@@ -573,7 +578,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -597,7 +602,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -615,7 +620,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -634,7 +639,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithERC20(
@@ -666,7 +672,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -684,7 +690,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -702,7 +708,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -721,7 +727,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithWETH(
@@ -753,7 +760,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -771,7 +778,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -789,7 +796,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -813,7 +820,8 @@ contract ExternalOrderPayloadHelperLib {
         // address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         // TODO: Come back and check to make sure this is OK.
@@ -877,7 +885,7 @@ contract ExternalOrderPayloadHelperLib {
             {
                 sidecarItemTransfers[0] = ItemTransfer({
                     from: context.castOfCharacters.sidecar,
-                    to: adapter,
+                    to: context.castOfCharacters.adapter,
                     token: desiredItem.token,
                     identifier: desiredItem.identifier,
                     amount: 1,
@@ -901,7 +909,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -919,7 +927,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithERC20(
@@ -950,7 +959,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -968,7 +977,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -986,7 +995,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1004,7 +1013,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1042,7 +1051,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: desiredItem.amount,
@@ -1060,7 +1069,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1078,7 +1087,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1097,7 +1106,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC1155WithERC20(
@@ -1129,7 +1139,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: desiredItem.amount,
@@ -1147,7 +1157,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1165,7 +1175,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1185,13 +1195,15 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.adapter;
         }
 
         try config.getPayload_BuyOfferedERC20WithERC721(
@@ -1223,7 +1235,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1245,7 +1257,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1262,7 +1274,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1281,7 +1293,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC20WithERC721(
@@ -1314,7 +1327,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1332,7 +1345,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1350,7 +1363,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1389,7 +1402,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1407,7 +1420,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1424,7 +1437,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1443,7 +1456,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedWETHWithERC721(
@@ -1475,7 +1489,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1493,7 +1507,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1511,7 +1525,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1530,7 +1544,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedBETHWithERC721(
@@ -1599,7 +1614,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1616,7 +1631,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1653,7 +1668,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1671,7 +1686,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1688,7 +1703,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1708,7 +1723,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC20WithERC1155(
@@ -1741,7 +1757,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredPayment.token,
                 identifier: 0,
                 amount: desiredPayment.amount,
@@ -1759,7 +1775,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1776,7 +1792,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1785,10 +1801,9 @@ contract ExternalOrderPayloadHelperLib {
         CastOfCharacters memory, /* castOfCharacters */
         Item721 memory, /* desiredItem */
         Item1155 memory /* offeredItem */
-    ) public view returns (OrderPayload memory _payload) {
+    ) public pure returns (OrderPayload memory /* _payload */ ) {
         // Only seaport, skip for now.
-        _logNotSupported();
-        return _payload;
+        _revertNotSupported();
     }
 
     function getPayloadToBuyOfferedERC721WithERC1155(
@@ -1804,7 +1819,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1813,10 +1828,9 @@ contract ExternalOrderPayloadHelperLib {
         CastOfCharacters memory, /* castOfCharacters */
         Item721 memory, /* desiredItem */
         Item1155 memory /* offeredItem */
-    ) public view returns (OrderPayload memory _payload) {
+    ) public pure returns (OrderPayload memory /* _payload */ ) {
         // Only seaport, skip for now.
-        _logNotSupported();
-        return _payload;
+        _revertNotSupported();
     }
 
     function getPayloadToBuyOfferedERC1155WithERC721_ListOnChain(
@@ -1832,7 +1846,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1841,10 +1855,9 @@ contract ExternalOrderPayloadHelperLib {
         CastOfCharacters memory, /* castOfCharacters */
         Item1155 memory, /* desiredItem */
         Item721 memory /* offeredItem */
-    ) public view returns (OrderPayload memory _payload) {
+    ) public pure returns (OrderPayload memory /* _payload */ ) {
         // Only seaport so skipping here.
-        _logNotSupported();
-        return _payload;
+        _revertNotSupported();
     }
 
     function getPayloadToBuyOfferedERC1155WithERC721(
@@ -1860,7 +1873,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1869,10 +1882,9 @@ contract ExternalOrderPayloadHelperLib {
         CastOfCharacters memory, /* castOfCharacters */
         Item1155 memory, /* desiredItem */
         Item721 memory /* offeredItem */
-    ) public view returns (OrderPayload memory _payload) {
+    ) public pure returns (OrderPayload memory /* _payload */ ) {
         // Only seaport so skipping here for now.
-        _logNotSupported();
-        return _payload;
+        _revertNotSupported();
     }
 
     // TODO: Make this a percentage, calculate it for the user, merge these into
@@ -1897,7 +1909,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1941,7 +1953,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -1959,7 +1971,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1978,7 +1990,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -1998,7 +2010,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
@@ -2031,7 +2044,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -2049,7 +2062,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2077,7 +2090,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2127,7 +2140,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -2145,7 +2158,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2173,7 +2186,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2195,7 +2208,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
@@ -2235,7 +2249,7 @@ contract ExternalOrderPayloadHelperLib {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: 1,
@@ -2253,7 +2267,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2271,7 +2285,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2286,7 +2300,8 @@ contract ExternalOrderPayloadHelperLib {
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.adapter;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
@@ -2299,8 +2314,8 @@ contract ExternalOrderPayloadHelperLib {
                 new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: context.castOfCharacters.sidecar,
+                    to: context.castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2345,7 +2360,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2363,7 +2378,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2382,7 +2397,8 @@ contract ExternalOrderPayloadHelperLib {
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
+            context.castOfCharacters.fulfiller =
+                context.castOfCharacters.sidecar;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEther(
@@ -2397,8 +2413,8 @@ contract ExternalOrderPayloadHelperLib {
                 new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: context.castOfCharacters.sidecar,
+                    to: context.castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2439,7 +2455,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2460,7 +2476,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2478,8 +2494,9 @@ contract ExternalOrderPayloadHelperLib {
         for (uint256 i = 0; i < 10; i++) {
             contexts[i] = OrderContext(false, true, castOfCharacters);
 
-            contexts[i].castOfCharacters.fulfiller =
-                requiresTakerIsSender ? sidecar : castOfCharacters.fulfiller;
+            contexts[i].castOfCharacters.fulfiller = requiresTakerIsSender
+                ? contexts[i].castOfCharacters.sidecar
+                : castOfCharacters.fulfiller;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
@@ -2516,8 +2533,8 @@ contract ExternalOrderPayloadHelperLib {
                 new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: contexts[i].castOfCharacters.sidecar,
+                    to: contexts[i].castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2545,7 +2562,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2566,7 +2583,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2580,19 +2597,21 @@ contract ExternalOrderPayloadHelperLib {
 
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
+        address originalFulfiller = castOfCharacters.fulfiller;
+
         for (uint256 i = 0; i < 10; i++) {
             contexts[i] = OrderContext(true, true, castOfCharacters);
 
-            contexts[i].castOfCharacters.fulfiller =
-                transfersToSpecifiedTaker ? adapter : castOfCharacters.fulfiller;
+            contexts[i].castOfCharacters.fulfiller = transfersToSpecifiedTaker
+                ? contexts[i].castOfCharacters.adapter
+                : contexts[i].castOfCharacters.fulfiller;
         }
 
         try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
-                contexts[i].castOfCharacters.fulfiller =
-                    castOfCharacters.fulfiller;
+                contexts[i].castOfCharacters.fulfiller = originalFulfiller;
             }
 
             uint256 flashloanAmount;
@@ -2631,8 +2650,8 @@ contract ExternalOrderPayloadHelperLib {
                 new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: contexts[i].castOfCharacters.sidecar,
+                    to: contexts[i].castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2659,7 +2678,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2683,7 +2702,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2751,8 +2770,8 @@ contract ExternalOrderPayloadHelperLib {
 
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: contexts[i].castOfCharacters.sidecar,
+                    to: contexts[i].castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2780,7 +2799,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2805,7 +2824,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2872,8 +2891,8 @@ contract ExternalOrderPayloadHelperLib {
 
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: contexts[i].castOfCharacters.sidecar,
+                    to: contexts[i].castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -2901,7 +2920,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2925,7 +2944,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -2952,7 +2971,8 @@ contract ExternalOrderPayloadHelperLib {
 
         if (requiresTakerIsSender) {
             for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = sidecar;
+                contexts[i].castOfCharacters.fulfiller =
+                    contexts[i].castOfCharacters.sidecar;
             }
         }
 
@@ -2988,8 +3008,8 @@ contract ExternalOrderPayloadHelperLib {
 
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
+                    from: contexts[i].castOfCharacters.sidecar,
+                    to: contexts[i].castOfCharacters.adapter,
                     token: desiredItems[i].token,
                     identifier: desiredItems[i].identifier,
                     amount: 1,
@@ -3017,7 +3037,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -3041,7 +3061,7 @@ contract ExternalOrderPayloadHelperLib {
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -3110,7 +3130,7 @@ contract ExternalOrderPayloadHelperLib {
 
             return payload;
         } catch {
-            _logNotSupported();
+            _revertNotSupported();
         }
     }
 
@@ -3164,8 +3184,8 @@ contract ExternalOrderPayloadHelperLib {
         return keccak256(bytes(name1)) == keccak256(bytes(name2));
     }
 
-    function _logNotSupported() internal view {
-        console.log(
+    function _revertNotSupported() internal pure {
+        revert(
             "Not currently supported. See <some_README> for details on how to add support."
         );
     }
