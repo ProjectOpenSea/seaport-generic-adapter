@@ -418,8 +418,8 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC721WithEther)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEther(
-            OrderContext(false, false, stdCastOfCharacters), standardERC721, 100
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEther(
+            config, stdCastOfCharacters, standardERC721, 100
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
 
@@ -446,37 +446,11 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEther_Adapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        // Blur, LR, and X2Y2 require that the msg.sender is also the taker.
-        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
-            || _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithEther(
-            context, standardERC721, 100
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEther_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, 100
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test721_1.ownerOf(1), alice);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -500,8 +474,8 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC1155WithEther_ListOnChain)";
         test1155_1.mint(alice, 1, 1);
-        try config.getPayload_BuyOfferedERC1155WithEther(
-            OrderContext(true, false, stdCastOfCharacters), standardERC1155, 100
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithEther_ListOnChain(
+            config, stdCastOfCharacters, standardERC1155, 100
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -538,11 +512,9 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC1155WithEther_ListOnChain_Adapter)";
         test1155_1.mint(alice, 1, 1);
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        try config.getPayload_BuyOfferedERC1155WithEther(
-            context, standardERC1155, 100
+        try payloadHelper
+            .getPayloadToBuyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC1155, 100
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -555,20 +527,6 @@ contract GenericMarketplaceTest is
 
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test1155_1.balanceOf(bob, 1), 0);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard1155Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -593,10 +551,8 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC1155WithEther)";
         test1155_1.mint(alice, 1, 1);
-        try config.getPayload_BuyOfferedERC1155WithEther(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC1155,
-            100
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithEther(
+            config, stdCastOfCharacters, standardERC1155, 100
         ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
@@ -623,37 +579,10 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithEther_Adapter)";
         test1155_1.mint(alice, 1, 1);
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        // LR requires that the msg.sender is also the taker.
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isBlurV2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC1155WithEther(
-            context, standardERC1155, 100
+        try payloadHelper
+            .getPayloadToBuyOfferedERC1155WithEther_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC1155, 100
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-            assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard1155Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),

@@ -394,7 +394,7 @@ contract ExternalOrderPayloadHelper {
             ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
-                to: adapter,
+                to: context.castOfCharacters.adapter,
                 token: desiredItem.token,
                 identifier: desiredItem.identifier,
                 amount: desiredItem.amount,
