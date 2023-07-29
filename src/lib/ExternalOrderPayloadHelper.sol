@@ -2504,8 +2504,7 @@ contract ExternalOrderPayloadHelper {
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
-                contexts[i].castOfCharacters.fulfiller =
-                    originalFulfiller;
+                contexts[i].castOfCharacters.fulfiller = originalFulfiller;
             }
 
             uint256 flashloanAmount;

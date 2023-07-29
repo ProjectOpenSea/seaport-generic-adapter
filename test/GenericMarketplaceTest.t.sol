@@ -660,7 +660,8 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -737,7 +738,8 @@ contract GenericMarketplaceTest is
 
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
-        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
@@ -819,14 +821,13 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithWETH_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithWETH_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
-
-           
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -900,19 +901,15 @@ contract GenericMarketplaceTest is
         // hevm.prank(bob);
         // beth.deposit{ value: 100 }();
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
-            config,
-            stdCastOfCharacters,
-            Item721(address(test721_1), 1),
-            100
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
+            config, stdCastOfCharacters, Item721(address(test721_1), 1), 100
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(alice.balance, 0);
             assertEq(beth.balanceOf(bob), 0);
             assertEq(bob.balance, 100);
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -944,7 +941,8 @@ contract GenericMarketplaceTest is
 
         // BREADCRUMB BLUR, LR, X2Y2
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -1065,7 +1063,8 @@ contract GenericMarketplaceTest is
 
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -1138,13 +1137,13 @@ contract GenericMarketplaceTest is
 
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1216,7 +1215,8 @@ contract GenericMarketplaceTest is
 
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -1235,7 +1235,6 @@ contract GenericMarketplaceTest is
                     || test20.balanceOf(config.market()) == 100
             );
             assertEq(test20.balanceOf(bob), 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1294,13 +1293,13 @@ contract GenericMarketplaceTest is
 
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1377,7 +1376,8 @@ contract GenericMarketplaceTest is
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
 
-        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -1400,7 +1400,6 @@ contract GenericMarketplaceTest is
             // Look into why test20 requires an explicit approval lol.
             vm.prank(sidecar);
             weth.approve(sidecar, 100);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1463,13 +1462,13 @@ contract GenericMarketplaceTest is
         hevm.prank(alice);
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
-        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1535,7 +1534,8 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         hevm.deal(bob, 0);
 
-        try payloadHelper.getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
             config,
             stdCastOfCharacters,
             Item20(address(beth), 100),
@@ -1545,8 +1545,6 @@ contract GenericMarketplaceTest is
             assertEq(beth.balanceOf(alice), 100);
             assertEq(beth.balanceOf(bob), 0);
             assertEq(bob.balance, 0);
-
- 
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -1614,7 +1612,8 @@ contract GenericMarketplaceTest is
 
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -1629,7 +1628,6 @@ contract GenericMarketplaceTest is
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1688,13 +1686,13 @@ contract GenericMarketplaceTest is
 
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1948,7 +1946,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
             config,
             stdCastOfCharacters,
             standardERC721,
@@ -1971,8 +1970,6 @@ contract GenericMarketplaceTest is
                     || test721_1.ownerOf(1) == config.market()
             );
             assertEq(feeReciever1.balance, 0);
-
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2026,13 +2023,12 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, 100, feeReciever1, 5
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2107,7 +2103,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
             config,
             stdCastOfCharacters,
             standardERC721,
@@ -2132,7 +2129,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2196,7 +2192,8 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
             config,
             stdCastOfCharacters,
             standardERC721,
@@ -2209,7 +2206,6 @@ contract GenericMarketplaceTest is
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
-
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2290,7 +2286,8 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, 100
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -2309,9 +2306,6 @@ contract GenericMarketplaceTest is
                     "Not owner"
                 );
             }
-
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2379,16 +2373,13 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, 100
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
-
-
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2476,10 +2467,6 @@ contract GenericMarketplaceTest is
             for (uint256 i = 0; i < ethAmounts.length; i++) {
                 flashloanAmount += ethAmounts[i];
             }
-
-
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2579,8 +2566,6 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
-
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill*")),
@@ -2675,9 +2660,6 @@ contract GenericMarketplaceTest is
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-           
-            
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill /w Sigs*")),
@@ -2769,7 +2751,7 @@ contract GenericMarketplaceTest is
         }
 
         try payloadHelper
-            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
+            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
             config, castOfCharactersArray, nfts, erc20s
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -2780,9 +2762,6 @@ contract GenericMarketplaceTest is
                 alice,
                 payload.submitOrder
             );
-
-           
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2863,7 +2842,8 @@ contract GenericMarketplaceTest is
             weths[i] = Item20(wethAddress, 100 + i);
         }
 
-        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, weths
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
@@ -2954,7 +2934,8 @@ contract GenericMarketplaceTest is
             weths[i] = Item20(wethAddress, 100 + i);
         }
 
-        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, weths
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
@@ -2973,8 +2954,6 @@ contract GenericMarketplaceTest is
             considerationArray[0] = ConsiderationItemLib.fromDefault(
                 "standardNativeConsiderationItem"
             ).withStartAmount(0).withEndAmount(0);
-
-            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
