@@ -718,14 +718,14 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
-            "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
+            "ZeroExConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
 
         // Not sure how best to do this, not implementing for now
@@ -785,7 +785,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -793,7 +793,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
+            "ZeroExConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
 
         // Not sure how best to do this, not implementing for now
@@ -848,7 +848,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -856,7 +856,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "ZeroExConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
+            "ZeroExConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
 
         // Not sure how best to do this, not implementing for now

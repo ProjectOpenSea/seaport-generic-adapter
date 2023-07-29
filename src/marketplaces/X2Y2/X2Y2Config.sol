@@ -405,7 +405,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
@@ -429,7 +429,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         execution.executeOrder = Call(address(X2Y2), false, ethAmount, payload);
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
@@ -445,7 +445,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         execution.executeOrder = Call(address(X2Y2), false, ethSum, payload);
     }
 
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -462,7 +462,7 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
         execution.executeOrder = Call(address(X2Y2), false, 0, payload);
     }
 
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,

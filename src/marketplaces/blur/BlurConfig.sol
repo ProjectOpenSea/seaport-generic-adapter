@@ -489,14 +489,14 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         Execution[] executions;
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
-            "BlurConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "BlurConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
 
         StackPressureInfra memory infra = StackPressureInfra({
@@ -544,7 +544,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -552,7 +552,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "BlurConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "BlurConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
 
         Execution[] memory executions = new Execution[](nfts.length);

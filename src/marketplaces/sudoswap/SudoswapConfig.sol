@@ -281,7 +281,7 @@ contract SudoswapConfig is BaseMarketConfig {
         });
     }
 
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
@@ -329,7 +329,7 @@ contract SudoswapConfig is BaseMarketConfig {
         });
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts

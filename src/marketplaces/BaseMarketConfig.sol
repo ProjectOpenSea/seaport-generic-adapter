@@ -383,7 +383,7 @@ abstract contract BaseMarketConfig {
      * @ param nfts Array of Address and ID for ERC721 tokens to be sold.
      * @ param ethAmount Amount of Ether to be received for the NFT.
      */
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata,
         Item721[] calldata,
         uint256
@@ -402,7 +402,7 @@ abstract contract BaseMarketConfig {
      * @ param ethAmounts Array of Ether emounts to be received for the NFTs in
      * each order
      */
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata,
         Item721[] calldata,
         uint256[] calldata
@@ -422,7 +422,7 @@ abstract contract BaseMarketConfig {
      * @ param erc20Amounts Array of Erc20 amounts to be received for the NFTs
      * in each order
      */
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata,
         address,
         Item721[] calldata,
@@ -443,7 +443,7 @@ abstract contract BaseMarketConfig {
      * @ param erc20Amounts Array of WETH amounts to be received for the NFTs in
      * each order
      */
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata,
         address,
         Item721[] calldata,

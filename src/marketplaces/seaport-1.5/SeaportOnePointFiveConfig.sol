@@ -965,7 +965,7 @@ contract SeaportOnePointFiveConfig is
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
@@ -1016,14 +1016,14 @@ contract SeaportOnePointFiveConfig is
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
-            "SeaportConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "SeaportConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
 
         (
@@ -1064,7 +1064,7 @@ contract SeaportOnePointFiveConfig is
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -1072,7 +1072,7 @@ contract SeaportOnePointFiveConfig is
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "SeaportConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "SeaportConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
@@ -1109,7 +1109,7 @@ contract SeaportOnePointFiveConfig is
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -1117,7 +1117,7 @@ contract SeaportOnePointFiveConfig is
     ) external view override returns (OrderPayload memory execution) {
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "SeaportConfig::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "SeaportConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(

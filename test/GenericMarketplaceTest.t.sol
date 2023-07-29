@@ -211,28 +211,28 @@ contract GenericMarketplaceTest is
         beforeAllPrepareMarketplaceTest(config);
 
         buyOfferedERC1155WithERC20_ListOnChain(config);
-        buyOfferedERC1155WithERC20_ListOnChain_Adapter(config);
+        buyOfferedERC1155WithERC20_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC1155WithERC20(config);
-        buyOfferedERC1155WithERC20_Adapter(config);
+        buyOfferedERC1155WithERC20_FulfillThroughAdapter(config);
 
         buyOfferedERC1155WithERC721_ListOnChain(config);
-        buyOfferedERC1155WithERC721_ListOnChain_Adapter(config);
+        buyOfferedERC1155WithERC721_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC1155WithERC721(config);
-        buyOfferedERC1155WithERC721_Adapter(config);
+        buyOfferedERC1155WithERC721_FulfillThroughAdapter(config);
 
         buyOfferedERC1155WithEther_ListOnChain(config);
-        buyOfferedERC1155WithEther_ListOnChain_Adapter(config);
+        buyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC1155WithEther(config);
-        buyOfferedERC1155WithEther_Adapter(config);
+        buyOfferedERC1155WithEther_FulfillThroughAdapter(config);
 
         buyOfferedERC20WithERC1155_ListOnChain(config);
-        buyOfferedERC20WithERC1155_ListOnChain_Adapter(config);
+        buyOfferedERC20WithERC1155_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC20WithERC1155(config);
-        buyOfferedERC20WithERC1155_Adapter(config);
+        buyOfferedERC20WithERC1155_FulfillThroughAdapter(config);
 
         buyOfferedERC20WithERC721_ListOnChain(config);
         // There's an issue with resetting storage for sudo, to just reset
@@ -240,16 +240,16 @@ contract GenericMarketplaceTest is
         if (_isSudo(config)) {
             beforeAllPrepareMarketplaceTest(config);
         }
-        buyOfferedERC20WithERC721_ListOnChain_Adapter(config);
+        buyOfferedERC20WithERC721_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC20WithERC721(config);
-        buyOfferedERC20WithERC721_Adapter(config);
+        buyOfferedERC20WithERC721_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithERC1155_ListOnChain(config);
-        buyOfferedERC721WithERC1155_ListOnChain_Adapter(config);
+        buyOfferedERC721WithERC1155_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithERC1155(config);
-        buyOfferedERC721WithERC1155_Adapter(config);
+        buyOfferedERC721WithERC1155_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithERC20_ListOnChain(config);
         // There's an issue with resetting storage for sudo, to just reset
@@ -257,73 +257,83 @@ contract GenericMarketplaceTest is
         if (_isSudo(config)) {
             beforeAllPrepareMarketplaceTest(config);
         }
-        buyOfferedERC721WithERC20_ListOnChain_Adapter(config);
+        buyOfferedERC721WithERC20_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithERC20(config);
-        buyOfferedERC721WithERC20_Adapter(config);
+        buyOfferedERC721WithERC20_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithEther(config);
-        buyOfferedERC721WithEther_Adapter(config);
+        buyOfferedERC721WithEther_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithEther_ListOnChain(config);
-        buyOfferedERC721WithEther_ListOnChain_Adapter(config);
+        buyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(config);
 
-        buyOfferedERC721WithEtherFee(config);
-        buyOfferedERC721WithEtherFee_Adapter(config);
+        buyOfferedERC721WithEtherOneFeeRecipient(config);
+        buyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(config);
 
-        buyOfferedERC721WithEtherFee_ListOnChain(config);
-        buyOfferedERC721WithEtherFee_ListOnChain_Adapter(config);
+        buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain(config);
+        buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter(
+            config
+        );
 
-        buyOfferedERC721WithEtherFeeTwoRecipients(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(config);
+        buyOfferedERC721WithEtherTwoFeeRecipients(config);
+        buyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(config);
 
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(config);
-        buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(config);
+        buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain(config);
+        buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter(
+            config
+        );
 
         buyOfferedERC721WithWETH(config);
-        buyOfferedERC721WithWETH_Adapter(config);
+        buyOfferedERC721WithWETH_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithBETH(config);
-        buyOfferedERC721WithBETH_Adapter(config);
+        buyOfferedERC721WithBETH_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithWETH_ListOnChain(config);
-        buyOfferedERC721WithWETH_ListOnChain_Adapter(config);
+        buyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedWETHWithERC721_ListOnChain(config);
-        buyOfferedWETHWithERC721_ListOnChain_Adapter(config);
+        buyOfferedWETHWithERC721_ListOnChain_FulfillThroughAdapter(config);
 
         buyOfferedWETHWithERC721(config);
-        buyOfferedWETHWithERC721_Adapter(config);
+        buyOfferedWETHWithERC721_FulfillThroughAdapter(config);
 
         buyOfferedBETHWithERC721(config);
-        buyOfferedBETHWithERC721_Adapter(config);
+        buyOfferedBETHWithERC721_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(config);
+        buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
+            config
+        );
 
         buyTenOfferedERC721WithErc20DistinctOrders(config);
-        buyTenOfferedERC721WithErc20DistinctOrders_Adapter(config);
+        buyTenOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithEther(config);
-        buyTenOfferedERC721WithEther_Adapter(config);
+        buyTenOfferedERC721WithEther_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithEther_ListOnChain(config);
-        buyTenOfferedERC721WithEther_ListOnChain_Adapter(config);
+        buyTenOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithEtherDistinctOrders(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_Adapter(config);
+        buyTenOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(config);
+        buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
+            config
+        );
 
         buyTenOfferedERC721WithWETHDistinctOrders(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_Adapter(config);
+        buyTenOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(config);
-        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(config);
+        buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
+            config
+        );
 
         benchmark_MatchOrders_ABCA(config);
-        benchmark_MatchOrders_ABCA_Adapter(config);
+        benchmark_MatchOrders_ABCA_FulfillThroughAdapter(config);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -370,11 +380,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEther_ListOnChain_Adapter(
+    function buyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithEther_ListOnChain_Adapter)";
+            "(buyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
         try payloadHelper
@@ -438,12 +448,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEther_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithEther_Adapter)";
+    function buyOfferedERC721WithEther_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithEther_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
         try payloadHelper
@@ -505,11 +514,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithEther_ListOnChain_Adapter(
+    function buyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC1155WithEther_ListOnChain_Adapter)";
+            "(buyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter)";
         test1155_1.mint(alice, 1, 1);
 
         try payloadHelper
@@ -571,12 +580,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithEther_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC1155WithEther_Adapter)";
+    function buyOfferedERC1155WithEther_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC1155WithEther_FulfillThroughAdapter)";
         test1155_1.mint(alice, 1, 1);
 
         try payloadHelper
@@ -606,10 +614,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithERC20_ListOnChain)";
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            OrderContext(true, false, stdCastOfCharacters),
-            standardERC721,
-            standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20(
+            config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -645,43 +651,18 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithERC20_ListOnChain_Adapter(
+    function buyOfferedERC721WithERC20_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithERC20_ListOnChain_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config);
-
-        // LooksRare requires that the msg.sender is also the taker. So this
-        // changes the fulfiller on the context, which changes the taker on the
-        // orders created, which allows the sidecar to fulfill the order, and
-        // then below the sidecar transfers the NFTs to the adapter, so that
-        // Seaport can yoink them out and enforce that the caller gets what the
-        // caller expects.
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        bool transfersToSpecifiedTaker = _isSudo(config);
-
-        // This causes the adapter to be set as the token recipient, so no
-        // transfers from the sidecar are necessary.
-        if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
-        }
+            "(buyOfferedERC721WithERC20_ListOnChain_FulfillThroughAdapter)";
 
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
 
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            context, standardERC721, standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -698,26 +679,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            if (transfersToSpecifiedTaker) {
-                // Sudo lets you send the NFT straight to the adapter and
-                // Seaport handles it from there.
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC20ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -744,10 +705,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithERC20)";
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC721,
-            standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20(
+            config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
@@ -770,48 +729,20 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithERC20_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithERC20_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyOfferedERC721WithERC20_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithERC20_FulfillThroughAdapter)";
 
         test721_1.mint(alice, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            context, standardERC721, standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, standardERC20
         ) returns (OrderPayload memory payload) {
-            // Put the context back.
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC20ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -840,10 +771,8 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 100);
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            OrderContext(true, false, stdCastOfCharacters),
-            standardERC721,
-            standardWeth
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20(
+            config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -879,54 +808,25 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithWETH_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithWETH_Adapter)";
+    function buyOfferedERC721WithWETH_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithWETH_FulfillThroughAdapter)";
 
         test721_1.mint(alice, 1);
         hevm.deal(bob, 100);
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
-            || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithWETH(
-            context, standardERC721, standardWeth
+        try payloadHelper.getPayloadToBuyOfferedERC721WithWETH_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
-            // Put the context back.
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-            ConsiderationItemLib.fromDefaultMany(
-                "standardWethConsiderationArray"
-            );
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                adapterOrderConsideration,
-                sidecarItemTransfers
-            );
+           
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -957,11 +857,11 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         beth.deposit{ value: 100 }();
 
-        OrderContext memory context =
-            OrderContext(false, false, stdCastOfCharacters);
-
-        try config.getPayload_BuyOfferedERC721WithBETH(
-            context, Item721(address(test721_1), 1), Item20(address(beth), 100)
+        try payloadHelper.getPayloadToBuyOfferedERC721WithBETH(
+            config,
+            stdCastOfCharacters,
+            Item721(address(test721_1), 1),
+            Item20(address(beth), 100)
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
@@ -986,12 +886,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithBETH_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithBETH_Adapter)";
+    function buyOfferedERC721WithBETH_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithBETH_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
         hevm.deal(alice, 0);
         hevm.deal(bob, 100);
@@ -1001,72 +900,19 @@ contract GenericMarketplaceTest is
         // hevm.prank(bob);
         // beth.deposit{ value: 100 }();
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithBETH(
-            context, Item721(address(test721_1), 1), Item20(address(beth), 100)
+        try payloadHelper.getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
+            config,
+            stdCastOfCharacters,
+            Item721(address(test721_1), 1),
+            100
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(alice.balance, 0);
             assertEq(beth.balanceOf(bob), 0);
             assertEq(bob.balance, 100);
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            );
-
-            Flashloan[] memory flashloans = new Flashloan[](1);
-
-            Flashloan memory flashloan = Flashloan({
-                amount: uint88(100),
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                shouldCallback: true,
-                recipient: context.castOfCharacters.adapter
-            });
-
-            flashloans[0] = flashloan;
-
-            Call[] memory sidecarSetUpCalls = new Call[](1);
-            Call memory call = Call({
-                target: address(beth),
-                allowFailure: false,
-                value: 100,
-                callData: abi.encodeWithSelector(beth.deposit.selector)
-            });
-            sidecarSetUpCalls[0] = call;
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            Call[] memory sidecarMarketplaceCalls;
-            sidecarMarketplaceCalls = new Call[](1);
-            sidecarMarketplaceCalls[0] = payload.executeOrder;
-
-            payload.executeOrder = AdapterHelperLib
-                .createSeaportWrappedCallParameters(
-                sidecarMarketplaceCalls,
-                sidecarSetUpCalls,
-                new Call[](0),
-                stdCastOfCharacters,
-                flashloans,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                adapterOrderConsideration,
-                sidecarItemTransfers
-            );
-
-            payload.executeOrder.value = 100;
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1085,33 +931,22 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithWETH_ListOnChain_Adapter(
+    function buyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithWETH_ListOnChain_Adapter)";
+            "(buyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter)";
 
         test721_1.mint(alice, 1);
         hevm.deal(bob, 100);
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
+        // BREADCRUMB BLUR, LR, X2Y2
 
-        bool requiresTakerIsSender =
-            _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
-
-        // These aren't actually working. They're not implemented yet.
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithERC20(
-            context, standardERC721, standardWeth
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1128,23 +963,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
-
-            ConsiderationItem[] memory adapterOrderConsideration =
-            ConsiderationItemLib.fromDefaultMany(
-                "standardWethConsiderationArray"
-            );
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                adapterOrderConsideration,
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1174,10 +992,8 @@ contract GenericMarketplaceTest is
         hevm.prank(bob);
         weth.deposit{ value: 100 }();
 
-        try config.getPayload_BuyOfferedERC721WithWETH(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC721,
-            standardWeth
+        try payloadHelper.getPayloadToBuyOfferedERC721WithWETH(
+            config, stdCastOfCharacters, standardERC721, standardWeth
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
@@ -1208,10 +1024,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithERC20_ListOnChain)";
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            OrderContext(true, false, stdCastOfCharacters),
-            standardERC1155,
-            standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20(
+            config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1243,19 +1057,16 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithERC20_ListOnChain_Adapter(
+    function buyOfferedERC1155WithERC20_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC1155WithERC20_ListOnChain_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
+            "(buyOfferedERC1155WithERC20_ListOnChain_FulfillThroughAdapter)";
 
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            context, standardERC1155, standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1269,20 +1080,6 @@ contract GenericMarketplaceTest is
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard1155Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC20ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1309,10 +1106,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC1155WithERC20)";
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC1155,
-            standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20(
+            config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
@@ -1335,48 +1130,21 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithERC20_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC1155WithERC20_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyOfferedERC1155WithERC20_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC1155WithERC20_FulfillThroughAdapter)";
 
         test1155_1.mint(alice, 1, 1);
         test20.mint(bob, 100);
-        try config.getPayload_BuyOfferedERC1155WithERC20(
-            context, standardERC1155, standardERC20
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC1155, standardERC20
         ) returns (OrderPayload memory payload) {
-            // Put the context back.
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard1155Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC1155OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC20ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1403,10 +1171,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC20WithERC721_ListOnChain)";
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            OrderContext(true, false, stdCastOfCharacters),
-            standardERC20,
-            standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721(
+            config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1442,36 +1208,17 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC20WithERC721_ListOnChain_Adapter(
+    function buyOfferedERC20WithERC721_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC20WithERC721_ListOnChain_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        // Turns out X2Y2 doesn't support this, but if it did, it would need
-        // this.
-        bool requiresTakerIsSender = _isX2y2(config);
-
-        // X2Y2 requires that the taker is the msg.sender.
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        bool transfersToSpecifiedTaker = _isSudo(config);
-
-        if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
-        }
+            "(buyOfferedERC20WithERC721_ListOnChain_FulfillThroughAdapter)";
 
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            context, standardERC20, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1489,23 +1236,6 @@ contract GenericMarketplaceTest is
             );
             assertEq(test20.balanceOf(bob), 0);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard20Transfer;
-
-            if (transfersToSpecifiedTaker) {
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC721ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1532,10 +1262,8 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC20WithERC721)";
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC20,
-            standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721(
+            config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
@@ -1558,48 +1286,21 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC20WithERC721_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC20WithERC721_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyOfferedERC20WithERC721_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC20WithERC721_FulfillThroughAdapter)";
 
         test20.mint(alice, 100);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC20WithERC721(
-            context, standardERC20, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC20, standardERC721
         ) returns (OrderPayload memory payload) {
-            // Put the context back.
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard20Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC721ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1628,10 +1329,8 @@ contract GenericMarketplaceTest is
         hevm.prank(alice);
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            OrderContext(true, false, stdCastOfCharacters),
-            standardWeth,
-            standardERC721
+        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721(
+            config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1667,22 +1366,19 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedWETHWithERC721_ListOnChain_Adapter(
+    function buyOfferedWETHWithERC721_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedWETHWithERC721_ListOnChain_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
+            "(buyOfferedWETHWithERC721_ListOnChain_FulfillThroughAdapter)";
 
         hevm.deal(alice, 100);
         hevm.prank(alice);
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
 
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            context, standardWeth, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1705,19 +1401,6 @@ contract GenericMarketplaceTest is
             vm.prank(sidecar);
             weth.approve(sidecar, 100);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standardWethTransfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardWethOfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC721ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1746,10 +1429,8 @@ contract GenericMarketplaceTest is
         hevm.prank(alice);
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardWeth,
-            standardERC721
+        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721(
+            config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
@@ -1772,49 +1453,23 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedWETHWithERC721_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedWETHWithERC721_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
-            || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyOfferedWETHWithERC721_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedWETHWithERC721_FulfillThroughAdapter)";
 
         hevm.deal(alice, 100);
         hevm.prank(alice);
         weth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedWETHWithERC721(
-            context, standardWeth, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardWeth, standardERC721
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standardWethTransfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardWethOfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC721ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -1842,8 +1497,9 @@ contract GenericMarketplaceTest is
         hevm.prank(alice);
         beth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedBETHWithERC721(
-            OrderContext(false, false, stdCastOfCharacters),
+        try payloadHelper.getPayloadToBuyOfferedBETHWithERC721(
+            config,
+            stdCastOfCharacters,
             Item20(address(beth), 100),
             Item721(address(test721_1), 1)
         ) returns (OrderPayload memory payload) {
@@ -1868,77 +1524,29 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedBETHWithERC721_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-    {
-        string memory testLabel = "(buyOfferedBETHWithERC721_Adapter)";
+    function buyOfferedBETHWithERC721_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) {
+        string memory testLabel =
+            "(buyOfferedBETHWithERC721_FulfillThroughAdapter)";
         hevm.deal(alice, 100);
         hevm.prank(alice);
         beth.deposit{ value: 100 }();
         test721_1.mint(bob, 1);
         hevm.deal(bob, 0);
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isBlurV2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedBETHWithERC721(
-            context, Item20(address(beth), 100), Item721(address(test721_1), 1)
+        try payloadHelper.getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
+            config,
+            stdCastOfCharacters,
+            Item20(address(beth), 100),
+            Item721(address(test721_1), 1)
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(beth.balanceOf(alice), 100);
             assertEq(beth.balanceOf(bob), 0);
             assertEq(bob.balance, 0);
 
-            // Sidecar's not going to transfer anything.
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
-
-            // Bob expects to get 100 native tokens.
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](1);
-            adapterOrderOffer[0] =
-                OfferItemLib.fromDefault("standardNativeOfferItem");
-
-            // This converts the BETH received by the sidecar into native tokens
-            // which should make their way to bob.
-            Call[] memory sidecarWrapUpCalls = new Call[](2);
-            Call memory bethCall = Call({
-                target: address(beth),
-                allowFailure: false,
-                value: 0,
-                callData: abi.encodeWithSelector(beth.withdraw.selector, 100)
-            });
-            Call memory sendNativeTokensToSeaportCall = Call({
-                target: seaportAddress,
-                allowFailure: false,
-                value: 100,
-                callData: ""
-            });
-            sidecarWrapUpCalls[0] = bethCall;
-            sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
-
-            Call[] memory sidecarMarketplaceCalls;
-            sidecarMarketplaceCalls = new Call[](1);
-            sidecarMarketplaceCalls[0] = payload.executeOrder;
-
-            payload.executeOrder = AdapterHelperLib
-                .createSeaportWrappedCallParameters(
-                sidecarMarketplaceCalls,
-                new Call[](0),
-                sidecarWrapUpCalls,
-                stdCastOfCharacters,
-                new Flashloan[](0),
-                adapterOrderOffer,
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC721ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
+ 
 
             _benchmarkCallWithParams(
                 config.name(),
@@ -1963,12 +1571,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC20WithERC1155_ListOnChain)";
-        OrderContext memory context =
-            OrderContext(true, false, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context, standardERC20, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155(
+            config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2000,18 +1606,16 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC20WithERC1155_ListOnChain_Adapter(
+    function buyOfferedERC20WithERC1155_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC20WithERC1155_ListOnChain_Adapter)";
+            "(buyOfferedERC20WithERC1155_ListOnChain_FulfillThroughAdapter)";
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context, standardERC20, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2026,19 +1630,6 @@ contract GenericMarketplaceTest is
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard20Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC1155ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2063,12 +1654,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC20WithERC1155)";
-        OrderContext memory context =
-            OrderContext(false, false, stdCastOfCharacters);
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context, standardERC20, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155(
+            config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
@@ -2091,49 +1680,21 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC20WithERC1155_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC20WithERC1155_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config);
-
-        // Cheat the context for LR.
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyOfferedERC20WithERC1155_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC20WithERC1155_FulfillThroughAdapter)";
 
         test20.mint(alice, 100);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC20WithERC1155(
-            context, standardERC20, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC20, standardERC1155
         ) returns (OrderPayload memory payload) {
-            // Put the context back.
-            context.castOfCharacters.fulfiller = bob;
-
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard20Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC20OfferArray"),
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardERC1155ConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2158,12 +1719,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC721WithERC1155_ListOnChain)";
-        OrderContext memory context =
-            OrderContext(true, false, stdCastOfCharacters);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC721WithERC1155(
-            context, standardERC721, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC1155(
+            config, stdCastOfCharacters, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2193,48 +1752,15 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithERC1155_ListOnChain_Adapter(
+    function buyOfferedERC721WithERC1155_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithERC1155_ListOnChain_Adapter)";
+            "(buyOfferedERC721WithERC1155_ListOnChain_FulfillThroughAdapter)";
 
         // Only seaport, skip for now.
         _logNotSupported(config.name(), testLabel);
         return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     true, true, stdCastOfCharacters
-        // );
-        // test721_1.mint(alice, 1);
-        // test1155_1.mint(bob, 1, 1);
-        // try config.getPayload_BuyOfferedERC721WithERC1155(
-        //     context,
-        //     standardERC721,
-        //     standardERC1155
-        // ) returns (OrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
     }
 
     function buyOfferedERC721WithERC1155(BaseMarketConfig config)
@@ -2243,12 +1769,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC721WithERC1155)";
-        OrderContext memory context =
-            OrderContext(false, false, stdCastOfCharacters);
         test721_1.mint(alice, 1);
         test1155_1.mint(bob, 1, 1);
-        try config.getPayload_BuyOfferedERC721WithERC1155(
-            context, standardERC721, standardERC1155
+        try payloadHelper.getPayloadToBuyOfferedERC721WithERC1155(
+            config, stdCastOfCharacters, standardERC721, standardERC1155
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test1155_1.balanceOf(bob, 1), 1);
@@ -2269,42 +1793,15 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithERC1155_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithERC1155_Adapter)";
+    function buyOfferedERC721WithERC1155_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithERC1155_FulfillThroughAdapter)";
 
         // Only seaport, skip for now.
         _logNotSupported(config.name(), testLabel);
         return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     false, true, stdCastOfCharacters
-        // );
-        // test721_1.mint(alice, 1);
-        // test1155_1.mint(bob, 1, 1);
-        // try config.getPayload_BuyOfferedERC721WithERC1155(
-        //     context,
-        //     standardERC721,
-        //     standardERC1155
-        // ) returns (OrderPayload memory payload) {
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
     }
 
     function buyOfferedERC1155WithERC721_ListOnChain(BaseMarketConfig config)
@@ -2313,12 +1810,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC1155WithERC721_ListOnChain)";
-        OrderContext memory context =
-            OrderContext(true, false, stdCastOfCharacters);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC1155WithERC721(
-            context, standardERC1155, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC721(
+            config, stdCastOfCharacters, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2348,48 +1843,15 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithERC721_ListOnChain_Adapter(
+    function buyOfferedERC1155WithERC721_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC1155WithERC721_ListOnChain_Adapter)";
+            "(buyOfferedERC1155WithERC721_ListOnChain_FulfillThroughAdapter)";
 
         // Only seaport so skipping here.
         _logNotSupported(config.name(), testLabel);
         return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     true, true, stdCastOfCharacters
-        // );
-        // test1155_1.mint(alice, 1, 1);
-        // test721_1.mint(bob, 1);
-        // try config.getPayload_BuyOfferedERC1155WithERC721(
-        //     context,
-        //     standardERC1155,
-        //     standardERC721
-        // ) returns (OrderPayload memory payload) {
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " List")),
-        //         alice,
-        //         payload.submitOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill*")),true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
     }
 
     function buyOfferedERC1155WithERC721(BaseMarketConfig config)
@@ -2398,12 +1860,10 @@ contract GenericMarketplaceTest is
         returns (uint256 gasUsed)
     {
         string memory testLabel = "(buyOfferedERC1155WithERC721)";
-        OrderContext memory context =
-            OrderContext(false, false, stdCastOfCharacters);
         test1155_1.mint(alice, 1, 1);
         test721_1.mint(bob, 1);
-        try config.getPayload_BuyOfferedERC1155WithERC721(
-            context, standardERC1155, standardERC721
+        try payloadHelper.getPayloadToBuyOfferedERC1155WithERC721(
+            config, stdCastOfCharacters, standardERC1155, standardERC721
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test1155_1.balanceOf(alice, 1), 1);
@@ -2424,66 +1884,26 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC1155WithERC721_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC1155WithERC721_Adapter)";
+    function buyOfferedERC1155WithERC721_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC1155WithERC721_FulfillThroughAdapter)";
 
         // Only seaport so skipping here.
         _logNotSupported(config.name(), testLabel);
         return 0;
-
-        // OrderContext memory context = OrderContext(
-        //     false, true, stdCastOfCharacters
-        // );
-        // test1155_1.mint(alice, 1, 1);
-        // test721_1.mint(bob, 1);
-
-        // try config.getPayload_BuyOfferedERC1155WithERC721(
-        //     context, standardERC1155, standardERC721
-        // ) returns (OrderPayload memory payload) {
-        //     assertEq(test721_1.ownerOf(1), bob);
-        //     assertEq(test1155_1.balanceOf(alice, 1), 1);
-
-        //     payload.executeOrder = AdapterHelperLib
-        //         .createSeaportWrappedCallParameters(
-        //         payload.executeOrder,
-        //         address(context.castOfCharacters.fulfiller),
-        //         seaportAddress,
-        //         address(context.flashloanOfferer),
-        //         address(context.castOfCharacters.adapter),
-        //         sidecar,
-        //
-        //         standardERC721
-        //     );
-
-        //     gasUsed = _benchmarkCallWithParams(
-        //         config.name(),
-        //         string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-        //         true,
-        //         true,
-        //         bob,
-        //         payload.executeOrder
-        //     );
-
-        //     assertEq(test721_1.ownerOf(1), alice);
-        //     assertEq(test1155_1.balanceOf(bob, 1), 1);
-        // } catch {
-        //     _logNotSupported(config.name(), testLabel);
-        // }
     }
 
-    function buyOfferedERC721WithEtherFee_ListOnChain(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee_ListOnChain)";
+    function buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            OrderContext(true, false, stdCastOfCharacters),
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient(
+            config,
+            stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
@@ -2521,18 +1941,16 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFee_ListOnChain_Adapter(
+    function buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithEtherFee_ListOnChain_Adapter)";
+            "(buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context,
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
+            config,
+            stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
             feeReciever1,
@@ -2554,25 +1972,7 @@ contract GenericMarketplaceTest is
             );
             assertEq(feeReciever1.balance, 0);
 
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(505).withEndAmount(505);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                considerationArray,
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2590,19 +1990,15 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFee(BaseMarketConfig config)
+    function buyOfferedERC721WithEtherOneFeeRecipient(BaseMarketConfig config)
         internal
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee)";
+        string memory testLabel = "(buyOfferedERC721WithEtherOneFeeRecipient)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            OrderContext(false, false, stdCastOfCharacters),
-            standardERC721,
-            100,
-            feeReciever1,
-            5
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient(
+            config, stdCastOfCharacters, standardERC721, 100, feeReciever1, 5
         ) returns (OrderPayload memory payload) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
@@ -2623,49 +2019,20 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFee_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyOfferedERC721WithEtherFee_Adapter)";
+    function buyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, standardERC721, 100, feeReciever1, 5
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
+            config, stdCastOfCharacters, standardERC721, 100, feeReciever1, 5
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(105).withEndAmount(105);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                considerationArray,
-                sidecarItemTransfers
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2683,14 +2050,15 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
+    function buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain)";
+            "(buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            OrderContext(true, false, stdCastOfCharacters),
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients(
+            config,
+            stdCastOfCharacters,
             standardERC721,
             100,
             feeReciever1,
@@ -2732,18 +2100,22 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter(
+    function buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_Adapter)";
+            "(buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
+            config,
+            stdCastOfCharacters,
+            standardERC721,
+            100,
+            feeReciever1,
+            5,
+            feeReciever2,
+            5
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2761,25 +2133,6 @@ contract GenericMarketplaceTest is
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(110).withEndAmount(110);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                considerationArray,
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2798,15 +2151,16 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFeeTwoRecipients(BaseMarketConfig config)
+    function buyOfferedERC721WithEtherTwoFeeRecipients(BaseMarketConfig config)
         internal
         prepareTest(config)
         returns (uint256 gasUsed)
     {
-        string memory testLabel = "(buyOfferedERC721WithEtherFeeTwoRecipients)";
+        string memory testLabel = "(buyOfferedERC721WithEtherTwoFeeRecipients)";
         test721_1.mint(alice, 1);
-        try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            OrderContext(false, false, stdCastOfCharacters),
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients(
+            config,
+            stdCastOfCharacters,
             standardERC721,
             100,
             feeReciever1,
@@ -2835,49 +2189,27 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithEtherFeeTwoRecipients_Adapter(
+    function buyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyOfferedERC721WithEtherFeeTwoRecipients_Adapter)";
+            "(buyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender = _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
-
-        try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
-            context, standardERC721, 100, feeReciever1, 5, feeReciever2, 5
+        try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
+            config,
+            stdCastOfCharacters,
+            standardERC721,
+            100,
+            feeReciever1,
+            5,
+            feeReciever2,
+            5
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
 
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(110).withEndAmount(110);
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = standard721Transfer;
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                OfferItemLib.fromDefaultMany("standardERC721OfferArray"),
-                considerationArray,
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2909,8 +2241,8 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
-            OrderContext(true, false, stdCastOfCharacters), nfts, 100
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther(
+            config, stdCastOfCharacters, nfts, 100
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -2946,20 +2278,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithEther_ListOnChain_Adapter(
+    function buyTenOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithEther_ListOnChain_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(true, true, stdCastOfCharacters);
-
-        bool transfersToSpecifiedTaker = _isSudo(config);
-
-        if (transfersToSpecifiedTaker) {
-            context.castOfCharacters.fulfiller = adapter;
-        }
+            "(buyTenOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter)";
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
@@ -2967,8 +2290,9 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
-        returns (OrderPayload memory payload) {
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, 100
+        ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2986,41 +2310,8 @@ contract GenericMarketplaceTest is
                 );
             }
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            if (transfersToSpecifiedTaker) {
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3052,8 +2343,8 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
-            OrderContext(false, false, stdCastOfCharacters), nfts, 100
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther(
+            config, stdCastOfCharacters, nfts, 100
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
@@ -3076,22 +2367,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithEther_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(buyTenOfferedERC721WithEther_Adapter)";
-
-        OrderContext memory context =
-            OrderContext(false, true, stdCastOfCharacters);
-
-        bool requiresTakerIsSender =
-            _isBlurV2(config) || _isX2y2(config) || _isLooksRareV2(config);
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller = sidecar;
-        }
+    function buyTenOfferedERC721WithEther_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(buyTenOfferedERC721WithEther_FulfillThroughAdapter)";
 
         Item721[] memory nfts = new Item721[](10);
         for (uint256 i = 0; i < 10; i++) {
@@ -3099,45 +2379,16 @@ contract GenericMarketplaceTest is
             nfts[i] = Item721(_test721Address, i + 1);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(context, nfts, 100)
-        returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = bob;
-
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, 100
+        ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
 
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                ConsiderationItemLib.fromDefaultMany(
-                    "standardNativeConsiderationArray"
-                ),
-                sidecarItemTransfers
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3163,19 +2414,18 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyTenOfferedERC721WithEtherDistinctOrders)";
 
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders(
+            config, stdCastOfCharacters, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
@@ -3198,36 +2448,25 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithEtherDistinctOrders_Adapter(
+    function buyTenOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithEtherDistinctOrders_Adapter)";
+            "(buyTenOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter)";
 
-        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
-            || _isLooksRareV2(config) || _isX2y2(config);
-
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
-
-            contexts[i].castOfCharacters.fulfiller =
-                requiresTakerIsSender ? sidecar : bob;
             ethAmounts[i] = 100 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
-                contexts[i].castOfCharacters.fulfiller = bob;
-            }
-
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -3238,43 +2477,9 @@ contract GenericMarketplaceTest is
                 flashloanAmount += ethAmounts[i];
             }
 
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
 
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                considerationArray,
-                sidecarItemTransfers
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3299,19 +2504,18 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain)";
 
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             ethAmounts[i] = 100 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders(
+            config, stdCastOfCharacters, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3342,25 +2546,18 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter(
+    function buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_Adapter)";
+            "(buyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter)";
 
-        bool transfersToSpecifiedTaker = _isSudo(config);
-
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory ethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
-
-            contexts[i].castOfCharacters.fulfiller =
-                transfersToSpecifiedTaker ? adapter : bob;
 
             // There's something screwy with the ETH amounts here. For some
             // reason, this needs to be 101 instead of 100 like it is in its
@@ -3369,13 +2566,10 @@ contract GenericMarketplaceTest is
             ethAmounts[i] = 101 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
-            contexts, nfts, ethAmounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, ethAmounts
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
-                contexts[i].castOfCharacters.fulfiller = bob;
-            }
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3385,58 +2579,7 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
-            uint256 flashloanAmount;
 
-            for (uint256 i; i < ethAmounts.length; i++) {
-                flashloanAmount += ethAmounts[i];
-            }
-
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
-
-            for (uint256 i; i < nfts.length; i++) {
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            ConsiderationItem[] memory considerationArray =
-            new ConsiderationItem[](
-                1
-            );
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardNativeConsiderationItem"
-            ).withStartAmount(flashloanAmount).withEndAmount(flashloanAmount);
-
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-            }
-
-            // Sudo does the transfers.
-            if (transfersToSpecifiedTaker) {
-                sidecarItemTransfers = new ItemTransfer[](0);
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                considerationArray,
-                sidecarItemTransfers
-            );
-
-            payload.executeOrder.value = flashloanAmount;
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3463,19 +2606,23 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyTenOfferedERC721WithErc20DistinctOrders)";
 
         test20.mint(bob, 1045);
-        OrderContext[] memory contexts = new OrderContext[](10);
+        CastOfCharacters[] memory castOfCharactersArray =
+        new CastOfCharacters[](
+            10
+        );
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
+        Item20[] memory erc20s = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
+            castOfCharactersArray[i] = stdCastOfCharacters;
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
-            erc20Amounts[i] = 100 + i;
+            erc20s[i] = Item20(_test20Address, 100 + i);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
+            config, castOfCharactersArray, nfts, erc20s
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
@@ -3499,87 +2646,37 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithErc20DistinctOrders_Adapter(
+    function buyTenOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithErc20DistinctOrders_Adapter)";
+            "(buyTenOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter)";
 
         test20.mint(bob, 1045);
-        OrderContext[] memory contexts = new OrderContext[](10);
+        CastOfCharacters[] memory castOfCharactersArray =
+        new CastOfCharacters[](
+            10
+        );
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
+        Item20[] memory erc20s = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
+            castOfCharactersArray[i] = stdCastOfCharacters;
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
-            erc20Amounts[i] = 100 + i;
+            erc20s[i] = Item20(_test20Address, 100 + i);
         }
 
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller =
-                    address(contexts[i].castOfCharacters.sidecar);
-            }
-        }
-
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
+            config, castOfCharactersArray, nfts, erc20s
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = bob;
-            }
-
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            uint256 totalERC20Amount;
-
-            for (uint256 i = 0; i < contexts.length; i++) {
-                totalERC20Amount += erc20Amounts[i];
-            }
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
-                "standardERC20ConsiderationItem"
-            ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
-
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                adapterOrderConsideration,
-                sidecarItemTransfers
-            );
+           
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3606,19 +2703,23 @@ contract GenericMarketplaceTest is
             "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain)";
 
         test20.mint(bob, 1045);
-        OrderContext[] memory contexts = new OrderContext[](10);
+        CastOfCharacters[] memory castOfCharactersArray =
+        new CastOfCharacters[](
+            10
+        );
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
+        Item20[] memory erc20s = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
+            castOfCharactersArray[i] = stdCastOfCharacters;
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
-            erc20Amounts[i] = 100 + i;
+            erc20s[i] = Item20(_test20Address, 100 + i);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
+            config, castOfCharactersArray, nfts, erc20s
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3646,43 +2747,31 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter(
+    function buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_Adapter)";
+            "(buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter)";
 
         test20.mint(bob, 1045);
-        OrderContext[] memory contexts = new OrderContext[](10);
+        CastOfCharacters[] memory castOfCharactersArray =
+        new CastOfCharacters[](
+            10
+        );
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory erc20Amounts = new uint256[](10);
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        // Ah crap this turns out to be only implemented for Seaport, so this is
-        // a no-op for now.
-        if (requiresTakerIsSender) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller =
-                    address(contexts[i].castOfCharacters.sidecar);
-            }
-        }
+        Item20[] memory erc20s = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
+            castOfCharactersArray[i] = stdCastOfCharacters;
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
-            erc20Amounts[i] = 100 + i;
+            erc20s[i] = Item20(_test20Address, 100 + i);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
-            contexts, _test20Address, nfts, erc20Amounts
+        try payloadHelper
+            .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
+            config, castOfCharactersArray, nfts, erc20s
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = bob;
-            }
-
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -3692,49 +2781,8 @@ contract GenericMarketplaceTest is
                 payload.submitOrder
             );
 
-            ConsiderationItem[] memory adapterOrderConsideration =
-                new ConsiderationItem[](1);
-
-            uint256 totalERC20Amount;
-
-            for (uint256 i = 0; i < contexts.length; i++) {
-                totalERC20Amount += erc20Amounts[i];
-            }
-
-            adapterOrderConsideration[0] = ConsiderationItemLib.fromDefault(
-                "standardERC20ConsiderationItem"
-            ).withStartAmount(totalERC20Amount).withEndAmount(totalERC20Amount);
-
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
-
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                adapterOrderConsideration,
-                sidecarItemTransfers
-            );
+           
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3763,19 +2811,17 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
+            config, stdCastOfCharacters, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
@@ -3799,87 +2845,30 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyTenOfferedERC721WithWETHDistinctOrders_Adapter(
+    function buyTenOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithWETHDistinctOrders_Adapter)";
+            "(buyTenOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter)";
 
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory wethAmounts = new uint256[](10);
+        Item20[] memory weths = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(false, true, stdCastOfCharacters);
-            wethAmounts[i] = 100 + i;
+            weths[i] = Item20(wethAddress, 100 + i);
         }
 
-        bool requiresTakerIsSender =
-            _isBlur(config) || _isLooksRareV2(config) || _isX2y2(config);
-
-        if (requiresTakerIsSender) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = sidecar;
-            }
-        }
-
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, weths
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = bob;
-            }
-
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
-
-            uint256 totalWethAmount;
-
-            for (uint256 i = 0; i < wethAmounts.length; i++) {
-                totalWethAmount += wethAmounts[i];
-            }
-
-            ConsiderationItem[] memory considerationArray =
-                new ConsiderationItem[](1);
-            considerationArray[0] = ConsiderationItemLib.fromDefault(
-                "standardWethConsiderationItem"
-            ).withStartAmount(totalWethAmount).withEndAmount(totalWethAmount);
-
-            OfferItem[] memory adapterOrderOffer = new OfferItem[](nfts.length);
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](nfts.length);
-
-            for (uint256 i; i < nfts.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: sidecar,
-                    to: adapter,
-                    token: nfts[i].token,
-                    identifier: nfts[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                adapterOrderOffer[i] = OfferItemLib.fromDefault(
-                    "standardERC721OfferItem"
-                ).withToken(nfts[i].token).withIdentifierOrCriteria(
-                    nfts[i].identifier
-                );
-            }
-
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                adapterOrderOffer,
-                considerationArray,
-                sidecarItemTransfers
-            );
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3908,19 +2897,17 @@ contract GenericMarketplaceTest is
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, false, stdCastOfCharacters);
             wethAmounts[i] = 100 + i;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
+            config, stdCastOfCharacters, nfts, wethAmounts
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3949,28 +2936,26 @@ contract GenericMarketplaceTest is
     }
 
     // This is a no-op for now.
-    function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter(
+    function buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
     ) internal prepareTest(config) returns (uint256 gasUsed) {
         string memory testLabel =
-            "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_Adapter)";
+            "(buyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter)";
 
         hevm.deal(bob, 1045);
         hevm.prank(bob);
         weth.deposit{ value: 1045 }();
-        OrderContext[] memory contexts = new OrderContext[](10);
         Item721[] memory nfts = new Item721[](10);
-        uint256[] memory wethAmounts = new uint256[](10);
+        Item20[] memory weths = new Item20[](10);
 
         for (uint256 i = 0; i < 10; i++) {
             test721_1.mint(alice, i + 1);
             nfts[i] = Item721(_test721Address, i + 1);
-            contexts[i] = OrderContext(true, true, stdCastOfCharacters);
-            wethAmounts[i] = 100 + i;
+            weths[i] = Item20(wethAddress, 100 + i);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, nfts, wethAmounts
+        try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
+            config, stdCastOfCharacters, nfts, weths
         ) returns (OrderPayload memory payload) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -3989,14 +2974,7 @@ contract GenericMarketplaceTest is
                 "standardNativeConsiderationItem"
             ).withStartAmount(0).withEndAmount(0);
 
-            payload.executeOrder = payload
-                .executeOrder
-                .createSeaportWrappedCallParameters(
-                stdCastOfCharacters,
-                new OfferItem[](0), // TODO: add boilerplate for conditionality
-                considerationArray,
-                new ItemTransfer[](0)
-            );
+            
 
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
@@ -4094,12 +3072,11 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function benchmark_MatchOrders_ABCA_Adapter(BaseMarketConfig config)
-        internal
-        prepareTest(config)
-        returns (uint256 gasUsed)
-    {
-        string memory testLabel = "(benchmark_MatchOrders_ABCA_Adapter)";
+    function benchmark_MatchOrders_ABCA_FulfillThroughAdapter(
+        BaseMarketConfig config
+    ) internal prepareTest(config) returns (uint256 gasUsed) {
+        string memory testLabel =
+            "(benchmark_MatchOrders_ABCA_FulfillThroughAdapter)";
 
         // Seaport only.
         _logNotSupported(config.name(), testLabel);

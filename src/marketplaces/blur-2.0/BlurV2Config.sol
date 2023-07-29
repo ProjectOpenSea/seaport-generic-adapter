@@ -697,7 +697,7 @@ contract BlurV2Config is
         return (takeAsk, signature);
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata nativeTokenAmounts
@@ -825,7 +825,7 @@ contract BlurV2Config is
         return (takeAsk, signature);
     }
 
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 nativeTokenAmount

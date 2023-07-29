@@ -124,7 +124,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         _prepareMarketplaces(configs);
 
         uint256 firstOrderGasUsed =
-            buyOfferedERC721WithEtherFee_ListOnChain(configs[0]);
+            buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain(configs[0]);
         uint256 secondOrderGasUsed =
             buyOfferedERC1155WithEther_ListOnChain(configs[1]);
         uint256 thirdOrderGasUsed = buyOfferedERC721WithWETH(configs[2]);
@@ -155,10 +155,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         _prepareMarketplaces(configs);
 
         uint256 firstOrderGasUsed =
-            buyOfferedERC721WithEtherFee_ListOnChain_Adapter(configs[0]);
+        buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter(
+            configs[0]
+        );
         uint256 secondOrderGasUsed =
-            buyOfferedERC1155WithEther_ListOnChain_Adapter(configs[1]);
-        uint256 thirdOrderGasUsed = buyOfferedERC721WithWETH_Adapter(configs[2]);
+        buyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter(configs[1]);
+        uint256 thirdOrderGasUsed =
+            buyOfferedERC721WithWETH_FulfillThroughAdapter(configs[2]);
         // Not through adapter bc it's Seaport.
         uint256 fourthOrderGasUsed = buyOfferedERC1155WithERC20(configs[3]);
 

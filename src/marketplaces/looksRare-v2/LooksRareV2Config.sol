@@ -515,7 +515,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEther(
+    function getPayload_BuyManyOfferedERC721WithEther(
         OrderContext calldata context,
         Item721[] calldata nfts,
         uint256 ethAmount
@@ -564,7 +564,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] calldata nfts,
         uint256[] calldata ethAmounts
@@ -575,7 +575,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
 
         require(
             contexts.length == nfts.length && nfts.length == ethAmounts.length,
-            "LooksRareV2Config::getPayload_BuyOfferedManyERC721WithEtherDistinctOrders: invalid input"
+            "LooksRareV2Config::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
 
         ManyItemsCalldataParams memory params =
@@ -615,7 +615,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -627,7 +627,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
 
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "LooksRareV2Config::getPayload_BuyOfferedManyERC721WithErc20DistinctOrders: invalid input"
+            "LooksRareV2Config::getPayload_BuyManyOfferedERC721WithErc20DistinctOrders: invalid input"
         );
 
         ManyItemsCalldataParams memory params =
@@ -666,7 +666,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
         );
     }
 
-    function getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+    function getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
         OrderContext[] calldata contexts,
         address erc20Address,
         Item721[] calldata nfts,
@@ -678,7 +678,7 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
 
         require(
             contexts.length == nfts.length && nfts.length == erc20Amounts.length,
-            "LooksRareV2Config::getPayload_BuyOfferedManyERC721WithWETHDistinctOrders: invalid input"
+            "LooksRareV2Config::getPayload_BuyManyOfferedERC721WithWETHDistinctOrders: invalid input"
         );
 
         ManyItemsCalldataParams memory params =

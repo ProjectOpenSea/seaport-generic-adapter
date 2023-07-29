@@ -816,8 +816,7 @@ contract ExternalOrderPayloadHelper {
 
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
 
-        // NOTE: Doing this a dumb way for now to dodge stack pressure issues.
-        // address originalFulfiller = context.castOfCharacters.fulfiller;
+        address originalFulfiller = context.castOfCharacters.fulfiller;
 
         if (requiresTakerIsSender) {
             context.castOfCharacters.fulfiller =
@@ -828,7 +827,7 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, desiredItem, Item20(address(beth), price)
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = castOfCharacters.fulfiller;
+            context.castOfCharacters.fulfiller = originalFulfiller;
 
             Flashloan[] memory flashloans = new Flashloan[](1);
             {
@@ -1889,7 +1888,7 @@ contract ExternalOrderPayloadHelper {
 
     // TODO: Make this a percentage, calculate it for the user, merge these into
     // a single FeeInfo struct.
-    function getPayloadToBuyOfferedERC721WithEtherFee_ListOnChain(
+    function getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -1913,7 +1912,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFee_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -1975,7 +1974,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFee(
+    function getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -1994,7 +1993,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFee_FulfillThroughAdapter(
+    function getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -2066,7 +2065,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain(
+    function getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -2094,7 +2093,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -2162,7 +2161,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients(
+    function getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -2190,7 +2189,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyOfferedERC721WithEtherFeeTwoRecipients_FulfillThroughAdapter(
+    function getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
@@ -2271,7 +2270,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEther_ListOnChain(
+    function getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2280,7 +2279,7 @@ contract ExternalOrderPayloadHelper {
         OrderContext memory context =
             OrderContext(true, false, castOfCharacters);
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
+        try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2289,7 +2288,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2304,7 +2303,7 @@ contract ExternalOrderPayloadHelper {
                 context.castOfCharacters.adapter;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
+        try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
             OfferItem[] memory itemsToBeOfferedByAdapter =
@@ -2364,7 +2363,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEther(
+    function getPayloadToBuyManyOfferedERC721WithEther(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2373,7 +2372,7 @@ contract ExternalOrderPayloadHelper {
         OrderContext memory context =
             OrderContext(false, false, castOfCharacters);
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
+        try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2382,7 +2381,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEther_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2401,7 +2400,7 @@ contract ExternalOrderPayloadHelper {
                 context.castOfCharacters.sidecar;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEther(
+        try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
@@ -2459,7 +2458,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders(
+    function getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2471,7 +2470,7 @@ contract ExternalOrderPayloadHelper {
             contexts[i] = OrderContext(false, false, castOfCharacters);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2480,7 +2479,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2491,6 +2490,8 @@ contract ExternalOrderPayloadHelper {
 
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
+        address originalFulfiller = castOfCharacters.fulfiller;
+
         for (uint256 i = 0; i < 10; i++) {
             contexts[i] = OrderContext(false, true, castOfCharacters);
 
@@ -2499,12 +2500,12 @@ contract ExternalOrderPayloadHelper {
                 : castOfCharacters.fulfiller;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
                 contexts[i].castOfCharacters.fulfiller =
-                    castOfCharacters.fulfiller;
+                    originalFulfiller;
             }
 
             uint256 flashloanAmount;
@@ -2566,7 +2567,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain(
+    function getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2578,7 +2579,7 @@ contract ExternalOrderPayloadHelper {
             contexts[i] = OrderContext(true, false, castOfCharacters);
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2587,7 +2588,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2607,7 +2608,7 @@ contract ExternalOrderPayloadHelper {
                 : contexts[i].castOfCharacters.fulfiller;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithEtherDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < 10; i++) {
@@ -2682,7 +2683,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders(
+    function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
         BaseMarketConfig config,
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
@@ -2697,7 +2698,7 @@ contract ExternalOrderPayloadHelper {
         }
 
         // TODO: Come back and rework this getPayload function across the board.
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
             contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2706,7 +2707,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
@@ -2732,7 +2733,7 @@ contract ExternalOrderPayloadHelper {
             }
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
             contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             // NOTE: I could skip the originalFulfiller business and just use
@@ -2803,7 +2804,9 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(
+    // TODO: Come back and make the cast of characters array consistent across
+    // these.
+    function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2819,7 +2822,7 @@ contract ExternalOrderPayloadHelper {
         }
 
         // TODO: Come back and refactor this.
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
             contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -2828,7 +2831,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2856,7 +2859,7 @@ contract ExternalOrderPayloadHelper {
         }
 
         // TODO: Come back and rework.
-        try config.getPayload_BuyOfferedManyERC721WithErc20DistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
             contexts, payments[0].token, desiredItems, paymentAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
@@ -2924,23 +2927,20 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders(
+    function getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
-        Item20[] memory payments
+        uint256[] memory prices
     ) public view returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
-        uint256[] memory wethAmounts = new uint256[](10);
-
         for (uint256 i = 0; i < 10; i++) {
             contexts[i] = OrderContext(false, false, castOfCharacters);
-            wethAmounts[i] = payments[i].amount;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
-            contexts, wethAddress, desiredItems, wethAmounts
+        try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
+            contexts, wethAddress, desiredItems, prices
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2948,7 +2948,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -2976,7 +2976,7 @@ contract ExternalOrderPayloadHelper {
             }
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
@@ -3041,7 +3041,7 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
-    function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain(
+    function getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -3056,7 +3056,7 @@ contract ExternalOrderPayloadHelper {
             wethAmounts[i] = payments[i].amount;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
@@ -3067,7 +3067,7 @@ contract ExternalOrderPayloadHelper {
 
     // TODO: either get rid of the "WithWETH" functions or convert them to
     // automatically populate the WETH info so you can just pass in a price.
-    function getPayloadToBuyTenOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
+    function getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
@@ -3082,7 +3082,7 @@ contract ExternalOrderPayloadHelper {
             wethAmounts[i] = payments[i].amount;
         }
 
-        try config.getPayload_BuyOfferedManyERC721WithWETHDistinctOrders(
+        try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             ConsiderationItem[] memory itemsToBeProvidedToAdapter =
