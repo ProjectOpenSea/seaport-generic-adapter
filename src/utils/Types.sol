@@ -3,12 +3,6 @@ pragma solidity ^0.8.13;
 
 import { Call, OrderContext } from "../../src/lib/AdapterHelperLib.sol";
 
-struct TestOrderContext {
-    bool listOnChain;
-    bool routeThroughAdapter;
-    OrderContext orderContext;
-}
-
 struct SetupCall {
     address sender;
     address target;

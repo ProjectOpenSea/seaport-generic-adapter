@@ -166,8 +166,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEther(
             context, desiredItem, price
@@ -184,7 +187,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
@@ -274,8 +281,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         // TODO: Add a field to the cast of characters for the address that
         // should get set on the external order as the taker so that the cast of
@@ -348,8 +358,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         uint256 price
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, desiredItem, price
@@ -366,7 +379,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, desiredItem, price
@@ -437,8 +454,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         // LR requires that the msg.sender is also the taker.
         bool requiresTakerIsSender =
@@ -522,7 +542,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         address originalFulfiller = context.castOfCharacters.fulfiller;
 
@@ -612,8 +636,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, desiredItem, payment
@@ -630,8 +657,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
@@ -700,8 +730,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, desiredItem, payment
@@ -718,8 +751,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
             || _isLooksRareV2(config) || _isX2y2(config);
@@ -788,8 +824,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, desiredItem, payment
@@ -811,8 +850,11 @@ contract ExternalOrderPayloadHelper {
         // flashloan, which goes from adapter to sidecar to BETH's deposit
         // function, and then the sidecar uses the BETH to fulfill the listing.
 
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
 
@@ -918,7 +960,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isBlur(config) || _isLooksRare(config) || _isX2y2(config);
@@ -986,8 +1032,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithWETH(
             context, desiredItem, payment
@@ -1004,8 +1053,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item20 memory payment
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
@@ -1022,7 +1074,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
@@ -1078,8 +1134,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item20 memory payment
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
@@ -1096,8 +1155,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item20 memory payment
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config);
@@ -1166,8 +1228,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, desiredPayment, offeredItem
@@ -1184,7 +1249,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         // Turns out X2Y2 doesn't support this, but if it did, it would need
         // this.
@@ -1266,8 +1335,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1283,8 +1355,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
@@ -1354,8 +1429,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
@@ -1372,7 +1450,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
@@ -1429,8 +1511,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1446,8 +1531,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isBlur(config) || _isLooksRare(config)
             || _isLooksRareV2(config) || _isX2y2(config);
@@ -1516,8 +1604,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedBETHWithERC721(
             context, desiredPayment, offeredItem
@@ -1535,8 +1626,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item721 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isBlurV2(config);
 
@@ -1623,8 +1717,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1640,7 +1737,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1658,7 +1759,7 @@ contract ExternalOrderPayloadHelper {
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC1155,
                 token: offeredItem.token,
-                identifierOrCriteria: 0,
+                identifierOrCriteria: offeredItem.identifier,
                 startAmount: offeredItem.amount,
                 endAmount: offeredItem.amount,
                 recipient: payable(address(0))
@@ -1695,8 +1796,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1712,8 +1816,11 @@ contract ExternalOrderPayloadHelper {
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isLooksRare(config) || _isLooksRareV2(config);
@@ -1784,8 +1891,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item1155 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1811,8 +1921,11 @@ contract ExternalOrderPayloadHelper {
         Item721 memory desiredItem,
         Item1155 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1838,8 +1951,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item721 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1865,8 +1981,11 @@ contract ExternalOrderPayloadHelper {
         Item1155 memory desiredItem,
         Item721 memory offeredItem
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
@@ -1896,8 +2015,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever1,
         uint256 feeAmount
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context,
@@ -1920,7 +2042,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever1,
         uint256 feeAmount
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context, desiredItem, price, feeReciever1, feeAmount
@@ -1982,8 +2108,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever1,
         uint256 feeAmount
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
             context, desiredItem, price, feeReciever1, feeAmount
         ) returns (OrderPayload memory payload) {
@@ -2001,8 +2130,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever1,
         uint256 feeAmount
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isX2y2(config);
 
@@ -2075,8 +2207,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever2,
         uint256 feeAmount2
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context,
@@ -2103,7 +2238,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever2,
         uint256 feeAmount2
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context,
@@ -2171,8 +2310,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever2,
         uint256 feeAmount2
     ) public view returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context,
@@ -2199,8 +2341,11 @@ contract ExternalOrderPayloadHelper {
         address feeReciever2,
         uint256 feeAmount2
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender = _isX2y2(config);
 
@@ -2276,8 +2421,11 @@ contract ExternalOrderPayloadHelper {
         Item721[] memory desiredItems,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(true, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
@@ -2294,7 +2442,13 @@ contract ExternalOrderPayloadHelper {
         Item721[] memory desiredItems,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext(true, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: true,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
+
+        address originalFulfiller = context.castOfCharacters.fulfiller;
 
         bool transfersToSpecifiedTaker = _isSudo(config);
 
@@ -2306,6 +2460,8 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
+            context.castOfCharacters.fulfiller = originalFulfiller;
+
             OfferItem[] memory itemsToBeOfferedByAdapter =
                 new OfferItem[](desiredItems.length);
 
@@ -2369,8 +2525,11 @@ contract ExternalOrderPayloadHelper {
         Item721[] memory desiredItems,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, false, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: false,
+            castOfCharacters: castOfCharacters
+        });
 
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
@@ -2387,8 +2546,11 @@ contract ExternalOrderPayloadHelper {
         Item721[] memory desiredItems,
         uint256 price
     ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context =
-            OrderContext(false, true, castOfCharacters);
+        OrderContext memory context = OrderContext({
+            listOnChain: false,
+            routeThroughAdapter: true,
+            castOfCharacters: castOfCharacters
+        });
 
         bool requiresTakerIsSender =
             _isBlurV2(config) || _isX2y2(config) || _isLooksRareV2(config);
@@ -2467,7 +2629,11 @@ contract ExternalOrderPayloadHelper {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(false, false, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: false,
+                routeThroughAdapter: false,
+                castOfCharacters: castOfCharacters
+            });
         }
 
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
@@ -2493,7 +2659,11 @@ contract ExternalOrderPayloadHelper {
         address originalFulfiller = castOfCharacters.fulfiller;
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(false, true, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: false,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharacters
+            });
 
             contexts[i].castOfCharacters.fulfiller = requiresTakerIsSender
                 ? contexts[i].castOfCharacters.sidecar
@@ -2575,7 +2745,11 @@ contract ExternalOrderPayloadHelper {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, false, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: false,
+                castOfCharacters: castOfCharacters
+            });
         }
 
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
@@ -2600,7 +2774,11 @@ contract ExternalOrderPayloadHelper {
         address originalFulfiller = castOfCharacters.fulfiller;
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, true, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharacters
+            });
 
             contexts[i].castOfCharacters.fulfiller = transfersToSpecifiedTaker
                 ? contexts[i].castOfCharacters.adapter
@@ -2807,7 +2985,7 @@ contract ExternalOrderPayloadHelper {
     // these.
     function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain(
         BaseMarketConfig config,
-        CastOfCharacters memory castOfCharacters,
+        CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
     ) public view returns (OrderPayload memory _payload) {
@@ -2816,7 +2994,11 @@ contract ExternalOrderPayloadHelper {
         uint256[] memory paymentAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, false, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: false,
+                castOfCharacters: castOfCharactersArray[i]
+            });
             paymentAmounts[i] = payments[i].amount;
         }
 
@@ -2832,7 +3014,7 @@ contract ExternalOrderPayloadHelper {
 
     function getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
-        CastOfCharacters memory castOfCharacters,
+        CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
     ) public returns (OrderPayload memory _payload) {
@@ -2853,7 +3035,11 @@ contract ExternalOrderPayloadHelper {
         }
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, true, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharactersArray[i]
+            });
             paymentAmounts[i] = payments[i].amount;
         }
 
@@ -2930,16 +3116,22 @@ contract ExternalOrderPayloadHelper {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
-        uint256[] memory prices
+        Item20[] memory weths
     ) public view returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
+        uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(false, false, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: false,
+                routeThroughAdapter: false,
+                castOfCharacters: castOfCharacters
+            });
+            wethAmounts[i] = weths[i].amount;
         }
 
         try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
-            contexts, wethAddress, desiredItems, prices
+            contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
             return payload;
         } catch {
@@ -2958,7 +3150,11 @@ contract ExternalOrderPayloadHelper {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(false, true, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: false,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharacters
+            });
             wethAmounts[i] = payments[i].amount;
         }
 
@@ -3051,7 +3247,11 @@ contract ExternalOrderPayloadHelper {
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, false, castOfCharacters);
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: false,
+                castOfCharacters: castOfCharacters
+            });
             wethAmounts[i] = payments[i].amount;
         }
 
@@ -3070,15 +3270,19 @@ contract ExternalOrderPayloadHelper {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
-        Item20[] memory payments
+        Item20[] memory weths
     ) public returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < 10; i++) {
-            contexts[i] = OrderContext(true, true, castOfCharacters);
-            wethAmounts[i] = payments[i].amount;
+            contexts[i] = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharacters
+            });
+            wethAmounts[i] = weths[i].amount;
         }
 
         try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
@@ -3091,7 +3295,7 @@ contract ExternalOrderPayloadHelper {
 
             uint256 totalWethAmount;
 
-            for (uint256 i; i < payments.length; ++i) {
+            for (uint256 i; i < wethAmounts.length; ++i) {
                 totalWethAmount += wethAmounts[i];
             }
 
@@ -3110,7 +3314,7 @@ contract ExternalOrderPayloadHelper {
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC20,
-                token: payments[0].token,
+                token: wethAddress,
                 identifierOrCriteria: 0,
                 startAmount: totalWethAmount,
                 endAmount: totalWethAmount,
