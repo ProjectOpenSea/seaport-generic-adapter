@@ -169,7 +169,8 @@ contract SeaportOnePointFiveConfig is
     function buildOrder(
         address offerer,
         OfferItem[] memory offerItems,
-        ConsiderationItem[] memory considerationItems
+        ConsiderationItem[] memory considerationItems,
+        bool skipSignature
     ) internal view returns (Order memory order) {
         OrderParameters memory components = order.parameters;
         components.offerer = offerer;
@@ -179,18 +180,28 @@ contract SeaportOnePointFiveConfig is
         components.startTime = 0;
         components.endTime = block.timestamp + 1;
         components.totalOriginalConsiderationItems = considerationItems.length;
-        bytes32 digest = _deriveEIP712Digest(_deriveOrderHash(components, 0));
-        (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
-        order.signature = signature;
+
+        if (!skipSignature) {
+            bytes32 digest =
+                _deriveEIP712Digest(_deriveOrderHash(components, 0));
+            (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, digest);
+            bytes memory signature = abi.encodePacked(r, s, v);
+            order.signature = signature;
+        }
     }
 
     function buildOrderAndFulfillmentManyDistinctOrders(
         OrderContext[] memory contexts,
         address paymentTokenAddress,
         Item721[] memory nfts,
-        uint256[] memory amounts
-    ) internal view returns (Order[] memory, Fulfillment[] memory, uint256) {
+        uint256[] memory amounts,
+        bool skipSignatures
+    )
+        public
+        view
+        override
+        returns (Order[] memory, Fulfillment[] memory, uint256)
+    {
         Order[] memory orders = new Order[](nfts.length + 1);
 
         ConsiderationItem[] memory fulfillerConsiderationItems =
@@ -227,7 +238,8 @@ contract SeaportOnePointFiveConfig is
                 orders[i] = buildOrder(
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
-                    considerationItems
+                    considerationItems,
+                    skipSignatures
                 );
             }
             {
@@ -309,7 +321,8 @@ contract SeaportOnePointFiveConfig is
         orders[nfts.length] = buildOrder(
             contexts[0].castOfCharacters.fulfiller,
             fulfillerOfferItems,
-            fulfillerConsiderationItems
+            fulfillerConsiderationItems,
+            skipSignatures
         );
         orders[nfts.length].signature = ""; // Signature isn't needed since
             // fulfiller is msg.sender
@@ -786,7 +799,10 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems
+            context.castOfCharacters.offerer,
+            offerItems,
+            considerationItems,
+            false
         );
 
         if (context.listOnChain) {
@@ -836,7 +852,10 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems
+            context.castOfCharacters.offerer,
+            offerItems,
+            considerationItems,
+            false
         );
 
         if (context.listOnChain) {
@@ -992,7 +1011,10 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems
+            context.castOfCharacters.offerer,
+            offerItems,
+            considerationItems,
+            false
         );
 
         if (context.listOnChain) {
@@ -1031,7 +1053,7 @@ contract SeaportOnePointFiveConfig is
             Fulfillment[] memory fullfillments,
             uint256 sumEthAmount
         ) = buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, address(0), nfts, ethAmounts
+            contexts, address(0), nfts, ethAmounts, false
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1081,7 +1103,7 @@ contract SeaportOnePointFiveConfig is
 
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, erc20s[0].token, nfts, prices
+            contexts, erc20s[0].token, nfts, prices, false
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1126,7 +1148,7 @@ contract SeaportOnePointFiveConfig is
         );
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, erc20Address, nfts, erc20Amounts
+            contexts, erc20Address, nfts, erc20Amounts, false
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1190,7 +1212,8 @@ contract SeaportOnePointFiveConfig is
                 orders[i] = buildOrder(
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
-                    considerationItems
+                    considerationItems,
+                    false
                 );
             }
             // Set fulfillment
@@ -1260,7 +1283,8 @@ contract SeaportOnePointFiveConfig is
                 orders[i] = buildOrder(
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
-                    considerationItems
+                    considerationItems,
+                    false
                 );
             }
             // Set fulfillment

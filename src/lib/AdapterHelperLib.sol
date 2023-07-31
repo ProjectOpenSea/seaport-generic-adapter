@@ -869,4 +869,58 @@ library AdapterHelperLib {
             }
         }
     }
+
+    function _extendOfferItems(
+        OfferItem[] memory currentItems,
+        OfferItem[] memory newItems
+    ) internal pure returns (OfferItem[] memory) {
+        OfferItem[] memory result =
+            new OfferItem[](currentItems.length + newItems.length);
+
+        for (uint256 i = 0; i < currentItems.length; i++) {
+            result[i] = currentItems[i];
+        }
+
+        for (uint256 i = 0; i < newItems.length; i++) {
+            result[i + currentItems.length] = newItems[i];
+        }
+
+        return result;
+    }
+
+    function _extendConsiderationItems(
+        ConsiderationItem[] memory currentItems,
+        ConsiderationItem[] memory newItems
+    ) internal pure returns (ConsiderationItem[] memory) {
+        ConsiderationItem[] memory result =
+            new ConsiderationItem[](currentItems.length + newItems.length);
+
+        for (uint256 i = 0; i < currentItems.length; i++) {
+            result[i] = currentItems[i];
+        }
+
+        for (uint256 i = 0; i < newItems.length; i++) {
+            result[i + currentItems.length] = newItems[i];
+        }
+
+        return result;
+    }
+
+    function _extendItemTransfers(
+        ItemTransfer[] memory currentItemTransfers,
+        ItemTransfer[] memory newItemTransfers
+    ) internal pure returns (ItemTransfer[] memory) {
+        ItemTransfer[] memory result =
+        new ItemTransfer[](currentItemTransfers.length + newItemTransfers.length);
+
+        for (uint256 i = 0; i < currentItemTransfers.length; i++) {
+            result[i] = currentItemTransfers[i];
+        }
+
+        for (uint256 i = 0; i < newItemTransfers.length; i++) {
+            result[i + currentItemTransfers.length] = newItemTransfers[i];
+        }
+
+        return result;
+    }
 }

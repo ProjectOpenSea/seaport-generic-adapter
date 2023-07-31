@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { Order, Fulfillment } from "seaport-types/lib/ConsiderationStructs.sol";
+
 import { SetupCall, OrderPayload } from "../utils/Types.sol";
 
 import { Call, Item20, Item721, Item1155 } from "../lib/AdapterHelperLib.sol";
@@ -488,6 +490,21 @@ abstract contract BaseMarketConfig {
         Item20 calldata,
         Item1155 calldata
     ) external view virtual returns (BasicOrderParameters memory) {
+        _notImplemented();
+    }
+
+    function buildOrderAndFulfillmentManyDistinctOrders(
+        OrderContext[] memory,
+        address,
+        Item721[] memory,
+        uint256[] memory,
+        bool
+    )
+        public
+        view
+        virtual
+        returns (Order[] memory, Fulfillment[] memory, uint256)
+    {
         _notImplemented();
     }
 

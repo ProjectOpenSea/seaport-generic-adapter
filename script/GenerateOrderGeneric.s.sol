@@ -5,6 +5,9 @@ import "forge-std/Script.sol";
 
 import { Vm } from "forge-std/Vm.sol";
 
+import { ConsiderationInterface } from
+    "seaport-types/interfaces/ConsiderationInterface.sol";
+
 import { ConsiderationItemLib } from "seaport-sol/lib/ConsiderationItemLib.sol";
 
 import { OrderParametersLib } from "seaport-sol/lib/OrderParametersLib.sol";
@@ -19,6 +22,7 @@ import {
     Fulfillment,
     FulfillmentComponent,
     OfferItem,
+    Order,
     OrderParameters
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
@@ -88,6 +92,9 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
     using OrderParametersLib for OrderParameters[];
     using AdapterHelperLib for Call;
     using AdapterHelperLib for Call[];
+    using AdapterHelperLib for ConsiderationItem[];
+    using AdapterHelperLib for ItemTransfer[];
+    using AdapterHelperLib for OfferItem[];
 
     address internal constant seaportAddress =
         address(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
@@ -169,19 +176,42 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
     }
 
     function run() public virtual {
-        console.log("Running some script");
+        console.log("Running the aggregation script.");
+        console.log("========================================================");
 
+        // Set up the external calls.
         OrderPayload[] memory payloads = new OrderPayload[](5);
+        Call[] memory executionCalls = new Call[](5);
+
+        OfferItem[][] memory offerItemsArray = new OfferItem[][](5);
+        ConsiderationItem[][] memory considerationItemsArray =
+            new ConsiderationItem[][](5);
+        ItemTransfer[][] memory itemTransfersArray = new ItemTransfer[][](5);
+
+        OfferItem[] memory allItemsToBeOfferedByAdapter = new OfferItem[](0);
+        ConsiderationItem[] memory allItemsToBeProvidedToAdapter =
+            new ConsiderationItem[](0);
+        ItemTransfer[] memory allSidecarItemTransfers = new ItemTransfer[](0);
 
         // TODO: look up whether Foundation does fees or not.
-        (payloads[0],,,) = getPayloadToBuyOfferedERC721WithEther_ListOnChain(
+        (
+            payloads[0],
+            offerItemsArray[0],
+            considerationItemsArray[0],
+            itemTransfersArray[0]
+        ) = getPayloadToBuyOfferedERC721WithEther_ListOnChain(
             foundationConfig, // BaseMarketConfig config,
             liveCastOfCharactersFoundation, // CastOfCharacters memory
             Item721({ token: address(0), identifier: 0 }), // Item721 memory
             0 // uint256 price
         );
 
-        (payloads[1],,,) = getPayloadToBuyOfferedERC1155WithERC20(
+        (
+            payloads[1],
+            offerItemsArray[1],
+            considerationItemsArray[1],
+            itemTransfersArray[1]
+        ) = getPayloadToBuyOfferedERC1155WithERC20(
             looksRareV2Config, // BaseMarketConfig config,
             liveCastOfCharactersLooksRareV2, // CastOfCharacters memory
             Item1155({ token: address(0), identifier: 0, amount: 1 }), // Item1155
@@ -194,7 +224,12 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         desiredItemsSudo[1] = Item721({ token: address(0), identifier: 0 });
         desiredItemsSudo[2] = Item721({ token: address(0), identifier: 0 });
 
-        (payloads[2],,,) = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
+        (
+            payloads[2],
+            offerItemsArray[2],
+            considerationItemsArray[2],
+            itemTransfersArray[2]
+        ) = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
             sudoswapConfig, // BaseMarketConfig config,
             liveCastOfCharactersSudo, // CastOfCharacters memory
             desiredItemsSudo, // Item721 memory desiredItems,
@@ -211,37 +246,192 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         paymentX2Y2[1] = Item20({ token: wethAddress, amount: 0 });
         paymentX2Y2[2] = Item20({ token: wethAddress, amount: 0 });
 
-        (payloads[3],,,) =
-        getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
+        (
+            payloads[3],
+            offerItemsArray[3],
+            considerationItemsArray[3],
+            itemTransfersArray[3]
+        ) = getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
             x2y2Config, // BaseMarketConfig config,
             liveCastOfCharactersX2Y2, // CastOfCharacters memory
             desiredItemsX2Y2, // Item721[] memory desiredItems,
             paymentX2Y2 // Item20[] memory payments
         );
 
-        (payloads[4],,,) = getPayloadToBuyOfferedERC721WithWETH(
+        (
+            payloads[4],
+            offerItemsArray[4],
+            considerationItemsArray[4],
+            itemTransfersArray[4]
+        ) = getPayloadToBuyOfferedERC721WithWETH(
             zeroExConfig, // BaseMarketConfig config,
             liveCastOfCharactersZeroEx, // CastOfCharacters memory
             Item721({ token: address(0), identifier: 0 }), // Item721 memory
             Item20({ token: wethAddress, amount: 0 }) // Item20 memory payment
         );
 
-        // // TODO: think about how to rework the external payload lib to either
-        // give me back transfers
-        // // TODO: either move everything to OfferItem/ConsiderationItem or at
-        // least make a converter function.
+        for (uint256 i; i < payloads.length; ++i) {
+            executionCalls[i] = payloads[i].executeOrder;
+        }
 
-        // (AdvancedOrder[] memory adapterOrders, Fulfillment[] memory
-        // adapterFulfillments) = AdapterHelperLib
-        //     .createAdapterOrdersAndFulfillments(
-        //     infra.executionPayloads,
-        //     new Call[](0),
-        //     new Call[](0),
-        //     baseCastOfCharacters,
-        //     new Flashloan[](0),
-        //     infra.adapterOfferArray,
-        //     infra.adapterConsiderationArray,
-        //     infra.itemTransfers
-        // );
+        for (uint256 i; i < offerItemsArray.length; ++i) {
+            allItemsToBeOfferedByAdapter = allItemsToBeOfferedByAdapter
+                ._extendOfferItems(offerItemsArray[i]);
+        }
+
+        for (uint256 i; i < considerationItemsArray.length; ++i) {
+            allItemsToBeProvidedToAdapter = allItemsToBeProvidedToAdapter
+                ._extendConsiderationItems(considerationItemsArray[i]);
+        }
+
+        for (uint256 i; i < itemTransfersArray.length; ++i) {
+            allSidecarItemTransfers = allSidecarItemTransfers
+                ._extendItemTransfers(itemTransfersArray[i]);
+        }
+
+        for (uint256 i; i < executionCalls.length; ++i) {
+            console.log("Execution call", i);
+        }
+
+        for (uint256 i; i < allItemsToBeOfferedByAdapter.length; ++i) {
+            console.log("Offer item", i);
+        }
+
+        for (uint256 i; i < allItemsToBeProvidedToAdapter.length; ++i) {
+            console.log("Consideration item", i);
+        }
+
+        for (uint256 i; i < allSidecarItemTransfers.length; ++i) {
+            console.log("Item transfer", i);
+        }
+
+        (
+            AdvancedOrder[] memory adapterOrders,
+            Fulfillment[] memory adapterFulfillments
+        ) = AdapterHelperLib.createAdapterOrdersAndFulfillments(
+            executionCalls, // The calls to external marketplaces.
+            new Call[](0), // Sidecar setup calls, unused
+            new Call[](0), // Sidecar wrap up calls, unused
+            baseCastOfCharacters, // Cast of characters, offerer is unused
+            new Flashloan[](0), // Flashloans, will be generated automatically
+            allItemsToBeOfferedByAdapter, // Things the call will get the caller
+            allItemsToBeProvidedToAdapter, // Things that will go out
+            allSidecarItemTransfers // Item shuffling by the sidecar
+        );
+
+        for (uint256 i; i < adapterOrders.length; ++i) {
+            console.log("Adapter order", i);
+        }
+
+        for (uint256 i; i < adapterFulfillments.length; ++i) {
+            console.log("Adapter fulfillment", i);
+        }
+
+        // Set up the seaport orders.
+        Order[] memory nativeSeaportOrders = new Order[](4);
+        Fulfillment[] memory nativeSeaportFullfillments = new Fulfillment[](4);
+        uint256 sumAmountsForNativeSeaportOrders;
+
+        {
+            Item721[] memory desiredItemsSeaport = new Item721[](3);
+            desiredItemsSeaport[0] =
+                Item721({ token: address(0), identifier: 0 }); // TODO: populate
+            desiredItemsSeaport[1] =
+                Item721({ token: address(0), identifier: 0 }); // TODO: populate
+            desiredItemsSeaport[2] =
+                Item721({ token: address(0), identifier: 0 }); // TODO: populate
+
+            CastOfCharacters[] memory castOfCharactersArraySeaport =
+                new CastOfCharacters[](3);
+            OrderContext[] memory orderContexts = new OrderContext[](3);
+            uint256[] memory prices = new uint256[](3);
+
+            for (uint256 i; i < orderContexts.length; ++i) {
+                orderContexts[i] = OrderContext({
+                    listOnChain: false,
+                    routeThroughAdapter: false,
+                    castOfCharacters: liveCastOfCharactersSeaport
+                });
+
+                castOfCharactersArraySeaport[i] = liveCastOfCharactersSeaport;
+                castOfCharactersArraySeaport[i].offerer = address(0); // TODO:
+                    // populate
+
+                prices[i] = 0; // TODO: populate
+            }
+
+            (
+                nativeSeaportOrders,
+                nativeSeaportFullfillments,
+                sumAmountsForNativeSeaportOrders
+            ) = seaportOnePointFiveConfig
+                .buildOrderAndFulfillmentManyDistinctOrders(
+                orderContexts,
+                address(0), // TODO: populate with shitcoins or leave if ETH
+                desiredItemsSeaport,
+                prices,
+                true // skip the attempt to sign the order to avoid revert
+            );
+        }
+
+        AdvancedOrder[] memory nativeSeaportAdvancedOrders =
+            new AdvancedOrder[](4);
+
+        for (uint256 i; i < nativeSeaportOrders.length; ++i) {
+            nativeSeaportAdvancedOrders[i] = AdvancedOrder({
+                parameters: nativeSeaportOrders[i].parameters,
+                numerator: 1,
+                denominator: 1,
+                signature: "", // ad hoc
+                extraData: "" // none required on the native orders
+             });
+        }
+
+        // 3 adapter orders (adapter order, flashloan, mirror)
+        // 3 seaport offer orders (from the API or whatever)
+        // 1 seaport taker order (from this script)
+        AdvancedOrder[] memory finalOrders = new AdvancedOrder[](7);
+        // 2 adapter fulfillments (flashloan, mirror)
+        // 4 native seaport fulfillments (one for each NFT plus the taker order)
+        Fulfillment[] memory finalFulfillments = new Fulfillment[](6);
+
+        {
+            finalOrders[0] = adapterOrders[0];
+            finalOrders[1] = adapterOrders[1];
+            finalOrders[2] = adapterOrders[2];
+            finalOrders[3] = nativeSeaportAdvancedOrders[0];
+            finalOrders[4] = nativeSeaportAdvancedOrders[1];
+            finalOrders[5] = nativeSeaportAdvancedOrders[2];
+            finalOrders[6] = nativeSeaportAdvancedOrders[3];
+        }
+
+        {
+            finalFulfillments[0] = adapterFulfillments[0];
+            finalFulfillments[1] = adapterFulfillments[1];
+            finalFulfillments[2] = nativeSeaportFullfillments[0];
+            finalFulfillments[3] = nativeSeaportFullfillments[1];
+            finalFulfillments[4] = nativeSeaportFullfillments[2];
+            finalFulfillments[5] = nativeSeaportFullfillments[3];
+        }
+
+        (bool success, bytes memory returnData) = seaportAddress.call{ value: 0 }(
+            abi.encodeWithSelector(
+                ConsiderationInterface.matchAdvancedOrders.selector,
+                finalOrders,
+                new CriteriaResolver[](0),
+                finalFulfillments,
+                address(0)
+            )
+        );
+
+        if (!success) {
+            console.log('returnData');
+            console.logBytes(returnData);
+            revert("Seaport matchAdvancedOrders failed");
+        } else {
+            console.log("Seaport matchAdvancedOrders succeeded");
+            console.log('returnData');
+            console.logBytes(returnData);
+        }
     }
 }
