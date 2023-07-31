@@ -390,7 +390,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),

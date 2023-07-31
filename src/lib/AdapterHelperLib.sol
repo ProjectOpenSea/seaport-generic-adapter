@@ -830,7 +830,6 @@ library AdapterHelperLib {
                     0,
                     abi.encodeWithSelector(
                         ERC20.transfer.selector,
-                        // itemTransfers[i].from,
                         itemTransfers[i].to,
                         itemTransfers[i].amount
                     )

@@ -127,30 +127,6 @@ contract ExternalOrderPayloadHelper {
         x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
 
-        // flashloanOffererInterface = FlashloanOffererInterface(
-        //     deployCode(
-        //         "out/FlashloanOfferer.sol/FlashloanOfferer.json",
-        //         abi.encode(seaportAddress)
-        //     )
-        // );
-
-        // adapterInterface = GenericAdapterInterface(
-        //     deployCode(
-        //         "out/GenericAdapter.sol/GenericAdapter.json",
-        //         abi.encode(seaportAddress,
-        // address(flashloanOffererInterface))
-        //     )
-        // );
-
-        // sidecarInterface = GenericAdapterSidecarInterface(
-        //     abi.decode(entries[0].data, (address))
-        // );
-
-        // flashloanOfferer = address(flashloanOffererInterface);
-        // adapter = address(adapterInterface);
-        // sidecar = address(sidecarInterface);
-
-        // TODO: cross chain WETH.
         wethAddress = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     }
 
@@ -186,7 +162,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -209,7 +193,7 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -225,7 +209,7 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers = new ItemTransfer[](0);
             }
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
             itemsToBeOfferedByAdapter[0] = OfferItem({
                 itemType: ItemType.ERC721,
                 token: desiredItem.token,
@@ -234,8 +218,7 @@ contract ExternalOrderPayloadHelper {
                 endAmount: 1
             });
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
@@ -254,7 +237,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2628,7 +2616,7 @@ contract ExternalOrderPayloadHelper {
     ) public view returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: false,
                 routeThroughAdapter: false,
@@ -2658,7 +2646,7 @@ contract ExternalOrderPayloadHelper {
 
         address originalFulfiller = castOfCharacters.fulfiller;
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: false,
                 routeThroughAdapter: true,
@@ -2673,7 +2661,7 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
+            for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = originalFulfiller;
             }
 
@@ -2744,7 +2732,7 @@ contract ExternalOrderPayloadHelper {
     ) public view returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: false,
@@ -2773,7 +2761,7 @@ contract ExternalOrderPayloadHelper {
 
         address originalFulfiller = castOfCharacters.fulfiller;
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: true,
@@ -2788,7 +2776,7 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
-            for (uint256 i = 0; i < 10; i++) {
+            for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = originalFulfiller;
             }
 
@@ -2869,7 +2857,7 @@ contract ExternalOrderPayloadHelper {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory paymentAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext(false, false, castOfCharactersArray[i]);
             paymentAmounts[i] = payments[i].amount;
         }
@@ -2893,7 +2881,7 @@ contract ExternalOrderPayloadHelper {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory paymentAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext(false, true, castOfCharactersArray[i]);
             paymentAmounts[i] = payments[i].amount;
         }
@@ -2993,7 +2981,7 @@ contract ExternalOrderPayloadHelper {
 
         uint256[] memory paymentAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: false,
@@ -3034,7 +3022,7 @@ contract ExternalOrderPayloadHelper {
             }
         }
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: true,
@@ -3121,7 +3109,7 @@ contract ExternalOrderPayloadHelper {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory wethAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: false,
                 routeThroughAdapter: false,
@@ -3149,7 +3137,7 @@ contract ExternalOrderPayloadHelper {
 
         uint256[] memory wethAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: false,
                 routeThroughAdapter: true,
@@ -3246,7 +3234,7 @@ contract ExternalOrderPayloadHelper {
 
         uint256[] memory wethAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: false,
@@ -3276,7 +3264,7 @@ contract ExternalOrderPayloadHelper {
 
         uint256[] memory wethAmounts = new uint256[](10);
 
-        for (uint256 i = 0; i < 10; i++) {
+        for (uint256 i = 0; i < desiredItems.length; i++) {
             contexts[i] = OrderContext({
                 listOnChain: true,
                 routeThroughAdapter: true,
