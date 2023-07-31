@@ -28,7 +28,7 @@ import {
     ItemTransfer
 } from "../src/lib/AdapterHelperLib.sol";
 
-import { ConsiderationInterface as ISeaport } from
+import { ConsiderationInterface } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 
 import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
@@ -378,7 +378,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
                 false, // allowFailure, ignored in this context
                 305, // value will be sum of all the values
                 abi.encodeWithSelector(
-                    ISeaport.matchAdvancedOrders.selector,
+                    ConsiderationInterface.matchAdvancedOrders.selector,
                     infra.finalOrders,
                     new CriteriaResolver[](0),
                     infra.finalFulfillments,
@@ -580,7 +580,9 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
                 false, // allowFailure, ignored in this context
                 0, // no value
                 abi.encodeWithSelector(
-                    ISeaport.fulfillAvailableAdvancedOrders.selector,
+                    ConsiderationInterface
+                        .fulfillAvailableAdvancedOrders
+                        .selector,
                     infra.finalOrders,
                     new CriteriaResolver[](0),
                     offerFulfillments,

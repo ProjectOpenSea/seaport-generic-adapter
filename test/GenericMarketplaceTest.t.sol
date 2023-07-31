@@ -3217,7 +3217,9 @@ contract GenericMarketplaceTest is
             }
         }
 
-        // This is where the adapter approves Seaport.
+        // This is where the adapter approves Seaport. These are left in place
+        // just to ensure accurate gas benchmarking. The adapter helper lib will
+        // automatically generate aprovals on the fly.
         Approval[] memory approvalsByTheAdapter = new Approval[](4);
         approvalsByTheAdapter[0] = Approval(_test20Address, ItemType.ERC20);
         approvalsByTheAdapter[1] = Approval(_test721Address, ItemType.ERC721);
@@ -3233,11 +3235,6 @@ contract GenericMarketplaceTest is
         testAdapter.generateOrder(
             address(this), new SpentItem[](0), new SpentItem[](0), contextArg
         );
-
-        vm.startPrank(sidecar);
-        test20.approve(sidecar, type(uint256).max);
-        weth.approve(sidecar, type(uint256).max);
-        vm.stopPrank();
     }
 
     function _doSetup() internal {

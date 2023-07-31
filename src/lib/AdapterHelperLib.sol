@@ -305,7 +305,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (Call memory) {
+    ) public returns (Call memory) {
         Call[] memory sidecarMarketplaceCalls = new Call[](1);
         sidecarMarketplaceCalls[0] = sidecarMarketplaceCall;
 
@@ -328,7 +328,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (Call memory) {
+    ) public returns (Call memory) {
         Call[] memory sidecarMarketplaceCalls = new Call[](1);
         sidecarMarketplaceCalls[0] = sidecarMarketplaceCall;
 
@@ -353,7 +353,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (Call memory wrappedCallParameters) {
+    ) public returns (Call memory wrappedCallParameters) {
         AdvancedOrder[] memory orders;
         Fulfillment[] memory fulfillments;
         (orders, fulfillments) = createAdapterOrdersAndFulfillments(
@@ -440,7 +440,6 @@ library AdapterHelperLib {
         ItemTransfer[] memory itemTransfers
     )
         public
-        view
         returns (
             AdvancedOrder[] memory orders,
             Fulfillment[] memory fulfillments
@@ -508,7 +507,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) public view returns (AdvancedOrder memory order) {
+    ) public returns (AdvancedOrder memory order) {
         return _createAdapterOrder(
             sidecarMarketplaceCalls,
             sidecarSetUpCalls,
@@ -528,7 +527,7 @@ library AdapterHelperLib {
         OfferItem[] memory adapterOffer,
         ConsiderationItem[] memory adapterConsideration,
         ItemTransfer[] memory itemTransfers
-    ) internal view returns (AdvancedOrder memory adapterOrder) {
+    ) internal returns (AdvancedOrder memory adapterOrder) {
         // Create the adapter order.
         adapterOrder =
             AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
@@ -582,10 +581,92 @@ library AdapterHelperLib {
         }
 
         adapterOrder = adapterOrder.withExtraData(
-            createGenericAdapterContext(new Approval[](0), calls)
+            createGenericAdapterContext(
+                _generateNecessaryApprovals(castOfCharacters, adapterOffer),
+                calls
+            )
         );
 
         return adapterOrder;
+    }
+
+    function _generateNecessaryApprovals(
+        CastOfCharacters memory castOfCharacters,
+        OfferItem[] memory adapterOffer
+    ) internal returns (Approval[] memory approvals) {
+        Approval[] memory tempApprovals = new Approval[](0);
+
+        // Automatically add approvals if they're needed.
+        for (uint256 i; i < adapterOffer.length; ++i) {
+            address token = adapterOffer[i].token;
+
+            if (adapterOffer[i].itemType == ItemType.ERC20) {
+                (bool success, bytes memory approvedBalanceBytes) = token.call(
+                    abi.encodeWithSelector(
+                        ERC20.allowance.selector,
+                        castOfCharacters.adapter,
+                        castOfCharacters.seaport
+                    )
+                );
+
+                if (success == false) {
+                    revert("ERC20 approval status check failed.");
+                }
+
+                uint256 approvedBalance = uint256(bytes32(approvedBalanceBytes));
+
+                if (!(approvedBalance == type(uint256).max)) {
+                    // Create a temporary Approval array with extra space for
+                    // the new approval.
+                    tempApprovals = new Approval[](approvals.length + 1);
+                    // Populate the temporary array with the existing approvals.
+                    for (uint256 j; j < approvals.length; ++j) {
+                        tempApprovals[j] = approvals[j];
+                    }
+                    // Add the new approval to the temporary array.
+                    tempApprovals[approvals.length] =
+                        Approval({ token: token, itemType: ItemType.ERC20 });
+                    // Set the approvals array to the temporary array.
+                    approvals = tempApprovals;
+                }
+            } else if (
+                adapterOffer[i].itemType == ItemType.ERC721
+                    || adapterOffer[i].itemType == ItemType.ERC1155
+            ) {
+                (bool success, bytes memory returnData) = token.call(
+                    abi.encodeWithSelector(
+                        ERC721.isApprovedForAll.selector,
+                        castOfCharacters.adapter,
+                        castOfCharacters.seaport
+                    )
+                );
+
+                if (success == false) {
+                    revert("NFT approval status check failed.");
+                }
+
+                bool tokenAlreadyApproved = uint256(bytes32(returnData)) == 1;
+
+                if (!tokenAlreadyApproved) {
+                    // Create a temporary Approval array with extra space for
+                    // the new approval.
+                    tempApprovals = new Approval[](approvals.length + 1);
+                    // Populate the temporary array with the existing approvals.
+                    for (uint256 j; j < approvals.length; ++j) {
+                        tempApprovals[j] = approvals[j];
+                    }
+                    // Add the new approval to the temporary array.
+                    tempApprovals[approvals.length] = Approval({
+                        token: token,
+                        itemType: adapterOffer[i].itemType
+                    });
+                    // Set the approvals array to the temporary array.
+                    approvals = tempApprovals;
+                }
+            } else {
+                revert("Invalid item type");
+            }
+        }
     }
 
     function _createFlashloanOrders(
@@ -748,8 +829,8 @@ library AdapterHelperLib {
                     false,
                     0,
                     abi.encodeWithSelector(
-                        ERC20.transferFrom.selector,
-                        itemTransfers[i].from,
+                        ERC20.transfer.selector,
+                        // itemTransfers[i].from,
                         itemTransfers[i].to,
                         itemTransfers[i].amount
                     )

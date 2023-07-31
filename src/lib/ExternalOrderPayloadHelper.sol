@@ -365,7 +365,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
         try config.getPayload_BuyOfferedERC1155WithEther(
@@ -436,7 +436,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
 
@@ -1021,7 +1021,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
         try config.getPayload_BuyOfferedERC1155WithERC20(
@@ -1095,7 +1095,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
 
@@ -1639,7 +1639,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
@@ -1711,7 +1711,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
 
@@ -2102,7 +2102,7 @@ contract ExternalOrderPayloadHelper {
         uint256 feeAmount1,
         address feeReciever2,
         uint256 feeAmount2
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context = OrderContext(true, true, castOfCharacters);
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
@@ -2198,7 +2198,7 @@ contract ExternalOrderPayloadHelper {
         uint256 feeAmount1,
         address feeReciever2,
         uint256 feeAmount2
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext memory context =
             OrderContext(false, true, castOfCharacters);
 
@@ -2484,7 +2484,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
@@ -2592,7 +2592,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         bool transfersToSpecifiedTaker = _isSudo(config);
 
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
@@ -2711,7 +2711,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory paymentAmounts = new uint256[](10);
 
@@ -2835,7 +2835,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory paymentAmounts = new uint256[](10);
@@ -2952,7 +2952,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
@@ -3071,7 +3071,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    ) public returns (OrderPayload memory _payload) {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
