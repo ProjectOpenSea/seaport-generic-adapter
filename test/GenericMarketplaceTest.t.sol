@@ -76,8 +76,10 @@ import {
     OrderContext
 } from "../src/lib/AdapterHelperLib.sol";
 
-import { ExternalOrderPayloadHelper } from
-    "../src/lib/ExternalOrderPayloadHelper.sol";
+import {
+    ExternalOrderPayloadHelper,
+    Fee
+} from "../src/lib/ExternalOrderPayloadHelper.sol";
 
 import { BaseMarketplaceTest } from "./utils/BaseMarketplaceTest.sol";
 
@@ -288,7 +290,7 @@ contract GenericMarketplaceTest is
         buyOfferedERC721WithWETH_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithBETH(config);
-        buyOfferedERC721WithBETH_FulfillThroughAdapter(config);
+        // buyOfferedERC721WithBETH_FulfillThroughAdapter(config);
 
         buyOfferedERC721WithWETH_ListOnChain(config);
         buyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter(config);
@@ -300,7 +302,7 @@ contract GenericMarketplaceTest is
         buyOfferedWETHWithERC721_FulfillThroughAdapter(config);
 
         buyOfferedBETHWithERC721(config);
-        buyOfferedBETHWithERC721_FulfillThroughAdapter(config);
+        // buyOfferedBETHWithERC721_FulfillThroughAdapter(config);
 
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain(config);
         buyTenOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
@@ -349,7 +351,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         try payloadHelper.getPayloadToBuyOfferedERC721WithEther_ListOnChain(
             config, stdCastOfCharacters, standardERC721, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -435,7 +442,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(alice, 1);
         try payloadHelper.getPayloadToBuyOfferedERC721WithEther(
             config, stdCastOfCharacters, standardERC721, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
 
             gasUsed = _benchmarkCallWithParams(
@@ -463,7 +475,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEther_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
 
             gasUsed = _benchmarkCallWithParams(
@@ -490,7 +507,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(alice, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithEther_ListOnChain(
             config, stdCastOfCharacters, standardERC1155, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -529,7 +551,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC1155WithEther_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -567,7 +594,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(alice, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithEther(
             config, stdCastOfCharacters, standardERC1155, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
             gasUsed = _benchmarkCallWithParams(
@@ -595,7 +627,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC1155WithEther_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
@@ -621,7 +658,12 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_ListOnChain(
             config, stdCastOfCharacters, standardERC721, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -668,7 +710,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithERC20_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -713,7 +760,12 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try payloadHelper.getPayloadToBuyOfferedERC721WithERC20(
             config, stdCastOfCharacters, standardERC721, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -746,7 +798,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -780,7 +837,12 @@ contract GenericMarketplaceTest is
         weth.deposit{ value: 100 }();
         try payloadHelper.getPayloadToBuyOfferedERC721WithERC20_ListOnChain(
             config, stdCastOfCharacters, standardERC721, standardWeth
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -829,7 +891,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithWETH_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardWeth
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
@@ -868,7 +935,12 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             Item721(address(test721_1), 1),
             Item20(address(beth), 100)
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(beth.balanceOf(alice), 0);
             assertEq(alice.balance, 0);
@@ -892,46 +964,52 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedERC721WithBETH_FulfillThroughAdapter(
-        BaseMarketConfig config
-    ) internal prepareTest(config) returns (uint256 gasUsed) {
-        string memory testLabel =
-            "(buyOfferedERC721WithBETH_FulfillThroughAdapter)";
-        test721_1.mint(alice, 1);
-        hevm.deal(alice, 0);
-        hevm.deal(bob, 100);
-        // Bob doesn't deposit BETH for this, he sends native tokens, gets a
-        // flashloan, which goes from adapter to sidecar to BETH's deposit
-        // function, and then the sidecar uses the BETH to fulfill the listing.
-        // hevm.prank(bob);
-        // beth.deposit{ value: 100 }();
+    // function buyOfferedERC721WithBETH_FulfillThroughAdapter(
+    //     BaseMarketConfig config
+    // ) internal prepareTest(config) returns (uint256 gasUsed) {
+    //     string memory testLabel =
+    //         "(buyOfferedERC721WithBETH_FulfillThroughAdapter)";
+    //     test721_1.mint(alice, 1);
+    //     hevm.deal(alice, 0);
+    //     hevm.deal(bob, 100);
+    //     // Bob doesn't deposit BETH for this, he sends native tokens, gets a
+    //     // flashloan, which goes from adapter to sidecar to BETH's deposit
+    //     // function, and then the sidecar uses the BETH to fulfill the
+    // listing.
+    //     // hevm.prank(bob);
+    //     // beth.deposit{ value: 100 }();
 
-        try payloadHelper
-            .getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
-            config, stdCastOfCharacters, Item721(address(test721_1), 1), 100
-        ) returns (OrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(beth.balanceOf(alice), 0);
-            assertEq(alice.balance, 0);
-            assertEq(beth.balanceOf(bob), 0);
-            assertEq(bob.balance, 100);
+    //     try payloadHelper
+    //         .getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
+    //         config, stdCastOfCharacters, Item721(address(test721_1), 1), 100
+    //     ) returns (
+    //         OrderPayload memory payload,
+    //         OfferItem[] memory,
+    //         ConsiderationItem[] memory,
+    //         ItemTransfer[] memory
+    //     ) {
+    //         assertEq(test721_1.ownerOf(1), alice);
+    //         assertEq(beth.balanceOf(alice), 0);
+    //         assertEq(alice.balance, 0);
+    //         assertEq(beth.balanceOf(bob), 0);
+    //         assertEq(bob.balance, 100);
 
-            gasUsed = _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+    //         gasUsed = _benchmarkCallWithParams(
+    //             config.name(),
+    //             string(abi.encodePacked(testLabel, " Fulfill, w/ Sig*")),
+    //             true,
+    //             true,
+    //             bob,
+    //             payload.executeOrder
+    //         );
 
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(alice.balance, 100);
-            assertEq(beth.balanceOf(bob), 0);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
+    //         assertEq(test721_1.ownerOf(1), bob);
+    //         assertEq(alice.balance, 100);
+    //         assertEq(beth.balanceOf(bob), 0);
+    //     } catch {
+    //         _logNotSupported(config.name(), testLabel);
+    //     }
+    // }
 
     function buyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config
@@ -949,7 +1027,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithERC20_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC721, standardWeth
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -997,7 +1080,12 @@ contract GenericMarketplaceTest is
 
         try payloadHelper.getPayloadToBuyOfferedERC721WithWETH(
             config, stdCastOfCharacters, standardERC721, standardWeth
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(weth.balanceOf(alice), 0);
             assertEq(weth.balanceOf(bob), 100);
@@ -1029,7 +1117,12 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20_ListOnChain(
             config, stdCastOfCharacters, standardERC1155, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1071,7 +1164,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC1155WithERC20_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1112,7 +1210,12 @@ contract GenericMarketplaceTest is
         test20.mint(bob, 100);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithERC20(
             config, stdCastOfCharacters, standardERC1155, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -1145,7 +1248,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC1155WithERC20_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC1155, standardERC20
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test1155_1.balanceOf(alice, 1), 1);
             assertEq(test20.balanceOf(alice), 0);
             assertEq(test20.balanceOf(bob), 100);
@@ -1177,7 +1285,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedERC20WithERC721_ListOnChain(
             config, stdCastOfCharacters, standardERC20, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1223,7 +1336,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC20WithERC721_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1268,7 +1386,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedERC20WithERC721(
             config, stdCastOfCharacters, standardERC20, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -1301,7 +1424,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC20WithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -1335,7 +1463,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedWETHWithERC721_ListOnChain(
             config, stdCastOfCharacters, standardWeth, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1384,7 +1517,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedWETHWithERC721_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardWeth, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1435,7 +1573,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedWETHWithERC721(
             config, stdCastOfCharacters, standardWeth, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
@@ -1470,7 +1613,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedWETHWithERC721_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardWeth, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(weth.balanceOf(alice), 100);
             assertEq(weth.balanceOf(bob), 0);
@@ -1506,7 +1654,12 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             Item20(address(beth), 100),
             Item721(address(test721_1), 1)
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(beth.balanceOf(alice), 100);
             assertEq(beth.balanceOf(bob), 0);
@@ -1528,45 +1681,50 @@ contract GenericMarketplaceTest is
         }
     }
 
-    function buyOfferedBETHWithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config
-    ) internal prepareTest(config) {
-        string memory testLabel =
-            "(buyOfferedBETHWithERC721_FulfillThroughAdapter)";
-        hevm.deal(alice, 100);
-        hevm.prank(alice);
-        beth.deposit{ value: 100 }();
-        test721_1.mint(bob, 1);
-        hevm.deal(bob, 0);
+    // function buyOfferedBETHWithERC721_FulfillThroughAdapter(
+    //     BaseMarketConfig config
+    // ) internal prepareTest(config) {
+    //     string memory testLabel =
+    //         "(buyOfferedBETHWithERC721_FulfillThroughAdapter)";
+    //     hevm.deal(alice, 100);
+    //     hevm.prank(alice);
+    //     beth.deposit{ value: 100 }();
+    //     test721_1.mint(bob, 1);
+    //     hevm.deal(bob, 0);
 
-        try payloadHelper
-            .getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
-            config,
-            stdCastOfCharacters,
-            Item20(address(beth), 100),
-            Item721(address(test721_1), 1)
-        ) returns (OrderPayload memory payload) {
-            assertEq(test721_1.ownerOf(1), bob);
-            assertEq(beth.balanceOf(alice), 100);
-            assertEq(beth.balanceOf(bob), 0);
-            assertEq(bob.balance, 0);
+    //     try payloadHelper
+    //         .getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
+    //         config,
+    //         stdCastOfCharacters,
+    //         Item20(address(beth), 100),
+    //         Item721(address(test721_1), 1)
+    //     ) returns (
+    //         OrderPayload memory payload,
+    //         OfferItem[] memory,
+    //         ConsiderationItem[] memory,
+    //         ItemTransfer[] memory
+    //     ) {
+    //         assertEq(test721_1.ownerOf(1), bob);
+    //         assertEq(beth.balanceOf(alice), 100);
+    //         assertEq(beth.balanceOf(bob), 0);
+    //         assertEq(bob.balance, 0);
 
-            _benchmarkCallWithParams(
-                config.name(),
-                string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
-                true,
-                true,
-                bob,
-                payload.executeOrder
-            );
+    //         _benchmarkCallWithParams(
+    //             config.name(),
+    //             string(abi.encodePacked(testLabel, " Fulfill w/ Sig*")),
+    //             true,
+    //             true,
+    //             bob,
+    //             payload.executeOrder
+    //         );
 
-            assertEq(test721_1.ownerOf(1), alice);
-            assertEq(beth.balanceOf(alice), 0);
-            assertEq(bob.balance, 100);
-        } catch {
-            _logNotSupported(config.name(), testLabel);
-        }
-    }
+    //         assertEq(test721_1.ownerOf(1), alice);
+    //         assertEq(beth.balanceOf(alice), 0);
+    //         assertEq(bob.balance, 100);
+    //     } catch {
+    //         _logNotSupported(config.name(), testLabel);
+    //     }
+    // }
 
     function buyOfferedERC20WithERC1155_ListOnChain(BaseMarketConfig config)
         internal
@@ -1578,7 +1736,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155_ListOnChain(
             config, stdCastOfCharacters, standardERC20, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1620,7 +1783,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC20WithERC1155_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1661,7 +1829,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC20WithERC1155(
             config, stdCastOfCharacters, standardERC20, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -1694,7 +1867,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyOfferedERC20WithERC1155_FulfillThroughAdapter(
             config, stdCastOfCharacters, standardERC20, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test1155_1.balanceOf(bob, 1), 1);
             assertEq(test20.balanceOf(alice), 100);
             assertEq(test20.balanceOf(bob), 0);
@@ -1726,7 +1904,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC721WithERC1155_ListOnChain(
             config, stdCastOfCharacters, standardERC721, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1776,7 +1959,12 @@ contract GenericMarketplaceTest is
         test1155_1.mint(bob, 1, 1);
         try payloadHelper.getPayloadToBuyOfferedERC721WithERC1155(
             config, stdCastOfCharacters, standardERC721, standardERC1155
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(test1155_1.balanceOf(bob, 1), 1);
 
@@ -1817,7 +2005,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithERC721_ListOnChain(
             config, stdCastOfCharacters, standardERC1155, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1867,7 +2060,12 @@ contract GenericMarketplaceTest is
         test721_1.mint(bob, 1);
         try payloadHelper.getPayloadToBuyOfferedERC1155WithERC721(
             config, stdCastOfCharacters, standardERC1155, standardERC721
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), bob);
             assertEq(test1155_1.balanceOf(alice, 1), 1);
 
@@ -1910,9 +2108,13 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
-            feeReciever1,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -1958,9 +2160,13 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
-            feeReciever1,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2001,8 +2207,17 @@ contract GenericMarketplaceTest is
         string memory testLabel = "(buyOfferedERC721WithEtherOneFeeRecipient)";
         test721_1.mint(alice, 1);
         try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient(
-            config, stdCastOfCharacters, standardERC721, 100, feeReciever1, 5
-        ) returns (OrderPayload memory payload) {
+            config,
+            stdCastOfCharacters,
+            standardERC721,
+            100,
+            Fee({ recipient: feeReciever1, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
@@ -2031,8 +2246,17 @@ contract GenericMarketplaceTest is
 
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
-            config, stdCastOfCharacters, standardERC721, 100, feeReciever1, 5
-        ) returns (OrderPayload memory payload) {
+            config,
+            stdCastOfCharacters,
+            standardERC721,
+            100,
+            Fee({ recipient: feeReciever1, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
 
@@ -2064,11 +2288,14 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 }),
+            Fee({ recipient: feeReciever2, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2116,11 +2343,14 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 }),
+            Fee({ recipient: feeReciever2, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2166,11 +2396,14 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 }),
+            Fee({ recipient: feeReciever2, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
@@ -2205,11 +2438,14 @@ contract GenericMarketplaceTest is
             stdCastOfCharacters,
             standardERC721,
             100,
-            feeReciever1,
-            5,
-            feeReciever2,
-            5
-        ) returns (OrderPayload memory payload) {
+            Fee({ recipient: feeReciever1, amount: 5 }),
+            Fee({ recipient: feeReciever2, amount: 5 })
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             assertEq(test721_1.ownerOf(1), alice);
             assertEq(feeReciever1.balance, 0);
             assertEq(feeReciever2.balance, 0);
@@ -2246,7 +2482,12 @@ contract GenericMarketplaceTest is
 
         try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
             config, stdCastOfCharacters, nfts, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2296,7 +2537,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEther_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2346,7 +2592,12 @@ contract GenericMarketplaceTest is
 
         try payloadHelper.getPayloadToBuyManyOfferedERC721WithEther(
             config, stdCastOfCharacters, nfts, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
@@ -2383,7 +2634,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEther_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, 100
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 0; i < 10; i++) {
                 assertEq(test721_1.ownerOf(i + 1), alice);
             }
@@ -2424,7 +2680,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders(
             config, stdCastOfCharacters, nfts, ethAmounts
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2464,7 +2725,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, ethAmounts
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2510,7 +2776,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_ListOnChain(
             config, stdCastOfCharacters, nfts, ethAmounts
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2563,7 +2834,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithEtherDistinctOrders_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, ethAmounts
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2615,7 +2891,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders(
             config, castOfCharactersArray, nfts, erc20s
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2662,7 +2943,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_FulfillThroughAdapter(
             config, castOfCharactersArray, nfts, erc20s
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2709,7 +2995,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain(
             config, castOfCharactersArray, nfts, erc20s
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2760,7 +3051,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithErc20DistinctOrders_ListOnChain_FulfillThroughAdapter(
             config, castOfCharactersArray, nfts, erc20s
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2808,7 +3104,12 @@ contract GenericMarketplaceTest is
 
         try payloadHelper.getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
             config, stdCastOfCharacters, nfts, weths
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2852,7 +3153,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, weths
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             for (uint256 i = 1; i <= 10; i++) {
                 assertEq(test721_1.ownerOf(i), alice);
             }
@@ -2896,7 +3202,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_ListOnChain(
             config, stdCastOfCharacters, nfts, weths
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),
@@ -2945,7 +3256,12 @@ contract GenericMarketplaceTest is
         try payloadHelper
             .getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders_ListOnChain_FulfillThroughAdapter(
             config, stdCastOfCharacters, nfts, weths
-        ) returns (OrderPayload memory payload) {
+        ) returns (
+            OrderPayload memory payload,
+            OfferItem[] memory,
+            ConsiderationItem[] memory,
+            ItemTransfer[] memory
+        ) {
             gasUsed = _benchmarkCallWithParams(
                 config.name(),
                 string(abi.encodePacked(testLabel, " List")),

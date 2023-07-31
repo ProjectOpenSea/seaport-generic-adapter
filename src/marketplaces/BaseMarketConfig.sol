@@ -417,16 +417,14 @@ abstract contract BaseMarketConfig {
      * market does not support the
      *   order type, must revert with NotImplemented.
      * @ param contexts Array of contexts for each order
-     * @ param erc20Address The erc20 address to use across orders
      * @ param nfts Array of NFTs for each order
-     * @ param erc20Amounts Array of Erc20 amounts to be received for the NFTs
+     * @ param - Array of Erc20 amounts to be received for the NFTs
      * in each order
      */
     function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata,
-        address,
         Item721[] calldata,
-        uint256[] calldata
+        Item20[] calldata
     ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }

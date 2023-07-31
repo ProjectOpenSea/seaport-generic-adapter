@@ -1066,17 +1066,22 @@ contract SeaportOnePointFiveConfig is
 
     function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
-        address erc20Address,
         Item721[] calldata nfts,
-        uint256[] calldata erc20Amounts
+        Item20[] calldata erc20s
     ) external view override returns (OrderPayload memory execution) {
         require(
-            contexts.length == nfts.length && nfts.length == erc20Amounts.length,
+            contexts.length == nfts.length && nfts.length == erc20s.length,
             "SeaportConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders: invalid input"
         );
+
+        uint256[] memory prices = new uint256[](erc20s.length);
+        for (uint256 i = 0; i < erc20s.length; i++) {
+            prices[i] = erc20s[i].amount;
+        }
+
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, erc20Address, nfts, erc20Amounts
+            contexts, erc20s[0].token, nfts, prices
         );
 
         // Validate all for simplicity for now, could make this combination of

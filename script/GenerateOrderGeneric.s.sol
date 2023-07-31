@@ -174,14 +174,14 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         OrderPayload[] memory payloads = new OrderPayload[](5);
 
         // TODO: look up whether Foundation does fees or not.
-        payloads[0] = getPayloadToBuyOfferedERC721WithEther_ListOnChain(
+        (payloads[0],,,) = getPayloadToBuyOfferedERC721WithEther_ListOnChain(
             foundationConfig, // BaseMarketConfig config,
             liveCastOfCharactersFoundation, // CastOfCharacters memory
             Item721({ token: address(0), identifier: 0 }), // Item721 memory
             0 // uint256 price
         );
 
-        payloads[1] = getPayloadToBuyOfferedERC1155WithERC20(
+        (payloads[1],,,) = getPayloadToBuyOfferedERC1155WithERC20(
             looksRareV2Config, // BaseMarketConfig config,
             liveCastOfCharactersLooksRareV2, // CastOfCharacters memory
             Item1155({ token: address(0), identifier: 0, amount: 1 }), // Item1155
@@ -194,7 +194,7 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         desiredItemsSudo[1] = Item721({ token: address(0), identifier: 0 });
         desiredItemsSudo[2] = Item721({ token: address(0), identifier: 0 });
 
-        payloads[2] = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
+        (payloads[2],,,) = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
             sudoswapConfig, // BaseMarketConfig config,
             liveCastOfCharactersSudo, // CastOfCharacters memory
             desiredItemsSudo, // Item721 memory desiredItems,
@@ -211,14 +211,15 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         paymentX2Y2[1] = Item20({ token: wethAddress, amount: 0 });
         paymentX2Y2[2] = Item20({ token: wethAddress, amount: 0 });
 
-        payloads[3] = getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
+        (payloads[3],,,) =
+        getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
             x2y2Config, // BaseMarketConfig config,
             liveCastOfCharactersX2Y2, // CastOfCharacters memory
             desiredItemsX2Y2, // Item721[] memory desiredItems,
             paymentX2Y2 // Item20[] memory payments
         );
 
-        payloads[4] = getPayloadToBuyOfferedERC721WithWETH(
+        (payloads[4],,,) = getPayloadToBuyOfferedERC721WithWETH(
             zeroExConfig, // BaseMarketConfig config,
             liveCastOfCharactersZeroEx, // CastOfCharacters memory
             Item721({ token: address(0), identifier: 0 }), // Item721 memory

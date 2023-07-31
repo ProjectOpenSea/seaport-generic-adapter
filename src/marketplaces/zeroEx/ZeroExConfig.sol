@@ -787,12 +787,11 @@ contract ZeroExConfig is BaseMarketConfig, Test {
 
     function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
-        address erc20Address,
         Item721[] calldata nfts,
-        uint256[] calldata erc20Amounts
+        Item20[] calldata erc20s
     ) external view override returns (OrderPayload memory execution) {
         require(
-            contexts.length == nfts.length && nfts.length == erc20Amounts.length,
+            contexts.length == nfts.length && nfts.length == erc20s.length,
             "ZeroExConfig::getPayload_BuyManyOfferedERC721WithEtherDistinctOrders/ARRAY_LENGTH_MISMATCH"
         );
 
@@ -817,8 +816,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 taker: address(0),
                 expiry: block.timestamp + 120,
                 nonce: testNonce + i,
-                erc20Token: erc20Address,
-                erc20TokenAmount: erc20Amounts[i],
+                erc20Token: erc20s[i].token,
+                erc20TokenAmount: erc20s[i].amount,
                 fees: new LibNFTOrder.Fee[](0),
                 erc721Token: nfts[i].token,
                 erc721TokenId: nfts[i].identifier,

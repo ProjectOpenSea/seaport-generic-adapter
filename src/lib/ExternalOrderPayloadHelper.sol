@@ -79,6 +79,12 @@ import "forge-std/console.sol";
 
 // NOTE: I might need something from ConsiderationTypeHashes.sol
 
+struct Fee {
+    address recipient;
+    uint256 amount;
+}
+// TODO: switch to a percentage.
+
 // TODO: think about whether this can be a library.
 contract ExternalOrderPayloadHelper {
     using ConsiderationItemLib for ConsiderationItem;
@@ -141,7 +147,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -151,7 +165,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithEther(
             context, desiredItem, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -194,14 +213,9 @@ contract ExternalOrderPayloadHelper {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
             sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             if (transfersToSpecifiedTaker) {
                 // Sudo lets you send the NFT straight to the adapter and
@@ -210,13 +224,10 @@ contract ExternalOrderPayloadHelper {
             }
 
             itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
             itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
@@ -253,11 +264,24 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         try config.getPayload_BuyOfferedERC721WithEther(
             OrderContext(false, false, castOfCharacters), desiredItem, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -268,7 +292,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -295,17 +327,13 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
@@ -315,15 +343,10 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -334,7 +357,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -345,7 +373,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -355,7 +392,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, desiredItem, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -366,7 +408,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -376,17 +426,10 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithEther(
             context, desiredItem, price
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC1155,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: desiredItem.amount,
-                endAmount: desiredItem.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] = _desiredItemToOfferItem(desiredItem);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
@@ -396,7 +439,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -415,7 +458,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -426,11 +474,25 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         try config.getPayload_BuyOfferedERC1155WithEther(
             OrderContext(false, false, castOfCharacters), desiredItem, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -441,7 +503,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -464,17 +534,10 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC1155,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: desiredItem.amount,
-                endAmount: desiredItem.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] = _desiredItemToOfferItem(desiredItem);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
@@ -484,7 +547,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -503,7 +566,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -514,11 +582,24 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         try config.getPayload_BuyOfferedERC721WithERC20(
             OrderContext(true, false, castOfCharacters), desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -529,7 +610,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -567,35 +656,19 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             if (transfersToSpecifiedTaker) {
                 // Sudo lets you send the NFT straight to the adapter and
@@ -612,7 +685,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -623,7 +701,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -633,7 +719,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -644,7 +735,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -667,35 +766,19 @@ contract ExternalOrderPayloadHelper {
             // Put the context back.
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -706,7 +789,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -717,7 +805,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -727,7 +823,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithERC20(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -738,7 +839,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -761,35 +870,19 @@ contract ExternalOrderPayloadHelper {
             // Put the context back.
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -800,7 +893,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -811,7 +909,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -821,133 +927,156 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithBETH(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
-        } catch {
-            _revertNotSupported();
-        }
-    }
-
-    // Breadcrumb. Might have to come back and sort this out.
-    function getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
-        BaseMarketConfig config,
-        CastOfCharacters memory castOfCharacters,
-        Item721 memory desiredItem,
-        uint256 price
-    ) public returns (OrderPayload memory _payload) {
-        // Bob doesn't deposit BETH for this, he sends native tokens, gets a
-        // flashloan, which goes from adapter to sidecar to BETH's deposit
-        // function, and then the sidecar uses the BETH to fulfill the listing.
-
-        OrderContext memory context = OrderContext({
-            listOnChain: false,
-            routeThroughAdapter: true,
-            castOfCharacters: castOfCharacters
-        });
-
-        bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
-
-        address originalFulfiller = context.castOfCharacters.fulfiller;
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller =
-                context.castOfCharacters.sidecar;
-        }
-
-        // TODO: Come back and check to make sure this is OK.
-        try config.getPayload_BuyOfferedERC721WithBETH(
-            context, desiredItem, Item20(address(beth), price)
-        ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = originalFulfiller;
-
-            Flashloan[] memory flashloans = new Flashloan[](1);
-            {
-                Flashloan memory flashloan = Flashloan({
-                    amount: uint88(price),
-                    itemType: ItemType.NATIVE,
-                    token: address(0),
-                    shouldCallback: true,
-                    recipient: context.castOfCharacters.adapter
-                });
-                flashloans[0] = flashloan;
-            }
-
-            Call[] memory sidecarSetUpCalls = new Call[](1);
-            {
-                Call memory call = Call({
-                    target: address(beth),
-                    allowFailure: false,
-                    value: price,
-                    callData: abi.encodeWithSelector(beth.deposit.selector)
-                });
-                sidecarSetUpCalls[0] = call;
-            }
-
-            Call[] memory sidecarMarketplaceCalls;
-            sidecarMarketplaceCalls = new Call[](1);
-            sidecarMarketplaceCalls[0] = payload.executeOrder;
-
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            {
-                itemsToBeOfferedByAdapter[0] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItem.token,
-                    identifierOrCriteria: desiredItem.identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
-            }
-
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            {
-                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                    itemType: ItemType.NATIVE,
-                    token: address(0),
-                    identifierOrCriteria: 0,
-                    startAmount: price,
-                    endAmount: price,
-                    recipient: payable(address(0))
-                });
-            }
-
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            {
-                sidecarItemTransfers[0] = ItemTransfer({
-                    from: context.castOfCharacters.sidecar,
-                    to: context.castOfCharacters.adapter,
-                    token: desiredItem.token,
-                    identifier: desiredItem.identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-            }
-
-            payload.executeOrder = AdapterHelperLib
-                .createSeaportWrappedCallParameters(
-                sidecarMarketplaceCalls,
-                sidecarSetUpCalls,
-                new Call[](0), // No wrap up calls necessary.
-                context.castOfCharacters,
-                flashloans,
+            return (
+                payload,
                 itemsToBeOfferedByAdapter,
                 itemsToBeProvidedToAdapter,
                 sidecarItemTransfers
             );
-
-            payload.executeOrder.value = price;
-
-            return payload;
         } catch {
             _revertNotSupported();
         }
     }
+
+    // // TODO: Come back and handle the stack pressure issue here.
+    // // Breadcrumb. Might have to come back and sort this out.
+    // function getPayloadToBuyOfferedERC721WithBETH_FulfillThroughAdapter(
+    //     BaseMarketConfig config,
+    //     CastOfCharacters memory castOfCharacters,
+    //     Item721 memory desiredItem,
+    //     uint256 price
+    // )
+    //     public
+    //     returns (
+    //         OrderPayload memory _payload,
+    //         OfferItem[] memory itemsToBeOfferedByAdapter,
+    //         ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+    //         ItemTransfer[] memory sidecarItemTransfers
+    //     )
+    // {
+    //     // Bob doesn't deposit BETH for this, he sends native tokens, gets a
+    //     // flashloan, which goes from adapter to sidecar to BETH's deposit
+    //     // function, and then the sidecar uses the BETH to fulfill the
+    // listing.
+
+    //     OrderContext memory context = OrderContext({
+    //         listOnChain: false,
+    //         routeThroughAdapter: true,
+    //         castOfCharacters: castOfCharacters
+    //     });
+
+    //     bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config);
+
+    //     address originalFulfiller = context.castOfCharacters.fulfiller;
+
+    //     if (requiresTakerIsSender) {
+    //         context.castOfCharacters.fulfiller =
+    //             context.castOfCharacters.sidecar;
+    //     }
+
+    //     // TODO: Come back and check to make sure this is OK.
+    //     try config.getPayload_BuyOfferedERC721WithBETH(
+    //         context, desiredItem, Item20(address(beth), price)
+    //     ) returns (OrderPayload memory payload) {
+    //         {
+    //             context.castOfCharacters.fulfiller = originalFulfiller;
+    //         }
+
+    //         Flashloan[] memory flashloans = new Flashloan[](1);
+    //         {
+    //             Flashloan memory flashloan = Flashloan({
+    //                 amount: uint88(price),
+    //                 itemType: ItemType.NATIVE,
+    //                 token: address(0),
+    //                 shouldCallback: true,
+    //                 recipient: context.castOfCharacters.adapter
+    //             });
+    //             flashloans[0] = flashloan;
+    //         }
+
+    //         Call[] memory sidecarSetUpCalls = new Call[](1);
+    //         {
+    //             Call memory call = Call({
+    //                 target: address(beth),
+    //                 allowFailure: false,
+    //                 value: price,
+    //                 callData: abi.encodeWithSelector(beth.deposit.selector)
+    //             });
+    //             sidecarSetUpCalls[0] = call;
+    //         }
+
+    //         Call[] memory sidecarMarketplaceCalls;
+    //         {
+    //             sidecarMarketplaceCalls = new Call[](1);
+    //             sidecarMarketplaceCalls[0] = payload.executeOrder;
+    //         }
+
+    //         itemsToBeOfferedByAdapter = new
+    // OfferItem[](1);
+    //         {
+    //             itemsToBeOfferedByAdapter[0] =
+    //                 _desiredItemToOfferItem(desiredItem);
+    //         }
+
+    //         itemsToBeProvidedToAdapter =
+    //             new ConsiderationItem[](1);
+    //         {
+    //             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+    //                 itemType: ItemType.NATIVE,
+    //                 token: address(0),
+    //                 identifierOrCriteria: 0,
+    //                 startAmount: price,
+    //                 endAmount: price,
+    //                 recipient: payable(address(0))
+    //             });
+    //         }
+
+    //         sidecarItemTransfers = new
+    // ItemTransfer[](1);
+    //         {
+    //             sidecarItemTransfers[0] =
+    //                 _desiredItemToSidecarItemTransfer(desiredItem, context);
+    //         }
+
+    //         payload.executeOrder = AdapterHelperLib
+    //             .createSeaportWrappedCallParameters(
+    //             sidecarMarketplaceCalls,
+    //             sidecarSetUpCalls,
+    //             new Call[](0), // No wrap up calls necessary.
+    //             context.castOfCharacters,
+    //             flashloans,
+    //             itemsToBeOfferedByAdapter,
+    //             itemsToBeProvidedToAdapter,
+    //             sidecarItemTransfers
+    //         );
+
+    //         payload.executeOrder.value = price;
+
+    //         return (
+    //             payload,
+    //             itemsToBeOfferedByAdapter,
+    //             itemsToBeProvidedToAdapter,
+    //             sidecarItemTransfers
+    //         );
+    //     } catch {
+    //         _revertNotSupported();
+    //     }
+    // }
 
     function getPayloadToBuyOfferedERC721WithWETH_ListOnChain_FulfillThroughAdapter(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -969,35 +1098,19 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -1008,7 +1121,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1019,7 +1137,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1029,7 +1155,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithWETH(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1040,7 +1171,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1050,7 +1190,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1061,7 +1206,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -1071,27 +1224,13 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC1155,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: desiredItem.amount,
-                endAmount: desiredItem.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] = _desiredItemToOfferItem(desiredItem);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1110,7 +1249,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1121,7 +1265,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1131,7 +1284,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithERC20(
             context, desiredItem, payment
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1142,7 +1300,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item20 memory payment
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -1165,27 +1331,13 @@ contract ExternalOrderPayloadHelper {
             // Put the context back.
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC1155,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: desiredItem.amount,
-                endAmount: desiredItem.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] = _desiredItemToOfferItem(desiredItem);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: address(payment.token),
-                identifierOrCriteria: 0,
-                startAmount: payment.amount,
-                endAmount: payment.amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter[0] = _paymentToConsiderationItem(payment);
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1204,7 +1356,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1215,7 +1372,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1225,7 +1390,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1236,7 +1406,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -1267,17 +1445,11 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC721,
@@ -1288,7 +1460,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1311,7 +1483,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1322,7 +1499,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1331,7 +1516,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC20WithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1342,7 +1532,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -1365,17 +1563,11 @@ contract ExternalOrderPayloadHelper {
             // Put the context back.
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC721,
@@ -1386,7 +1578,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1405,7 +1597,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1416,7 +1613,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1426,7 +1631,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1437,7 +1647,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -1447,17 +1665,11 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC721,
@@ -1468,7 +1680,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1487,7 +1699,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1498,7 +1715,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1507,7 +1732,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedWETHWithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1518,7 +1748,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -1540,17 +1778,11 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC721,
@@ -1561,7 +1793,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1580,7 +1812,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1591,7 +1828,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1601,110 +1846,141 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedBETHWithERC721(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
-        } catch {
-            _revertNotSupported();
-        }
-    }
-
-    // Breadcrumb. Might have to come back and sort this out.
-    function getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
-        BaseMarketConfig config,
-        CastOfCharacters memory castOfCharacters,
-        Item20 memory desiredPayment,
-        Item721 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext({
-            listOnChain: false,
-            routeThroughAdapter: true,
-            castOfCharacters: castOfCharacters
-        });
-
-        bool requiresTakerIsSender = _isBlurV2(config);
-
-        address originalFulfiller = context.castOfCharacters.fulfiller;
-
-        if (requiresTakerIsSender) {
-            context.castOfCharacters.fulfiller =
-                context.castOfCharacters.sidecar;
-        }
-
-        try config.getPayload_BuyOfferedBETHWithERC721(
-            context, desiredPayment, offeredItem
-        ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = originalFulfiller;
-
-            // Sidecar's not going to transfer anything.
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](0);
-
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
-
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC721,
-                token: offeredItem.token,
-                identifierOrCriteria: offeredItem.identifier,
-                startAmount: 1,
-                endAmount: 1,
-                recipient: payable(address(0))
-            });
-
-            // This converts the BETH received by the sidecar into native tokens
-            // which should make their way to the fulfiller.
-            Call[] memory sidecarWrapUpCalls = new Call[](2);
-            Call memory bethCall = Call({
-                target: address(beth),
-                allowFailure: false,
-                value: 0,
-                callData: abi.encodeWithSelector(
-                    beth.withdraw.selector, desiredPayment.amount
-                    )
-            });
-            Call memory sendNativeTokensToSeaportCall = Call({
-                target: address(seaport),
-                allowFailure: false,
-                value: desiredPayment.amount,
-                callData: ""
-            });
-            sidecarWrapUpCalls[0] = bethCall;
-            sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
-
-            Call[] memory sidecarMarketplaceCalls;
-            sidecarMarketplaceCalls = new Call[](1);
-            sidecarMarketplaceCalls[0] = payload.executeOrder;
-
-            payload.executeOrder = AdapterHelperLib
-                .createSeaportWrappedCallParameters(
-                sidecarMarketplaceCalls,
-                new Call[](0),
-                sidecarWrapUpCalls,
-                context.castOfCharacters,
-                new Flashloan[](0),
+            return (
+                payload,
                 itemsToBeOfferedByAdapter,
                 itemsToBeProvidedToAdapter,
                 sidecarItemTransfers
             );
-
-            return payload;
         } catch {
             _revertNotSupported();
         }
     }
+
+    // // TODO: Come back and handle the stack pressure issues here.
+    // // Breadcrumb. Might have to come back and sort this out.
+    // function getPayloadToBuyOfferedBETHWithERC721_FulfillThroughAdapter(
+    //     BaseMarketConfig config,
+    //     CastOfCharacters memory castOfCharacters,
+    //     Item20 memory desiredPayment,
+    //     Item721 memory offeredItem
+    // )
+    //     public
+    //     returns (
+    //         OrderPayload memory _payload,
+    //         OfferItem[] memory itemsToBeOfferedByAdapter,
+    //         ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+    //         ItemTransfer[] memory sidecarItemTransfers
+    //     )
+    // {
+    //     OrderContext memory context = OrderContext({
+    //         listOnChain: false,
+    //         routeThroughAdapter: true,
+    //         castOfCharacters: castOfCharacters
+    //     });
+
+    //     bool requiresTakerIsSender = _isBlurV2(config);
+
+    //     address originalFulfiller = context.castOfCharacters.fulfiller;
+
+    //     if (requiresTakerIsSender) {
+    //         context.castOfCharacters.fulfiller =
+    //             context.castOfCharacters.sidecar;
+    //     }
+
+    //     try config.getPayload_BuyOfferedBETHWithERC721(
+    //         context, desiredPayment, offeredItem
+    //     ) returns (OrderPayload memory payload) {
+    //         context.castOfCharacters.fulfiller = originalFulfiller;
+
+    //         // Sidecar's not going to transfer anything.
+    //         sidecarItemTransfers = new
+    // ItemTransfer[](0);
+
+    //         itemsToBeOfferedByAdapter = new
+    // OfferItem[](1);
+    //         itemsToBeOfferedByAdapter[0] = OfferItem({
+    //             itemType: ItemType.NATIVE,
+    //             token: address(0),
+    //             identifierOrCriteria: 0,
+    //             startAmount: desiredPayment.amount,
+    //             endAmount: desiredPayment.amount
+    //         });
+
+    //         itemsToBeProvidedToAdapter =
+    //             new ConsiderationItem[](1);
+    //         itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+    //             itemType: ItemType.ERC721,
+    //             token: offeredItem.token,
+    //             identifierOrCriteria: offeredItem.identifier,
+    //             startAmount: 1,
+    //             endAmount: 1,
+    //             recipient: payable(address(0))
+    //         });
+
+    //         // This converts the BETH received by the sidecar into native
+    // tokens
+    //         // which should make their way to the fulfiller.
+    //         Call[] memory sidecarWrapUpCalls = new Call[](2);
+    //         Call memory bethCall = Call({
+    //             target: address(beth),
+    //             allowFailure: false,
+    //             value: 0,
+    //             callData: abi.encodeWithSelector(
+    //                 beth.withdraw.selector, desiredPayment.amount
+    //                 )
+    //         });
+    //         Call memory sendNativeTokensToSeaportCall = Call({
+    //             target: address(seaport),
+    //             allowFailure: false,
+    //             value: desiredPayment.amount,
+    //             callData: ""
+    //         });
+    //         sidecarWrapUpCalls[0] = bethCall;
+    //         sidecarWrapUpCalls[1] = sendNativeTokensToSeaportCall;
+
+    //         Call[] memory sidecarMarketplaceCalls;
+    //         sidecarMarketplaceCalls = new Call[](1);
+    //         sidecarMarketplaceCalls[0] = payload.executeOrder;
+
+    //         payload.executeOrder = AdapterHelperLib
+    //             .createSeaportWrappedCallParameters(
+    //             sidecarMarketplaceCalls,
+    //             new Call[](0),
+    //             sidecarWrapUpCalls,
+    //             context.castOfCharacters,
+    //             new Flashloan[](0),
+    //             itemsToBeOfferedByAdapter,
+    //             itemsToBeProvidedToAdapter,
+    //             sidecarItemTransfers
+    //         );
+
+    //         return (
+    //             payload,
+    //             itemsToBeOfferedByAdapter,
+    //             itemsToBeProvidedToAdapter,
+    //             sidecarItemTransfers
+    //         );
+    //     } catch {
+    //         _revertNotSupported();
+    //     }
+    // }
 
     function getPayloadToBuyOfferedERC20WithERC1155_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1713,7 +1989,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1724,7 +2005,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -1733,17 +2022,11 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC1155,
                 token: offeredItem.token,
@@ -1753,7 +2036,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1772,7 +2055,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1783,7 +2071,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1792,7 +2089,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC20WithERC1155(
             context, desiredPayment, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1803,7 +2105,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item20 memory desiredPayment,
         Item1155 memory offeredItem
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -1827,17 +2137,11 @@ contract ExternalOrderPayloadHelper {
             // Put the context back.
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC20,
-                token: desiredPayment.token,
-                identifierOrCriteria: 0,
-                startAmount: desiredPayment.amount,
-                endAmount: desiredPayment.amount
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter[0] =
+                _desiredPaymentToOfferItem(desiredPayment);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC1155,
@@ -1848,7 +2152,7 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers = new ItemTransfer[](1);
             sidecarItemTransfers[0] = ItemTransfer({
                 from: context.castOfCharacters.sidecar,
                 to: context.castOfCharacters.adapter,
@@ -1867,7 +2171,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1878,7 +2187,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1887,7 +2205,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1908,7 +2231,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         Item1155 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1917,7 +2249,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC721WithERC1155(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1938,7 +2275,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item721 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -1947,7 +2293,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -1968,7 +2319,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
         Item721 memory offeredItem
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -1977,7 +2337,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyOfferedERC1155WithERC721(
             context, desiredItem, offeredItem
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2000,9 +2365,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount
-    ) public returns (OrderPayload memory _payload) {
+        Fee memory fee
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -2013,10 +2385,15 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price, // increased so that the fee recipient recieves 1%
-            feeReciever1,
-            feeAmount
+            fee.recipient,
+            fee.amount
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2027,9 +2404,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount
-    ) public returns (OrderPayload memory _payload) {
+        Fee memory fee
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -2037,41 +2421,32 @@ contract ExternalOrderPayloadHelper {
         });
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, feeReciever1, feeAmount
+            context, desiredItem, price, fee.recipient, fee.amount
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
                 identifierOrCriteria: 0,
-                startAmount: price + feeAmount,
-                endAmount: price + feeAmount,
+                startAmount: price + fee.amount,
+                endAmount: price + fee.amount,
                 recipient: payable(address(0))
             });
 
             // TODO: Maybe an ItemTransfer to ConsiderationItem conversion
             // function and an ItemTransfer to OfferItem conversion function.
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -2082,7 +2457,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2093,18 +2473,30 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount
-    ) public returns (OrderPayload memory _payload) {
+        Fee memory fee
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
             castOfCharacters: castOfCharacters
         });
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, feeReciever1, feeAmount
+            context, desiredItem, price, fee.recipient, fee.amount
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2115,9 +2507,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount
-    ) public returns (OrderPayload memory _payload) {
+        Fee memory fee
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -2134,41 +2533,32 @@ contract ExternalOrderPayloadHelper {
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, feeReciever1, 5
+            context, desiredItem, price, fee.recipient, 5
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.NATIVE,
                 token: address(0),
                 identifierOrCriteria: 0,
-                startAmount: price + feeAmount,
-                endAmount: price + feeAmount,
+                startAmount: price + fee.amount,
+                endAmount: price + fee.amount,
                 recipient: payable(address(0))
             });
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                desiredItem, context.castOfCharacters
+            );
 
             payload.executeOrder = payload
                 .executeOrder
@@ -2179,7 +2569,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2190,11 +2585,18 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount1,
-        address feeReciever2,
-        uint256 feeAmount2
-    ) public view returns (OrderPayload memory _payload) {
+        Fee memory feeOne,
+        Fee memory feeTwo
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -2205,12 +2607,17 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeReciever1,
-            feeAmount1,
-            feeReciever2,
-            feeAmount2
+            feeOne.recipient,
+            feeOne.amount,
+            feeTwo.recipient,
+            feeTwo.amount
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2221,57 +2628,67 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount1,
-        address feeReciever2,
-        uint256 feeAmount2
-    ) public returns (OrderPayload memory _payload) {
-        OrderContext memory context = OrderContext({
-            listOnChain: true,
-            routeThroughAdapter: true,
-            castOfCharacters: castOfCharacters
-        });
+        Fee memory feeOne,
+        Fee memory feeTwo
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
+        OrderContext memory context;
+
+        {
+            context = OrderContext({
+                listOnChain: true,
+                routeThroughAdapter: true,
+                castOfCharacters: castOfCharacters
+            });
+        }
 
         try config.getPayload_BuyOfferedERC721WithEtherTwoFeeRecipient(
             context,
             desiredItem,
             price,
-            feeReciever1,
-            feeAmount1,
-            feeReciever2,
-            feeAmount2
+            feeOne.recipient,
+            feeOne.amount,
+            feeTwo.recipient,
+            feeTwo.amount
         ) returns (OrderPayload memory payload) {
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
+
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                identifierOrCriteria: 0,
-                startAmount: price + feeAmount1 + feeAmount2,
-                endAmount: price + feeAmount1 + feeAmount2,
-                recipient: payable(address(0))
-            });
+            {
+                uint256 totalAmount;
+                {
+                    totalAmount = price + feeOne.amount + feeTwo.amount;
+                }
+                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+                    itemType: ItemType.NATIVE,
+                    token: address(0),
+                    identifierOrCriteria: 0,
+                    startAmount: totalAmount,
+                    endAmount: totalAmount,
+                    recipient: payable(address(0))
+                });
+            }
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            {
+                sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                    desiredItem, context.castOfCharacters
+                );
+            }
 
             payload.executeOrder = payload
                 .executeOrder
@@ -2282,7 +2699,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2293,11 +2715,18 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount1,
-        address feeReciever2,
-        uint256 feeAmount2
-    ) public view returns (OrderPayload memory _payload) {
+        Fee memory feeOne,
+        Fee memory feeTwo
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -2308,12 +2737,17 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeReciever1,
-            feeAmount1,
-            feeReciever2,
-            feeAmount2
+            feeOne.recipient,
+            feeOne.amount,
+            feeTwo.recipient,
+            feeTwo.amount
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2324,22 +2758,27 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        address feeReciever1,
-        uint256 feeAmount1,
-        address feeReciever2,
-        uint256 feeAmount2
-    ) public returns (OrderPayload memory _payload) {
+        Fee memory feeOne,
+        Fee memory feeTwo
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
             castOfCharacters: castOfCharacters
         });
 
-        bool requiresTakerIsSender = _isX2y2(config);
+        address requiresTakerIsSender =
+            _isX2y2(config) ? context.castOfCharacters.fulfiller : address(0);
 
-        address originalFulfiller = context.castOfCharacters.fulfiller;
-
-        if (requiresTakerIsSender) {
+        if (requiresTakerIsSender != address(0)) {
             context.castOfCharacters.fulfiller =
                 context.castOfCharacters.sidecar;
         }
@@ -2348,45 +2787,45 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeReciever1,
-            feeAmount1,
-            feeReciever2,
-            feeAmount2
+            feeOne.recipient,
+            feeOne.amount,
+            feeTwo.recipient,
+            feeTwo.amount
         ) returns (OrderPayload memory payload) {
-            context.castOfCharacters.fulfiller = originalFulfiller;
+            {
+                context.castOfCharacters.fulfiller = requiresTakerIsSender
+                    != address(0)
+                    ? requiresTakerIsSender
+                    : context.castOfCharacters.fulfiller;
+            }
 
-            OfferItem[] memory itemsToBeOfferedByAdapter = new OfferItem[](1);
+            itemsToBeOfferedByAdapter = new OfferItem[](1);
 
-            itemsToBeOfferedByAdapter[0] = OfferItem({
-                itemType: ItemType.ERC721,
-                token: desiredItem.token,
-                identifierOrCriteria: desiredItem.identifier,
-                startAmount: 1,
-                endAmount: 1
-            });
+            {
+                itemsToBeOfferedByAdapter[0] =
+                    _desiredItemToOfferItem(desiredItem);
+            }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                identifierOrCriteria: 0,
-                startAmount: price + feeAmount1 + feeAmount2,
-                endAmount: price + feeAmount1 + feeAmount2,
-                recipient: payable(address(0))
-            });
+            {
+                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+                    itemType: ItemType.NATIVE,
+                    token: address(0),
+                    identifierOrCriteria: 0,
+                    startAmount: price + feeOne.amount + feeTwo.amount,
+                    endAmount: price + feeOne.amount + feeTwo.amount,
+                    recipient: payable(address(0))
+                });
+            }
 
-            ItemTransfer[] memory sidecarItemTransfers = new ItemTransfer[](1);
-            sidecarItemTransfers[0] = ItemTransfer({
-                from: context.castOfCharacters.sidecar,
-                to: context.castOfCharacters.adapter,
-                token: desiredItem.token,
-                identifier: desiredItem.identifier,
-                amount: 1,
-                itemType: ItemType.ERC721
-            });
+            sidecarItemTransfers = new ItemTransfer[](1);
+            {
+                sidecarItemTransfers[0] = _desiredItemToSidecarItemTransfer(
+                    desiredItem, context.castOfCharacters
+                );
+            }
 
             payload.executeOrder = payload
                 .executeOrder
@@ -2397,7 +2836,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2408,7 +2852,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: false,
@@ -2418,7 +2870,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2429,7 +2886,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: true,
             routeThroughAdapter: true,
@@ -2450,11 +2915,9 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: context.castOfCharacters.sidecar,
@@ -2465,17 +2928,11 @@ contract ExternalOrderPayloadHelper {
                     itemType: ItemType.ERC721
                 });
 
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+                itemsToBeOfferedByAdapter[i] =
+                    _desiredItemToOfferItem(desiredItems[i]);
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
 
@@ -2501,7 +2958,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2512,7 +2974,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: false,
@@ -2522,7 +2992,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2533,7 +3008,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256 price
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext memory context = OrderContext({
             listOnChain: false,
             routeThroughAdapter: true,
@@ -2555,11 +3038,9 @@ contract ExternalOrderPayloadHelper {
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
             for (uint256 i; i < desiredItems.length; i++) {
                 sidecarItemTransfers[i] = ItemTransfer({
                     from: context.castOfCharacters.sidecar,
@@ -2570,17 +3051,11 @@ contract ExternalOrderPayloadHelper {
                     itemType: ItemType.ERC721
                 });
 
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+                itemsToBeOfferedByAdapter[i] =
+                    _desiredItemToOfferItem(desiredItems[i]);
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
 
@@ -2602,7 +3077,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2613,7 +3093,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         for (uint256 i = 0; i < desiredItems.length; i++) {
@@ -2627,7 +3116,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2638,7 +3132,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         bool requiresTakerIsSender = _isBlur(config) || _isBlurV2(config)
             || _isLooksRareV2(config) || _isX2y2(config);
 
@@ -2646,16 +3148,18 @@ contract ExternalOrderPayloadHelper {
 
         address originalFulfiller = castOfCharacters.fulfiller;
 
-        for (uint256 i = 0; i < desiredItems.length; i++) {
-            contexts[i] = OrderContext({
-                listOnChain: false,
-                routeThroughAdapter: true,
-                castOfCharacters: castOfCharacters
-            });
+        {
+            for (uint256 i = 0; i < desiredItems.length; i++) {
+                contexts[i] = OrderContext({
+                    listOnChain: false,
+                    routeThroughAdapter: true,
+                    castOfCharacters: castOfCharacters
+                });
 
-            contexts[i].castOfCharacters.fulfiller = requiresTakerIsSender
-                ? contexts[i].castOfCharacters.sidecar
-                : castOfCharacters.fulfiller;
+                contexts[i].castOfCharacters.fulfiller = requiresTakerIsSender
+                    ? contexts[i].castOfCharacters.sidecar
+                    : castOfCharacters.fulfiller;
+            }
         }
 
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
@@ -2667,45 +3171,46 @@ contract ExternalOrderPayloadHelper {
 
             uint256 flashloanAmount;
 
-            for (uint256 i = 0; i < prices.length; i++) {
-                flashloanAmount += prices[i];
+            {
+                for (uint256 i = 0; i < prices.length; i++) {
+                    flashloanAmount += prices[i];
+                }
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                identifierOrCriteria: 0,
-                startAmount: flashloanAmount,
-                endAmount: flashloanAmount,
-                recipient: payable(address(0))
-            });
-
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
-
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
-            for (uint256 i; i < desiredItems.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: contexts[i].castOfCharacters.sidecar,
-                    to: contexts[i].castOfCharacters.adapter,
-                    token: desiredItems[i].token,
-                    identifier: desiredItems[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
+            {
+                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+                    itemType: ItemType.NATIVE,
+                    token: address(0),
+                    identifierOrCriteria: 0,
+                    startAmount: flashloanAmount,
+                    endAmount: flashloanAmount,
+                    recipient: payable(address(0))
                 });
+            }
 
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
+
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
+
+            {
+                // TODO: see if making a helper eases the stack pressure.
+                Item721[] memory _desiredItems = desiredItems;
+                for (uint256 i; i < _desiredItems.length; i++) {
+                    sidecarItemTransfers[i] = ItemTransfer({
+                        from: contexts[i].castOfCharacters.sidecar,
+                        to: contexts[i].castOfCharacters.adapter,
+                        token: _desiredItems[i].token,
+                        identifier: _desiredItems[i].identifier,
+                        amount: 1,
+                        itemType: ItemType.ERC721
+                    });
+
+                    itemsToBeOfferedByAdapter[i] =
+                        _desiredItemToOfferItem(_desiredItems[i]);
+                }
             }
 
             // BREADCRUMB
@@ -2718,7 +3223,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2729,7 +3239,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         for (uint256 i = 0; i < contexts.length; i++) {
@@ -2743,7 +3262,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithEtherDistinctOrders(
             contexts, desiredItems, prices
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2754,12 +3278,20 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         uint256[] memory prices
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         bool transfersToSpecifiedTaker = _isSudo(config);
 
-        OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
-
         address originalFulfiller = castOfCharacters.fulfiller;
+
+        OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext({
@@ -2782,47 +3314,49 @@ contract ExternalOrderPayloadHelper {
 
             uint256 flashloanAmount;
 
-            for (uint256 i; i < prices.length; i++) {
-                flashloanAmount += prices[i];
+            {
+                for (uint256 i; i < prices.length; i++) {
+                    flashloanAmount += prices[i];
+                }
             }
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
 
-            for (uint256 i; i < desiredItems.length; i++) {
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+            {
+                for (uint256 i; i < desiredItems.length; i++) {
+                    itemsToBeOfferedByAdapter[i] =
+                        _desiredItemToOfferItem(desiredItems[i]);
+                }
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.NATIVE,
-                token: address(0),
-                identifierOrCriteria: 0,
-                startAmount: flashloanAmount,
-                endAmount: flashloanAmount,
-                recipient: payable(address(0))
-            });
-
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
-            for (uint256 i; i < desiredItems.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: contexts[i].castOfCharacters.sidecar,
-                    to: contexts[i].castOfCharacters.adapter,
-                    token: desiredItems[i].token,
-                    identifier: desiredItems[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
+            {
+                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+                    itemType: ItemType.NATIVE,
+                    token: address(0),
+                    identifierOrCriteria: 0,
+                    startAmount: flashloanAmount,
+                    endAmount: flashloanAmount,
+                    recipient: payable(address(0))
                 });
+            }
+
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
+            {
+                Item721[] memory _desiredItems = desiredItems;
+
+                for (uint256 i; i < _desiredItems.length; i++) {
+                    sidecarItemTransfers[i] = ItemTransfer({
+                        from: contexts[i].castOfCharacters.sidecar,
+                        to: contexts[i].castOfCharacters.adapter,
+                        token: _desiredItems[i].token,
+                        identifier: _desiredItems[i].identifier,
+                        amount: 1,
+                        itemType: ItemType.ERC721
+                    });
+                }
             }
 
             // Sudo does the transfers.
@@ -2842,7 +3376,12 @@ contract ExternalOrderPayloadHelper {
 
             payload.executeOrder.value = flashloanAmount;
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2853,7 +3392,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory paymentAmounts = new uint256[](10);
 
@@ -2864,9 +3412,14 @@ contract ExternalOrderPayloadHelper {
 
         // TODO: Come back and rework this getPayload function across the board.
         try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
-            contexts, payments[0].token, desiredItems, paymentAmounts
+            contexts, desiredItems, payments
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2877,80 +3430,78 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
-        uint256[] memory paymentAmounts = new uint256[](10);
 
         for (uint256 i = 0; i < contexts.length; i++) {
             contexts[i] = OrderContext(false, true, castOfCharactersArray[i]);
-            paymentAmounts[i] = payments[i].amount;
         }
-
-        bool requiresTakerIsSender =
-            _isLooksRare(config) || _isLooksRareV2(config) || _isX2y2(config);
 
         address originalFulfiller = contexts[0].castOfCharacters.fulfiller;
 
-        if (requiresTakerIsSender) {
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller =
-                    address(contexts[i].castOfCharacters.sidecar);
+        {
+            bool requiresTakerIsSender = _isLooksRare(config)
+                || _isLooksRareV2(config) || _isX2y2(config);
+            if (requiresTakerIsSender) {
+                for (uint256 i = 0; i < contexts.length; i++) {
+                    contexts[i].castOfCharacters.fulfiller =
+                        address(contexts[i].castOfCharacters.sidecar);
+                }
             }
         }
 
         try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
-            contexts, payments[0].token, desiredItems, paymentAmounts
+            contexts, desiredItems, payments
         ) returns (OrderPayload memory payload) {
-            // NOTE: I could skip the originalFulfiller business and just use
-            // the
-            // one from the argument to reset the one on the context. But it's
-            // prob better to just leave it like this for now and keep the
-            // boilerplate in place for the context refactoring.
-            for (uint256 i = 0; i < contexts.length; i++) {
-                contexts[i].castOfCharacters.fulfiller = originalFulfiller;
+            {
+                for (uint256 i = 0; i < contexts.length; i++) {
+                    contexts[i].castOfCharacters.fulfiller = originalFulfiller;
+                }
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
-            uint256 totalERC20Amount;
+            {
+                uint256 totalERC20Amount;
 
-            for (uint256 i = 0; i < contexts.length; i++) {
-                totalERC20Amount += paymentAmounts[i];
+                {
+                    for (uint256 i = 0; i < contexts.length; i++) {
+                        totalERC20Amount += payments[i].amount;
+                    }
+                }
+
+                // TODO: Come back and make this more flexible.
+                itemsToBeProvidedToAdapter[0] = ConsiderationItem({
+                    itemType: ItemType.ERC20,
+                    token: payments[0].token,
+                    identifierOrCriteria: 0,
+                    startAmount: totalERC20Amount,
+                    endAmount: totalERC20Amount,
+                    recipient: payable(address(0))
+                });
             }
 
-            // TODO: Come back and make this more flexible.
-            itemsToBeProvidedToAdapter[0] = ConsiderationItem({
-                itemType: ItemType.ERC20,
-                token: payments[0].token,
-                identifierOrCriteria: 0,
-                startAmount: totalERC20Amount,
-                endAmount: totalERC20Amount,
-                recipient: payable(address(0))
-            });
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
+            {
+                Item721[] memory _desiredItems = desiredItems;
+                for (uint256 i; i < _desiredItems.length; i++) {
+                    sidecarItemTransfers[i] = _desiredItemToSidecarItemTransfer(
+                        _desiredItems[i], contexts[i].castOfCharacters
+                    );
 
-            for (uint256 i; i < desiredItems.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: contexts[i].castOfCharacters.sidecar,
-                    to: contexts[i].castOfCharacters.adapter,
-                    token: desiredItems[i].token,
-                    identifier: desiredItems[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
-
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+                    itemsToBeOfferedByAdapter[i] =
+                        _desiredItemToOfferItem(_desiredItems[i]);
+                }
             }
 
             // TODO: Come back and make this more flexible.
@@ -2963,7 +3514,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -2976,7 +3532,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory paymentAmounts = new uint256[](10);
@@ -2992,9 +3557,14 @@ contract ExternalOrderPayloadHelper {
 
         // TODO: Come back and refactor this.
         try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
-            contexts, payments[0].token, desiredItems, paymentAmounts
+            contexts, desiredItems, payments
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3005,7 +3575,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters[] memory castOfCharactersArray,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory paymentAmounts = new uint256[](10);
@@ -3033,14 +3611,13 @@ contract ExternalOrderPayloadHelper {
 
         // TODO: Come back and rework.
         try config.getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
-            contexts, payments[0].token, desiredItems, paymentAmounts
+            contexts, desiredItems, payments
         ) returns (OrderPayload memory payload) {
             for (uint256 i = 0; i < contexts.length; i++) {
                 contexts[i].castOfCharacters.fulfiller = originalFulfiller;
             }
 
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
 
             uint256 totalERC20Amount;
 
@@ -3059,29 +3636,25 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
 
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
 
-            for (uint256 i; i < desiredItems.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: contexts[i].castOfCharacters.sidecar,
-                    to: contexts[i].castOfCharacters.adapter,
-                    token: desiredItems[i].token,
-                    identifier: desiredItems[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
+            {
+                Item721[] memory _desiredItems = desiredItems;
+                for (uint256 i; i < _desiredItems.length; i++) {
+                    sidecarItemTransfers[i] = ItemTransfer({
+                        from: contexts[i].castOfCharacters.sidecar,
+                        to: contexts[i].castOfCharacters.adapter,
+                        token: _desiredItems[i].token,
+                        identifier: _desiredItems[i].identifier,
+                        amount: 1,
+                        itemType: ItemType.ERC721
+                    });
 
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+                    itemsToBeOfferedByAdapter[i] =
+                        _desiredItemToOfferItem(_desiredItems[i]);
+                }
             }
 
             // BREADCRUMB
@@ -3094,7 +3667,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3105,7 +3683,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory weths
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
         uint256[] memory wethAmounts = new uint256[](10);
 
@@ -3121,7 +3708,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3132,7 +3724,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
@@ -3173,8 +3773,7 @@ contract ExternalOrderPayloadHelper {
             }
 
             // TODO: Come back and clean this up.
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-                new ConsiderationItem[](1);
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](1);
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                 itemType: ItemType.ERC20,
                 token: payments[0].token,
@@ -3184,28 +3783,19 @@ contract ExternalOrderPayloadHelper {
                 recipient: payable(address(0))
             });
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
-            ItemTransfer[] memory sidecarItemTransfers =
-                new ItemTransfer[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
+            sidecarItemTransfers = new ItemTransfer[](desiredItems.length);
 
-            for (uint256 i; i < desiredItems.length; i++) {
-                sidecarItemTransfers[i] = ItemTransfer({
-                    from: contexts[i].castOfCharacters.sidecar,
-                    to: contexts[i].castOfCharacters.adapter,
-                    token: desiredItems[i].token,
-                    identifier: desiredItems[i].identifier,
-                    amount: 1,
-                    itemType: ItemType.ERC721
-                });
+            {
+                // TODO: Come back and think about array stuff.
+                sidecarItemTransfers = _desiredItemsToSidecarItemTransfers(
+                    desiredItems, contexts[0].castOfCharacters
+                );
+            }
 
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+            {
+                itemsToBeOfferedByAdapter =
+                    _desiredItemsToOfferItems(desiredItems);
             }
 
             // BREADCRUMB
@@ -3218,7 +3808,12 @@ contract ExternalOrderPayloadHelper {
                 sidecarItemTransfers
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3229,7 +3824,16 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory payments
-    ) public view returns (OrderPayload memory _payload) {
+    )
+        public
+        view
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
@@ -3246,7 +3850,12 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3259,7 +3868,15 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721[] memory desiredItems,
         Item20[] memory weths
-    ) public returns (OrderPayload memory _payload) {
+    )
+        public
+        returns (
+            OrderPayload memory _payload,
+            OfferItem[] memory itemsToBeOfferedByAdapter,
+            ConsiderationItem[] memory itemsToBeProvidedToAdapter,
+            ItemTransfer[] memory sidecarItemTransfers
+        )
+    {
         OrderContext[] memory contexts = new OrderContext[](desiredItems.length);
 
         uint256[] memory wethAmounts = new uint256[](10);
@@ -3276,8 +3893,7 @@ contract ExternalOrderPayloadHelper {
         try config.getPayload_BuyManyOfferedERC721WithWETHDistinctOrders(
             contexts, wethAddress, desiredItems, wethAmounts
         ) returns (OrderPayload memory payload) {
-            ConsiderationItem[] memory itemsToBeProvidedToAdapter =
-            new ConsiderationItem[](
+            itemsToBeProvidedToAdapter = new ConsiderationItem[](
                 1
             );
 
@@ -3287,17 +3903,11 @@ contract ExternalOrderPayloadHelper {
                 totalWethAmount += wethAmounts[i];
             }
 
-            OfferItem[] memory itemsToBeOfferedByAdapter =
-                new OfferItem[](desiredItems.length);
+            itemsToBeOfferedByAdapter = new OfferItem[](desiredItems.length);
 
             for (uint256 i; i < desiredItems.length; i++) {
-                itemsToBeOfferedByAdapter[i] = OfferItem({
-                    itemType: ItemType.ERC721,
-                    token: desiredItems[i].token,
-                    identifierOrCriteria: desiredItems[i].identifier,
-                    startAmount: 1,
-                    endAmount: 1
-                });
+                itemsToBeOfferedByAdapter[i] =
+                    _desiredItemToOfferItem(desiredItems[i]);
             }
 
             itemsToBeProvidedToAdapter[0] = ConsiderationItem({
@@ -3319,7 +3929,12 @@ contract ExternalOrderPayloadHelper {
                 new ItemTransfer[](0)
             );
 
-            return payload;
+            return (
+                payload,
+                itemsToBeOfferedByAdapter,
+                itemsToBeProvidedToAdapter,
+                sidecarItemTransfers
+            );
         } catch {
             _revertNotSupported();
         }
@@ -3379,5 +3994,200 @@ contract ExternalOrderPayloadHelper {
         revert(
             "Not currently supported. See <some_README> for details on how to add support."
         );
+    }
+
+    function _desiredItemToOfferItem(Item721 memory desiredItem)
+        public
+        pure
+        returns (OfferItem memory)
+    {
+        return OfferItem({
+            itemType: ItemType.ERC721,
+            token: desiredItem.token,
+            identifierOrCriteria: desiredItem.identifier,
+            startAmount: 1,
+            endAmount: 1
+        });
+    }
+
+    function _desiredItemToOfferItem(Item1155 memory desiredItem)
+        public
+        pure
+        returns (OfferItem memory)
+    {
+        return OfferItem({
+            itemType: ItemType.ERC1155,
+            token: desiredItem.token,
+            identifierOrCriteria: desiredItem.identifier,
+            startAmount: desiredItem.amount,
+            endAmount: desiredItem.amount
+        });
+    }
+
+    function _desiredPaymentToOfferItem(Item20 memory desiredPayment)
+        public
+        pure
+        returns (OfferItem memory)
+    {
+        return OfferItem({
+            itemType: ItemType.ERC20,
+            token: desiredPayment.token,
+            identifierOrCriteria: 0,
+            startAmount: desiredPayment.amount,
+            endAmount: desiredPayment.amount
+        });
+    }
+
+    function _desiredItemsToOfferItems(Item721[] memory desiredItems)
+        public
+        pure
+        returns (OfferItem[] memory)
+    {
+        OfferItem[] memory itemsToBeOfferedByAdapter =
+            new OfferItem[](desiredItems.length);
+
+        for (uint256 i; i < desiredItems.length; i++) {
+            itemsToBeOfferedByAdapter[i] =
+                _desiredItemToOfferItem(desiredItems[i]);
+        }
+
+        return itemsToBeOfferedByAdapter;
+    }
+
+    function _desiredItemsToOfferItems(Item1155[] memory desiredItems)
+        public
+        pure
+        returns (OfferItem[] memory)
+    {
+        OfferItem[] memory itemsToBeOfferedByAdapter =
+            new OfferItem[](desiredItems.length);
+
+        for (uint256 i; i < desiredItems.length; i++) {
+            itemsToBeOfferedByAdapter[i] =
+                _desiredItemToOfferItem(desiredItems[i]);
+        }
+
+        return itemsToBeOfferedByAdapter;
+    }
+
+    function _desiredPaymentsToOfferItems(Item20[] memory desiredPayments)
+        public
+        pure
+        returns (OfferItem[] memory)
+    {
+        OfferItem[] memory itemsToBeOfferedByAdapter =
+            new OfferItem[](desiredPayments.length);
+
+        for (uint256 i; i < desiredPayments.length; i++) {
+            itemsToBeOfferedByAdapter[i] =
+                _desiredPaymentToOfferItem(desiredPayments[i]);
+        }
+
+        return itemsToBeOfferedByAdapter;
+    }
+
+    function _desiredPaymentToSidecarItemTransfer(
+        Item20 memory desiredPayment,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer memory) {
+        return ItemTransfer({
+            from: castOfCharacters.sidecar,
+            to: castOfCharacters.adapter,
+            token: desiredPayment.token,
+            identifier: 0,
+            amount: desiredPayment.amount,
+            itemType: ItemType.ERC20
+        });
+    }
+
+    function _desiredItemToSidecarItemTransfer(
+        Item721 memory desiredItem,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer memory) {
+        return ItemTransfer({
+            from: castOfCharacters.sidecar,
+            to: castOfCharacters.adapter,
+            token: desiredItem.token,
+            identifier: desiredItem.identifier,
+            amount: 1,
+            itemType: ItemType.ERC721
+        });
+    }
+
+    function _desiredItemToSidecarItemTransfer(
+        Item1155 memory desiredItem,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer memory) {
+        return ItemTransfer({
+            from: castOfCharacters.sidecar,
+            to: castOfCharacters.adapter,
+            token: desiredItem.token,
+            identifier: desiredItem.identifier,
+            amount: desiredItem.amount,
+            itemType: ItemType.ERC1155
+        });
+    }
+
+    function _desiredPaymentsToSidecarItemTransfers(
+        Item20[] memory desiredPayments,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer[] memory) {
+        ItemTransfer[] memory sidecarItemTransfers =
+            new ItemTransfer[](desiredPayments.length);
+
+        for (uint256 i; i < desiredPayments.length; i++) {
+            sidecarItemTransfers[i] = _desiredPaymentToSidecarItemTransfer(
+                desiredPayments[i], castOfCharacters
+            );
+        }
+
+        return sidecarItemTransfers;
+    }
+
+    function _desiredItemsToSidecarItemTransfers(
+        Item721[] memory desiredItems,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer[] memory) {
+        ItemTransfer[] memory sidecarItemTransfers =
+            new ItemTransfer[](desiredItems.length);
+
+        for (uint256 i; i < desiredItems.length; i++) {
+            sidecarItemTransfers[i] = _desiredItemToSidecarItemTransfer(
+                desiredItems[i], castOfCharacters
+            );
+        }
+
+        return sidecarItemTransfers;
+    }
+
+    function _desiredItemsToSidecarItemTransfers(
+        Item1155[] memory desiredItems,
+        CastOfCharacters memory castOfCharacters
+    ) public pure returns (ItemTransfer[] memory) {
+        ItemTransfer[] memory sidecarItemTransfers =
+            new ItemTransfer[](desiredItems.length);
+
+        for (uint256 i; i < desiredItems.length; i++) {
+            sidecarItemTransfers[i] = _desiredItemToSidecarItemTransfer(
+                desiredItems[i], castOfCharacters
+            );
+        }
+
+        return sidecarItemTransfers;
+    }
+
+    function _paymentToConsiderationItem(Item20 memory payment)
+        public
+        pure
+        returns (ConsiderationItem memory)
+    {
+        return ConsiderationItem({
+            itemType: ItemType.ERC20,
+            token: payment.token,
+            identifierOrCriteria: 0,
+            startAmount: payment.amount,
+            endAmount: payment.amount,
+            recipient: payable(address(0))
+        });
     }
 }

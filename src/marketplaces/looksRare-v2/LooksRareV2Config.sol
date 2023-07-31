@@ -617,16 +617,15 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
 
     function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
-        address erc20Address,
         Item721[] calldata nfts,
-        uint256[] calldata erc20Amounts
+        Item20[] calldata erc20s
     ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
 
         require(
-            contexts.length == nfts.length && nfts.length == erc20Amounts.length,
+            contexts.length == nfts.length && nfts.length == erc20s.length,
             "LooksRareV2Config::getPayload_BuyManyOfferedERC721WithErc20DistinctOrders: invalid input"
         );
 
@@ -638,8 +637,8 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
                 quoteType: QuoteType.Ask,
                 orderNonce: i,
                 maker: contexts[i].castOfCharacters.offerer,
-                currency: erc20Address,
-                price: erc20Amounts[i],
+                currency: erc20s[i].token,
+                price: erc20s[i].amount,
                 collectionType: CollectionType.ERC721,
                 collection: nfts[i].token,
                 amount: 1,

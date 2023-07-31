@@ -70,6 +70,22 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
     function encodeFillOrderDistinctOrders(
         OrderContext[] calldata contexts,
         Item721[] memory nfts,
+        Item20[] memory erc20s,
+        uint256 intent
+    ) internal view returns (bytes memory payload, uint256 ethSum) {
+        uint256[] memory prices = new uint256[](erc20s.length);
+        for (uint256 i = 0; i < erc20s.length; i++) {
+            prices[i] = erc20s[i].amount;
+        }
+        address currency = erc20s[0].token;
+        return encodeFillOrderDistinctOrders(
+            contexts, nfts, prices, currency, intent
+        );
+    }
+
+    function encodeFillOrderDistinctOrders(
+        OrderContext[] calldata contexts,
+        Item721[] memory nfts,
         uint256[] memory prices,
         address currency,
         uint256 intent
@@ -447,16 +463,15 @@ contract X2Y2Config is BaseMarketConfig, X2Y2TypeHashes {
 
     function getPayload_BuyManyOfferedERC721WithErc20DistinctOrders(
         OrderContext[] calldata contexts,
-        address erc20Address,
         Item721[] calldata nfts,
-        uint256[] calldata erc20Amounts
+        Item20[] calldata erc20s
     ) external view override returns (OrderPayload memory execution) {
         if (contexts[0].listOnChain) {
             _notImplemented();
         }
 
         (bytes memory payload,) = encodeFillOrderDistinctOrders(
-            contexts, nfts, erc20Amounts, erc20Address, Market.INTENT_SELL
+            contexts, nfts, erc20s, Market.INTENT_SELL
         );
 
         execution.executeOrder = Call(address(X2Y2), false, 0, payload);
