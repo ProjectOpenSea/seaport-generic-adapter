@@ -45,23 +45,17 @@ import { ConsiderationInterface as ISeaport } from
 
 import { BaseMarketConfig } from "../src/marketplaces/BaseMarketConfig.sol";
 
-import { BlurConfig } from "../src/marketplaces/blur/BlurConfig.sol";
-
 import { FoundationConfig } from
     "../src/marketplaces/foundation/FoundationConfig.sol";
 
-import { LooksRareConfig } from
-    "../src/marketplaces/looksRare/LooksRareConfig.sol";
-
-import { LooksRareV2Config } from
-    "../src/marketplaces/looksRare-v2/LooksRareV2Config.sol";
+// TODO: Come back and see if it's feasible to untangle the mess of nonces.
+// import { LooksRareV2Config } from
+//     "../src/marketplaces/looksRare-v2/LooksRareV2Config.sol";
 
 import { SeaportOnePointFiveConfig } from
     "../src/marketplaces/seaport-1.5/SeaportOnePointFiveConfig.sol";
 
 import { SudoswapConfig } from "../src/marketplaces/sudoswap/SudoswapConfig.sol";
-
-import { X2Y2Config } from "../src/marketplaces/X2Y2/X2Y2Config.sol";
 
 import { ZeroExConfig } from "../src/marketplaces/zeroEx/ZeroExConfig.sol";
 
@@ -99,47 +93,27 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
     address internal constant seaportAddress =
         address(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
 
-    // BaseMarketConfig blurConfig;
-    // BaseMarketConfig blurV2Config;
-    // BaseMarketConfig foundationConfig;
-    // BaseMarketConfig looksRareConfig;
-    // BaseMarketConfig looksRareV2Config;
-    // BaseMarketConfig seaportOnePointFiveConfig;
-    // BaseMarketConfig sudoswapConfig;
-    // BaseMarketConfig x2y2Config;
-    // BaseMarketConfig zeroExConfig;
-
-    // FlashloanOffererInterface flashloanOfferer;
-    // GenericAdapterInterface adapter;
-    // GenericAdapterSidecarInterface sidecar;
-
     address flashloanOffererAddress;
     address adapterAddress;
     address sidecarAddress;
 
     CastOfCharacters baseCastOfCharacters;
     CastOfCharacters liveCastOfCharactersFoundation;
-    CastOfCharacters liveCastOfCharactersLooksRareV2;
     CastOfCharacters liveCastOfCharactersSeaport;
     CastOfCharacters liveCastOfCharactersSudo;
-    CastOfCharacters liveCastOfCharactersX2Y2;
     CastOfCharacters liveCastOfCharactersZeroEx;
 
     address myAddress;
 
     constructor() {
         foundationConfig = BaseMarketConfig(new FoundationConfig());
-        looksRareV2Config = BaseMarketConfig(new LooksRareV2Config());
         seaportOnePointFiveConfig =
             BaseMarketConfig(new SeaportOnePointFiveConfig());
         sudoswapConfig = BaseMarketConfig(new SudoswapConfig());
-        x2y2Config = BaseMarketConfig(new X2Y2Config());
         zeroExConfig = BaseMarketConfig(new ZeroExConfig());
     }
 
     function setUp() public virtual {
-        console.log("Doing setup");
-
         flashloanOffererAddress =
             address(0x00A7DB0000BD990097e5229ea162cE0047a6006B);
         adapterAddress = address(0x00000000F2E7Fb5F440025F49BbD67133D2A6097);
@@ -157,22 +131,9 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         });
 
         liveCastOfCharactersFoundation = baseCastOfCharacters;
-        liveCastOfCharactersFoundation.offerer = address(0);
-
-        liveCastOfCharactersLooksRareV2 = baseCastOfCharacters;
-        liveCastOfCharactersLooksRareV2.offerer = address(0);
-
         liveCastOfCharactersSeaport = baseCastOfCharacters;
-        liveCastOfCharactersSeaport.offerer = address(0);
-
         liveCastOfCharactersSudo = baseCastOfCharacters;
-        liveCastOfCharactersSudo.offerer = address(0);
-
-        liveCastOfCharactersX2Y2 = baseCastOfCharacters;
-        liveCastOfCharactersX2Y2.offerer = address(0);
-
         liveCastOfCharactersZeroEx = baseCastOfCharacters;
-        liveCastOfCharactersZeroEx.offerer = address(0);
     }
 
     function run() public virtual {
@@ -180,20 +141,22 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         console.log("========================================================");
 
         // Set up the external calls.
-        OrderPayload[] memory payloads = new OrderPayload[](5);
-        Call[] memory executionCalls = new Call[](5);
+        OrderPayload[] memory payloads = new OrderPayload[](3);
+        Call[] memory executionCalls = new Call[](3);
 
-        OfferItem[][] memory offerItemsArray = new OfferItem[][](5);
+        OfferItem[][] memory offerItemsArray = new OfferItem[][](3);
         ConsiderationItem[][] memory considerationItemsArray =
-            new ConsiderationItem[][](5);
-        ItemTransfer[][] memory itemTransfersArray = new ItemTransfer[][](5);
+            new ConsiderationItem[][](3);
+        ItemTransfer[][] memory itemTransfersArray = new ItemTransfer[][](3);
 
         OfferItem[] memory allItemsToBeOfferedByAdapter = new OfferItem[](0);
         ConsiderationItem[] memory allItemsToBeProvidedToAdapter =
             new ConsiderationItem[](0);
         ItemTransfer[] memory allSidecarItemTransfers = new ItemTransfer[](0);
 
-        // TODO: look up whether Foundation does fees or not.
+        // https://foundation.app/@plasm0/ai-0975/3
+        // Offerer does not need to be set
+
         (
             payloads[0],
             offerItemsArray[0],
@@ -202,72 +165,61 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         ) = getPayloadToBuyOfferedERC721WithEther_ListOnChain(
             foundationConfig, // BaseMarketConfig config,
             liveCastOfCharactersFoundation, // CastOfCharacters memory
-            Item721({ token: address(0), identifier: 0 }), // Item721 memory
-            0 // uint256 price
+            Item721({
+                token: address(0xA266ACAA1F44c2c744556C0fFa499E2d39E48557),
+                identifier: 3
+            }), // Item721 memory
+            0.01005 ether // uint256 price // NOTE: this 0.00005 might be
+                // unnecessary
         );
+
+        // https://sudoswap.xyz/#/browse/buy/0xcd76d0cf64bf4a58d898905c5adad5e1e838e0d3
+        // Offerer does not need to be set
+
+        Item721[] memory desiredItemsSudo = new Item721[](3);
+        desiredItemsSudo[0] = Item721({
+            token: address(0xCd76D0Cf64Bf4A58D898905C5adAD5e1E838E0d3),
+            identifier: 2298
+        });
+        desiredItemsSudo[1] = Item721({
+            token: address(0xCd76D0Cf64Bf4A58D898905C5adAD5e1E838E0d3),
+            identifier: 2519
+        });
+        desiredItemsSudo[2] = Item721({
+            token: address(0xCd76D0Cf64Bf4A58D898905C5adAD5e1E838E0d3),
+            identifier: 3807
+        });
 
         (
             payloads[1],
             offerItemsArray[1],
             considerationItemsArray[1],
             itemTransfersArray[1]
-        ) = getPayloadToBuyOfferedERC1155WithERC20(
-            looksRareV2Config, // BaseMarketConfig config,
-            liveCastOfCharactersLooksRareV2, // CastOfCharacters memory
-            Item1155({ token: address(0), identifier: 0, amount: 1 }), // Item1155
-                // memory
-            Item20({ token: address(0), amount: 0 }) // Item20 memory payment
+        ) = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
+            sudoswapConfig, // BaseMarketConfig config,
+            liveCastOfCharactersSudo, // CastOfCharacters memory
+            desiredItemsSudo, // Item721 memory desiredItems,
+            0.0506 ether // uint256 price
         );
 
-        Item721[] memory desiredItemsSudo = new Item721[](3);
-        desiredItemsSudo[0] = Item721({ token: address(0), identifier: 0 });
-        desiredItemsSudo[1] = Item721({ token: address(0), identifier: 0 });
-        desiredItemsSudo[2] = Item721({ token: address(0), identifier: 0 });
+        // https://nft.coinbase.com/nft/ethereum/0x76be3b62873462d2142405439777e971754e8e77/10789
+        liveCastOfCharactersZeroEx.offerer =
+            address(0x58afcEC9F52951BaeF490eF6E4A9a09Bfdd53bB7);
 
         (
             payloads[2],
             offerItemsArray[2],
             considerationItemsArray[2],
             itemTransfersArray[2]
-        ) = getPayloadToBuyManyOfferedERC721WithEther_ListOnChain(
-            sudoswapConfig, // BaseMarketConfig config,
-            liveCastOfCharactersSudo, // CastOfCharacters memory
-            desiredItemsSudo, // Item721 memory desiredItems,
-            0 // uint256 price
-        );
-
-        Item721[] memory desiredItemsX2Y2 = new Item721[](3);
-        desiredItemsX2Y2[0] = Item721({ token: address(0), identifier: 0 });
-        desiredItemsX2Y2[1] = Item721({ token: address(0), identifier: 0 });
-        desiredItemsX2Y2[2] = Item721({ token: address(0), identifier: 0 });
-
-        Item20[] memory paymentX2Y2 = new Item20[](3);
-        paymentX2Y2[0] = Item20({ token: wethAddress, amount: 0 });
-        paymentX2Y2[1] = Item20({ token: wethAddress, amount: 0 });
-        paymentX2Y2[2] = Item20({ token: wethAddress, amount: 0 });
-
-        (
-            payloads[3],
-            offerItemsArray[3],
-            considerationItemsArray[3],
-            itemTransfersArray[3]
-        ) = getPayloadToBuyManyOfferedERC721WithWETHDistinctOrders(
-            x2y2Config, // BaseMarketConfig config,
-            liveCastOfCharactersX2Y2, // CastOfCharacters memory
-            desiredItemsX2Y2, // Item721[] memory desiredItems,
-            paymentX2Y2 // Item20[] memory payments
-        );
-
-        (
-            payloads[4],
-            offerItemsArray[4],
-            considerationItemsArray[4],
-            itemTransfersArray[4]
-        ) = getPayloadToBuyOfferedERC721WithWETH(
+        ) = getPayloadToBuyOfferedERC1155WithEther(
             zeroExConfig, // BaseMarketConfig config,
             liveCastOfCharactersZeroEx, // CastOfCharacters memory
-            Item721({ token: address(0), identifier: 0 }), // Item721 memory
-            Item20({ token: wethAddress, amount: 0 }) // Item20 memory payment
+            Item1155({
+                token: address(0x76BE3b62873462d2142405439777e971754E8E77),
+                identifier: 10789,
+                amount: 1
+            }), // Item1155 memory
+            0.009 ether // uint256 price
         );
 
         for (uint256 i; i < payloads.length; ++i) {
@@ -425,12 +377,12 @@ contract GenerateOrderGeneric is Script, ExternalOrderPayloadHelper {
         );
 
         if (!success) {
-            console.log('returnData');
+            console.log("returnData");
             console.logBytes(returnData);
             revert("Seaport matchAdvancedOrders failed");
         } else {
             console.log("Seaport matchAdvancedOrders succeeded");
-            console.log('returnData');
+            console.log("returnData");
             console.logBytes(returnData);
         }
     }

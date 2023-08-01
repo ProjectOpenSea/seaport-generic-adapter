@@ -30,6 +30,7 @@ import {
     AdapterHelperLib,
     Approval,
     CastOfCharacters,
+    Fee,
     Flashloan,
     Item1155,
     Item20,
@@ -77,13 +78,6 @@ import { ConsiderationTypeHashes } from
 
 import "forge-std/console.sol";
 
-// NOTE: I might need something from ConsiderationTypeHashes.sol
-
-struct Fee {
-    address recipient;
-    uint256 amount;
-}
-// TODO: switch to a percentage.
 
 // TODO: think about whether this can be a library.
 contract ExternalOrderPayloadHelper {
@@ -2365,7 +2359,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory fee
+        Fee[] memory fees
     )
         public
         returns (
@@ -2385,8 +2379,8 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price, // increased so that the fee recipient recieves 1%
-            fee.recipient,
-            fee.amount
+            fees[0].recipient,
+            fees[0].amount
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -2404,7 +2398,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory fee
+        Fee[] memory fees
     )
         public
         returns (
@@ -2421,7 +2415,7 @@ contract ExternalOrderPayloadHelper {
         });
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, fee.recipient, fee.amount
+            context, desiredItem, price, fees[0].recipient, fees[0].amount
         ) returns (OrderPayload memory payload) {
             itemsToBeOfferedByAdapter = new OfferItem[](1);
             {
@@ -2436,8 +2430,8 @@ contract ExternalOrderPayloadHelper {
                 itemType: ItemType.NATIVE,
                 token: address(0),
                 identifierOrCriteria: 0,
-                startAmount: price + fee.amount,
-                endAmount: price + fee.amount,
+                startAmount: price + fees[0].amount,
+                endAmount: price + fees[0].amount,
                 recipient: payable(address(0))
             });
 
@@ -2473,7 +2467,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory fee
+        Fee[] memory fees
     )
         public
         returns (
@@ -2489,7 +2483,7 @@ contract ExternalOrderPayloadHelper {
             castOfCharacters: castOfCharacters
         });
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, fee.recipient, fee.amount
+            context, desiredItem, price, fees[0].recipient, fees[0].amount
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -2507,7 +2501,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory fee
+        Fee[] memory fees
     )
         public
         returns (
@@ -2533,7 +2527,7 @@ contract ExternalOrderPayloadHelper {
         }
 
         try config.getPayload_BuyOfferedERC721WithEtherOneFeeRecipient(
-            context, desiredItem, price, fee.recipient, 5
+            context, desiredItem, price, fees[0].recipient, 5
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
@@ -2550,8 +2544,8 @@ contract ExternalOrderPayloadHelper {
                 itemType: ItemType.NATIVE,
                 token: address(0),
                 identifierOrCriteria: 0,
-                startAmount: price + fee.amount,
-                endAmount: price + fee.amount,
+                startAmount: price + fees[0].amount,
+                endAmount: price + fees[0].amount,
                 recipient: payable(address(0))
             });
 
@@ -2585,8 +2579,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory feeOne,
-        Fee memory feeTwo
+        Fee[] memory fees
     )
         public
         view
@@ -2607,10 +2600,10 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeOne.recipient,
-            feeOne.amount,
-            feeTwo.recipient,
-            feeTwo.amount
+            fees[0].recipient,
+            fees[0].amount,
+            fees[1].recipient,
+            fees[1].amount
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -2628,8 +2621,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory feeOne,
-        Fee memory feeTwo
+        Fee[] memory fees
     )
         public
         returns (
@@ -2653,10 +2645,10 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeOne.recipient,
-            feeOne.amount,
-            feeTwo.recipient,
-            feeTwo.amount
+            fees[0].recipient,
+            fees[0].amount,
+            fees[1].recipient,
+            fees[1].amount
         ) returns (OrderPayload memory payload) {
             itemsToBeOfferedByAdapter = new OfferItem[](1);
 
@@ -2671,7 +2663,7 @@ contract ExternalOrderPayloadHelper {
             {
                 uint256 totalAmount;
                 {
-                    totalAmount = price + feeOne.amount + feeTwo.amount;
+                    totalAmount = price + fees[0].amount + fees[1].amount;
                 }
                 itemsToBeProvidedToAdapter[0] = ConsiderationItem({
                     itemType: ItemType.NATIVE,
@@ -2715,8 +2707,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory feeOne,
-        Fee memory feeTwo
+        Fee[] memory fees
     )
         public
         view
@@ -2737,10 +2728,10 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeOne.recipient,
-            feeOne.amount,
-            feeTwo.recipient,
-            feeTwo.amount
+            fees[0].recipient,
+            fees[0].amount,
+            fees[1].recipient,
+            fees[1].amount
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -2758,8 +2749,7 @@ contract ExternalOrderPayloadHelper {
         CastOfCharacters memory castOfCharacters,
         Item721 memory desiredItem,
         uint256 price,
-        Fee memory feeOne,
-        Fee memory feeTwo
+        Fee[] memory fees
     )
         public
         returns (
@@ -2787,10 +2777,10 @@ contract ExternalOrderPayloadHelper {
             context,
             desiredItem,
             price,
-            feeOne.recipient,
-            feeOne.amount,
-            feeTwo.recipient,
-            feeTwo.amount
+            fees[0].recipient,
+            fees[0].amount,
+            fees[1].recipient,
+            fees[1].amount
         ) returns (OrderPayload memory payload) {
             {
                 context.castOfCharacters.fulfiller = requiresTakerIsSender
@@ -2814,8 +2804,8 @@ contract ExternalOrderPayloadHelper {
                     itemType: ItemType.NATIVE,
                     token: address(0),
                     identifierOrCriteria: 0,
-                    startAmount: price + feeOne.amount + feeTwo.amount,
-                    endAmount: price + feeOne.amount + feeTwo.amount,
+                    startAmount: price + fees[0].amount + fees[1].amount,
+                    endAmount: price + fees[0].amount + fees[1].amount,
                     recipient: payable(address(0))
                 });
             }

@@ -5,7 +5,14 @@ import { Order, Fulfillment } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import { SetupCall, OrderPayload } from "../utils/Types.sol";
 
-import { Call, Item20, Item721, Item1155 } from "../lib/AdapterHelperLib.sol";
+import {
+    Call,
+    BillOfGoods,
+    Fee,
+    Item20,
+    Item721,
+    Item1155
+} from "../lib/AdapterHelperLib.sol";
 
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
@@ -507,6 +514,17 @@ abstract contract BaseMarketConfig {
     {
         _notImplemented();
     }
+
+    function getDigest(OrderContext[] calldata, BillOfGoods[] memory, Fee[] calldata)
+        public
+        pure
+        virtual
+        returns (bytes32)
+    {
+        _notImplemented();
+    }
+
+    
 
     /*//////////////////////////////////////////////////////////////
                           Helpers

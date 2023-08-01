@@ -94,6 +94,20 @@ struct CastOfCharacters {
     address sidecar;
 }
 
+struct BillOfGoods {
+    Item721[] item721s;
+    Item1155[] item1155s;
+    Item20[] item20s;
+    uint256[] nativeAmounts;
+}
+
+// TODO: switch to a percentage, ideally.
+struct Fee {
+    address recipient;
+    uint256 amount;
+}
+
+
 /**
  * @dev An ItemTransfer is a struct that specifies the details of a transfer of
  *      an item by the sidecar.

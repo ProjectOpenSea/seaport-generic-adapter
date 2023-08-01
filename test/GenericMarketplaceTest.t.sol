@@ -2102,13 +2102,17 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain)";
         test721_1.mint(alice, 1);
+        Fee[] memory fees = new Fee[](1);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+        }
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_ListOnChain(
             config,
             stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
-            Fee({ recipient: feeReciever1, amount: 5 })
+            fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2154,13 +2158,18 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
+        Fee[] memory fees = new Fee[](1);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+        }
+
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_ListOnChain_FulfillThroughAdapter(
             config,
             stdCastOfCharacters,
             standardERC721,
             500, // increased so that the fee recipient recieves 1%
-            Fee({ recipient: feeReciever1, amount: 5 })
+            fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2206,12 +2215,12 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC721WithEtherOneFeeRecipient)";
         test721_1.mint(alice, 1);
+        Fee[] memory fees = new Fee[](1);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+        }
         try payloadHelper.getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2244,13 +2253,14 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
+        Fee[] memory fees = new Fee[](1);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+        }
+
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherOneFeeRecipient_FulfillThroughAdapter(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2282,14 +2292,16 @@ contract GenericMarketplaceTest is
         string memory testLabel =
             "(buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain)";
         test721_1.mint(alice, 1);
+
+        Fee[] memory fees = new Fee[](2);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+            fees[1] = Fee({ recipient: feeReciever2, amount: 5 });
+        }
+
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 }),
-            Fee({ recipient: feeReciever2, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2337,14 +2349,15 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
+        Fee[] memory fees = new Fee[](2);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+            fees[1] = Fee({ recipient: feeReciever2, amount: 5 });
+        }
+
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_ListOnChain_FulfillThroughAdapter(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 }),
-            Fee({ recipient: feeReciever2, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2391,13 +2404,14 @@ contract GenericMarketplaceTest is
     {
         string memory testLabel = "(buyOfferedERC721WithEtherTwoFeeRecipients)";
         test721_1.mint(alice, 1);
+        Fee[] memory fees = new Fee[](2);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+            fees[1] = Fee({ recipient: feeReciever2, amount: 5 });
+        }
+
         try payloadHelper.getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 }),
-            Fee({ recipient: feeReciever2, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
@@ -2432,14 +2446,15 @@ contract GenericMarketplaceTest is
             "(buyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter)";
         test721_1.mint(alice, 1);
 
+        Fee[] memory fees = new Fee[](2);
+        {
+            fees[0] = Fee({ recipient: feeReciever1, amount: 5 });
+            fees[1] = Fee({ recipient: feeReciever2, amount: 5 });
+        }
+
         try payloadHelper
             .getPayloadToBuyOfferedERC721WithEtherTwoFeeRecipients_FulfillThroughAdapter(
-            config,
-            stdCastOfCharacters,
-            standardERC721,
-            100,
-            Fee({ recipient: feeReciever1, amount: 5 }),
-            Fee({ recipient: feeReciever2, amount: 5 })
+            config, stdCastOfCharacters, standardERC721, 100, fees
         ) returns (
             OrderPayload memory payload,
             OfferItem[] memory,
