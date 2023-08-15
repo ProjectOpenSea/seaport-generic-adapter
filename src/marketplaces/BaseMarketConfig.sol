@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { Vm } from "forge-std/Vm.sol";
+
 import { Order, Fulfillment } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import { SetupCall, OrderPayload } from "../utils/Types.sol";
@@ -32,10 +34,17 @@ import { BasicOrderParameters } from
     "seaport-types/lib/ConsiderationStructs.sol";
 import { CastOfCharacters } from "../lib/AdapterHelperLib.sol";
 
+// Cheat code address, 0x7109709ECfa91a80626fF3989D68f67F5b1DD12D.
+address constant VM_ADDRESS =
+    address(uint160(uint256(keccak256("hevm cheat code"))));
+
 abstract contract BaseMarketConfig {
     FlashloanOffererInterface testFlashloanOfferer;
     GenericAdapterInterface testAdapter;
     GenericAdapterSidecarInterface testSidecar;
+
+    Vm private constant vm =
+        Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     /**
      * @dev Market name used in results
@@ -484,10 +493,44 @@ abstract contract BaseMarketConfig {
         _notImplemented();
     }
 
+    /*//////////////////////////////////////////////////////////////
+                        Uniswap Functions
+    //////////////////////////////////////////////////////////////*/
+
+    function getPayload_BuyOfferedERC20WithERC20(
+        OrderContext calldata,
+        Item20 calldata,
+        Item20 calldata
+    ) external virtual returns (OrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_BuyOfferedERC20WithEther(
+        OrderContext calldata,
+        Item20 calldata,
+        uint256
+    ) external view virtual returns (OrderPayload memory) {
+        _notImplemented();
+    }
+
+    function getPayload_BuyOfferedEtherWithERC20(
+        OrderContext calldata,
+        uint256,
+        Item20 calldata
+    ) external view virtual returns (OrderPayload memory) {
+        _notImplemented();
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    Irregular Public Functions
+    //////////////////////////////////////////////////////////////*/
+
     function getComponents_BuyOfferedERC1155WithERC20(
         address,
         Item1155 calldata,
-        Item20 memory
+        Item20 memory,
+        uint256,
+        bytes memory
     ) public view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
     }
@@ -495,7 +538,9 @@ abstract contract BaseMarketConfig {
     function getComponents_BuyOfferedERC20WithERC1155(
         address,
         Item20 calldata,
-        Item1155 calldata
+        Item1155 calldata,
+        uint256,
+        bytes memory
     ) external view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
     }
@@ -505,7 +550,7 @@ abstract contract BaseMarketConfig {
         address,
         Item721[] memory,
         uint256[] memory,
-        bool
+        uint256
     )
         public
         view
@@ -515,16 +560,13 @@ abstract contract BaseMarketConfig {
         _notImplemented();
     }
 
-    function getDigest(OrderContext[] calldata, BillOfGoods[] memory, Fee[] calldata)
-        public
-        pure
-        virtual
-        returns (bytes32)
-    {
+    function getDigest(
+        OrderContext[] calldata,
+        BillOfGoods[] memory,
+        Fee[] calldata
+    ) public pure virtual returns (bytes32) {
         _notImplemented();
     }
-
-    
 
     /*//////////////////////////////////////////////////////////////
                           Helpers
@@ -545,15 +587,23 @@ abstract contract BaseMarketConfig {
         _tester = ITestRunner(msg.sender);
     }
 
-    /**
-     * @dev Request a signature from the testing contract.
-     */
     function _sign(address signer, bytes32 digest)
         internal
         view
         returns (uint8, bytes32, bytes32)
     {
         return _tester.signDigest(signer, digest);
+    }
+
+    function _sign(address signer, uint256 privateKey, bytes32 digest)
+        internal
+        view
+        returns (uint8 v, bytes32 r, bytes32 s)
+    {
+        if (privateKey == 0) {
+            return _sign(signer, digest);
+        }
+        (v, r, s) = vm.sign(privateKey, digest);
     }
 }
 

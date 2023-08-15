@@ -6,6 +6,7 @@ import { stdStorage, StdStorage } from "forge-std/Test.sol";
 import { TestERC1155 } from "../../src/contracts/test/TestERC1155.sol";
 import { TestERC20 } from "../../src/contracts/test/TestERC20.sol";
 import { WETH } from "solady/src/tokens/WETH.sol";
+
 import { TestERC721 } from "../../src/contracts/test/TestERC721.sol";
 
 contract BaseMarketplaceTest is DSTestPlus {
@@ -27,15 +28,21 @@ contract BaseMarketplaceTest is DSTestPlus {
     address payable internal feeReciever2 = payable(hevm.addr(feeReciever2Pk));
 
     TestERC20 internal test20;
-    TestERC20 internal token2;
-    TestERC20 internal token3;
+    TestERC20 internal test20_2;
+    TestERC20 internal test20_3;
 
     WETH internal constant weth =
         WETH(payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
 
+    TestERC20 internal constant wethToApprove =
+        TestERC20(payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2));
+
     // TestERC20 internal beth
     WETH internal constant beth =
         WETH(payable(0x0000000000A39bb272e79075ade125fd351887Ac));
+
+    TestERC20 internal constant dai =
+        TestERC20(payable(0x6B175474E89094C44Da98b954EedeAC495271d0F));
 
     TestERC721 internal test721_1;
     TestERC721 internal test721_2;
@@ -83,11 +90,11 @@ contract BaseMarketplaceTest is DSTestPlus {
 
         _deployTestTokenContracts();
         accounts = [alice, bob, cal, address(this)];
-        erc20s = [test20, token2, token3];
+        erc20s = [test20, test20_2, test20_3, wethToApprove, dai];
         erc20Addresses = [
             address(test20),
-            address(token2),
-            address(token3),
+            address(test20_2),
+            address(test20_3),
             address(weth),
             address(beth)
         ];
@@ -97,10 +104,11 @@ contract BaseMarketplaceTest is DSTestPlus {
         erc1155s = [test1155_1, test1155_2, test1155_3];
         allTokens = [
             address(test20),
-            address(token2),
-            address(token3),
+            address(test20_2),
+            address(test20_3),
             address(weth),
             address(beth),
+            address(dai),
             address(test721_1),
             address(test721_2),
             address(test721_3),
@@ -115,8 +123,8 @@ contract BaseMarketplaceTest is DSTestPlus {
      */
     function _deployTestTokenContracts() internal {
         test20 = new TestERC20();
-        token2 = new TestERC20();
-        token3 = new TestERC20();
+        test20_2 = new TestERC20();
+        test20_3 = new TestERC20();
         test721_1 = new TestERC721();
         test721_2 = new TestERC721();
         test721_3 = new TestERC721();
@@ -124,8 +132,10 @@ contract BaseMarketplaceTest is DSTestPlus {
         test1155_2 = new TestERC1155();
         test1155_3 = new TestERC1155();
         hevm.label(address(test20), "test20");
+        hevm.label(address(test20_2), "test20_2");
         hevm.label(address(weth), "weth");
         hevm.label(address(beth), "beth");
+        hevm.label(address(dai), "dai");
         hevm.label(address(test721_1), "test721_1");
         hevm.label(address(test1155_1), "test1155_1");
         hevm.label(address(feeReciever1), "feeReciever1");
@@ -143,6 +153,7 @@ contract BaseMarketplaceTest is DSTestPlus {
             erc20s[i].approve(_erc20Target, MAX_INT);
         }
         weth.approve(_erc20Target, MAX_INT);
+        dai.approve(_erc20Target, MAX_INT);
         for (uint256 i = 0; i < erc721s.length; i++) {
             erc721s[i].setApprovalForAll(_erc721Target, true);
         }

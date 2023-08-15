@@ -17,6 +17,8 @@ import { IZeroEx } from "./interfaces/IZeroEx.sol";
 import "./lib/LibNFTOrder.sol";
 import "./lib/LibSignature.sol";
 
+import "forge-std/console.sol";
+
 contract ZeroExConfig is BaseMarketConfig, Test {
     IZeroEx constant zeroEx =
         IZeroEx(0xDef1C0ded9bec7F1a1670819833240f027b25EfF);
@@ -114,6 +116,8 @@ contract ZeroExConfig is BaseMarketConfig, Test {
         Item1155 memory nft,
         uint256 ethAmount
     ) external view override returns (OrderPayload memory execution) {
+        console.log("getPayload_BuyOfferedERC1155WithEther");
+
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -131,17 +135,7 @@ contract ZeroExConfig is BaseMarketConfig, Test {
             erc1155TokenProperties: new LibNFTOrder.Property[](0)
         });
 
-        // Sign the order
-        (uint8 v, bytes32 r, bytes32 s) =
-            _sign(order.maker, zeroEx.getERC1155OrderHash(order));
-
-        // Prepare the signature
-        LibSignature.Signature memory sig = LibSignature.Signature({
-            signatureType: LibSignature.SignatureType.EIP712,
-            v: v,
-            r: r,
-            s: s
-        });
+        LibSignature.Signature memory sig;
 
         // Handle special case if "listing on chain" or in the 0x parlance the
         // order is "presigned"
@@ -161,6 +155,18 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                     IZeroEx.preSignERC1155Order.selector, order
                 )
             );
+        } else {
+            // Sign the order
+            (uint8 v, bytes32 r, bytes32 s) =
+                _sign(order.maker, zeroEx.getERC1155OrderHash(order));
+
+            // Prepare the signature
+            sig = LibSignature.Signature({
+                signatureType: LibSignature.SignatureType.EIP712,
+                v: v,
+                r: r,
+                s: s
+            });
         }
 
         // Execute the buy

@@ -107,7 +107,6 @@ struct Fee {
     uint256 amount;
 }
 
-
 /**
  * @dev An ItemTransfer is a struct that specifies the details of a transfer of
  *      an item by the sidecar.
@@ -129,10 +128,12 @@ struct OrderContext {
 
 // // Maybe
 // struct OrderContext {
-//     Call[] sidecarMarketplaceCalls;
-//     Flashloan[] flashloans;
+//     bool listOnChain;
+//     bool routeThroughAdapter;
+//     OrderPayload sidecarMarketplaceCallPayload; // or maybe payloads
+//     Flashloan flashloan;
+//     CastOfCharacters castOfCharacters;
 //     Approval[] approvals;
-//     CastOfCharacters[] castOfCharactersArray;
 //     ItemTransfer[] itemTransfers;
 // }
 
@@ -677,6 +678,8 @@ library AdapterHelperLib {
                     // Set the approvals array to the temporary array.
                     approvals = tempApprovals;
                 }
+            } else if (adapterOffer[i].itemType == ItemType.NATIVE) {
+                continue;
             } else {
                 revert("Invalid item type");
             }

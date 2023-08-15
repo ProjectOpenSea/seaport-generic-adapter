@@ -97,6 +97,7 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
     function testLooksRare() external override { }
     function testLooksRareV2() external override { }
     function testSudoswap() external override { }
+    function testUniswap() external override { }
     function testX2Y2() external override { }
     function testZeroEx() external override { }
 
@@ -346,13 +347,13 @@ contract GenericMarketplaceAggregationTest is GenericMarketplaceTest {
         {
             BasicOrderParameters memory params = configs[3]
                 .getComponents_BuyOfferedERC1155WithERC20(
-                alice, Item1155(_test1155Address, 2, 1), standardERC20
+                alice, Item1155(_test1155Address, 2, 1), standardERC20, 0, ""
             );
 
             orderOffer1155 = _createSeaportOrderFromBasicParams(params);
 
             params = configs[3].getComponents_BuyOfferedERC20WithERC1155(
-                bob, standardERC20, Item1155(_test1155Address, 2, 1)
+                bob, standardERC20, Item1155(_test1155Address, 2, 1), 0, ""
             );
 
             orderConsider1155 = _createSeaportOrderFromBasicParams(params);

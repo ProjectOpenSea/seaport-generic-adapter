@@ -162,8 +162,7 @@ contract BlurConfig is BaseMarketConfig, BlurTypeHashes {
 
         {
             // If it's an offer of ERC20 for ERC721, then the maker is the buyer
-            // and
-            // the taker is the seller.
+            // and the taker is the seller.
             (makerOrder, infra.v, infra.r, infra.s) = buildOrder(
                 maker,
                 isOffer ? Side.Buy : Side.Sell,

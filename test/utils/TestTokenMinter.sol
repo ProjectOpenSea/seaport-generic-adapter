@@ -53,8 +53,8 @@ contract TestTokenMinter is
     address payable internal cal = payable(vm.addr(calPk));
 
     TestERC20 internal test20;
-    TestERC20 internal token2;
-    TestERC20 internal token3;
+    TestERC20 internal test20_2;
+    TestERC20 internal test20_3;
 
     TestERC721 internal test721_1;
     TestERC721 internal test721_2;
@@ -113,7 +113,7 @@ contract TestTokenMinter is
         vm.label(cal, "cal");
 
         _deployTestTokenContracts();
-        erc20s = [test20, token2, token3];
+        erc20s = [test20, test20_2, test20_3];
         erc721s = [test721_1, test721_2, test721_3];
         erc1155s = [test1155_1, test1155_2, test1155_3];
 
@@ -214,8 +214,8 @@ contract TestTokenMinter is
      */
     function _deployTestTokenContracts() internal {
         test20 = new TestERC20();
-        token2 = new TestERC20();
-        token3 = new TestERC20();
+        test20_2 = new TestERC20();
+        test20_3 = new TestERC20();
         test721_1 = new TestERC721();
         test721_2 = new TestERC721();
         test721_3 = new TestERC721();
