@@ -6,6 +6,7 @@ import { OrderPayload } from "../../utils/Types.sol";
 
 import {
     Call,
+    Fee,
     Item721,
     Item1155,
     Item20,
@@ -16,6 +17,8 @@ import "./lib/ConsiderationTypeHashes.sol";
 import { ConsiderationInterface as ISeaport } from
     "seaport-types/interfaces/ConsiderationInterface.sol";
 import "forge-std/console2.sol";
+
+import "forge-std/console.sol";
 
 // prettier-ignore
 enum BasicOrderRouteType
@@ -54,7 +57,6 @@ contract SeaportOnePointFiveConfig is
         address offerer,
         OfferItem memory offerItem,
         ConsiderationItem memory considerationItem,
-        uint256 privateKey,
         bytes memory actualSignature
     )
         internal
@@ -90,7 +92,7 @@ contract SeaportOnePointFiveConfig is
         if (actualSignature.length == 0) {
             bytes32 digest =
                 _deriveEIP712Digest(_deriveOrderHash(components, 0));
-            (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, privateKey, digest);
+            (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, digest);
             signature = abi.encodePacked(r, s, v);
         } else {
             signature = actualSignature;
@@ -180,7 +182,7 @@ contract SeaportOnePointFiveConfig is
         address offerer,
         OfferItem[] memory offerItems,
         ConsiderationItem[] memory considerationItems,
-        uint256 privateKey
+        bytes memory actualSignature
     ) internal view returns (Order memory order) {
         OrderParameters memory components = order.parameters;
         components.offerer = offerer;
@@ -191,21 +193,76 @@ contract SeaportOnePointFiveConfig is
         components.endTime = block.timestamp + 1;
         components.totalOriginalConsiderationItems = considerationItems.length;
 
-        bytes32 digest = _deriveEIP712Digest(_deriveOrderHash(components, 0));
-        (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, privateKey, digest);
-        bytes memory signature = abi.encodePacked(r, s, v);
+        bytes memory signature;
+
+        if (actualSignature.length == 0) {
+            bytes32 digest =
+                _deriveEIP712Digest(_deriveOrderHash(components, 0));
+            (uint8 v, bytes32 r, bytes32 s) = _sign(offerer, digest);
+            signature = abi.encodePacked(r, s, v);
+        } else {
+            signature = actualSignature;
+        }
+
         order.signature = signature;
     }
 
-    // TODO: Add natspec. PK is only required when you're doing it for real. The
-    // tests should just pass a 0 so that the PK will be grabbed automatically
-    // in the _sign function.
+    function _createConsiderationArray(
+        OrderContext memory context,
+        address paymentTokenAddress,
+        Fee memory fee,
+        uint256 amount
+    ) internal pure returns (ConsiderationItem[] memory considerationItems) {
+        // TODO: support abritrary number of fee recipients.
+        if (fee.recipient != address(0)) {
+            // TODO: less fragile math.
+            uint256 feeAmount =
+                fee.amount > 0 ? fee.amount : (amount / 100 / 100) * fee.bps;
+
+            considerationItems = new ConsiderationItem[](2);
+            considerationItems[0] = ConsiderationItem(
+                paymentTokenAddress != address(0)
+                    ? ItemType.ERC20
+                    : ItemType.NATIVE,
+                paymentTokenAddress,
+                0,
+                amount - feeAmount,
+                amount - feeAmount,
+                payable(context.castOfCharacters.offerer)
+            );
+
+            considerationItems[1] = ConsiderationItem(
+                paymentTokenAddress != address(0)
+                    ? ItemType.ERC20
+                    : ItemType.NATIVE,
+                paymentTokenAddress,
+                0,
+                feeAmount,
+                feeAmount,
+                payable(fee.recipient)
+            );
+        } else {
+            considerationItems = new ConsiderationItem[](1);
+            considerationItems[0] = ConsiderationItem(
+                paymentTokenAddress != address(0)
+                    ? ItemType.ERC20
+                    : ItemType.NATIVE,
+                paymentTokenAddress,
+                0,
+                amount,
+                amount,
+                payable(context.castOfCharacters.offerer)
+            );
+        }
+    }
+
     function buildOrderAndFulfillmentManyDistinctOrders(
         OrderContext[] memory contexts,
         address paymentTokenAddress,
         Item721[] memory nfts,
         uint256[] memory amounts,
-        uint256 privateKey
+        Fee[] memory fees,
+        bytes[] memory actualSignatures
     )
         public
         view
@@ -226,22 +283,12 @@ contract SeaportOnePointFiveConfig is
             OfferItem[] memory offerItems = new OfferItem[](1);
 
             ConsiderationItem[] memory considerationItems =
-                new ConsiderationItem[](1);
+            _createConsiderationArray(
+                contexts[i], paymentTokenAddress, fees[i], amounts[i]
+            );
             {
                 offerItems[0] = OfferItem(
                     ItemType.ERC721, nfts[i].token, nfts[i].identifier, 1, 1
-                );
-            }
-            {
-                considerationItems[0] = ConsiderationItem(
-                    paymentTokenAddress != address(0)
-                        ? ItemType.ERC20
-                        : ItemType.NATIVE,
-                    paymentTokenAddress,
-                    0,
-                    amounts[i],
-                    amounts[i],
-                    payable(contexts[i].castOfCharacters.offerer)
                 );
             }
             {
@@ -249,17 +296,18 @@ contract SeaportOnePointFiveConfig is
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
                     considerationItems,
-                    privateKey
+                    actualSignatures[i]
                 );
             }
             {
+                OrderContext memory context = contexts[i];
                 fulfillerConsiderationItems[i] = ConsiderationItem(
                     ItemType.ERC721,
                     nfts[i].token,
                     nfts[i].identifier,
                     1,
                     1,
-                    payable(contexts[i].castOfCharacters.fulfiller)
+                    payable(context.castOfCharacters.fulfiller)
                 );
             }
             {
@@ -332,7 +380,145 @@ contract SeaportOnePointFiveConfig is
             contexts[0].castOfCharacters.fulfiller,
             fulfillerOfferItems,
             fulfillerConsiderationItems,
-            privateKey
+            "a" // This is a hack to avoid buildOrder trying to sign with a test
+                // private key.  It gets overwritten immediately below anyway.
+        );
+        orders[nfts.length].signature = ""; // Signature isn't needed since
+            // fulfiller is msg.sender
+
+        return (orders, fullfillments, sumAmounts);
+    }
+
+    function buildOrderAndFulfillmentManyDistinctOrders(
+        OrderContext[] memory contexts,
+        address paymentTokenAddress,
+        Item1155[] memory nfts,
+        uint256[] memory amounts,
+        Fee[] memory fees,
+        bytes[] memory actualSignatures
+    )
+        public
+        view
+        override
+        returns (Order[] memory, Fulfillment[] memory, uint256)
+    {
+        Order[] memory orders = new Order[](nfts.length + 1);
+
+        ConsiderationItem[] memory fulfillerConsiderationItems =
+        new ConsiderationItem[](
+                nfts.length
+            );
+
+        Fulfillment[] memory fullfillments = new Fulfillment[](nfts.length + 1);
+
+        for (uint256 i = 0; i < nfts.length; i++) {
+            // Build offer orders
+            OfferItem[] memory offerItems = new OfferItem[](1);
+
+            ConsiderationItem[] memory considerationItems =
+            _createConsiderationArray(
+                contexts[i], paymentTokenAddress, fees[i], amounts[i]
+            );
+            {
+                offerItems[0] = OfferItem(
+                    ItemType.ERC1155,
+                    nfts[i].token,
+                    nfts[i].identifier,
+                    nfts[i].amount,
+                    nfts[i].amount
+                );
+            }
+            {
+                orders[i] = buildOrder(
+                    contexts[i].castOfCharacters.offerer,
+                    offerItems,
+                    considerationItems,
+                    actualSignatures[i]
+                );
+            }
+            {
+                OrderContext memory context = contexts[i];
+                fulfillerConsiderationItems[i] = ConsiderationItem(
+                    ItemType.ERC1155,
+                    nfts[i].token,
+                    nfts[i].identifier,
+                    nfts[i].amount,
+                    nfts[i].amount,
+                    payable(context.castOfCharacters.fulfiller)
+                );
+            }
+            {
+                // Add fulfillment components for each NFT
+
+                FulfillmentComponent memory nftConsiderationComponent =
+                    FulfillmentComponent(nfts.length, i);
+
+                FulfillmentComponent memory nftOfferComponent =
+                    FulfillmentComponent(i, 0);
+
+                FulfillmentComponent[] memory nftOfferComponents =
+                    new FulfillmentComponent[](1);
+                nftOfferComponents[0] = nftOfferComponent;
+
+                FulfillmentComponent[] memory nftConsiderationComponents =
+                new FulfillmentComponent[](
+                        1
+                    );
+                nftConsiderationComponents[0] = nftConsiderationComponent;
+                fullfillments[i] =
+                    Fulfillment(nftOfferComponents, nftConsiderationComponents);
+            }
+        }
+
+        uint256 sumAmounts = 0;
+
+        for (uint256 i = 0; i < nfts.length; i++) {
+            sumAmounts += amounts[i];
+        }
+
+        {
+            FulfillmentComponent memory paymentTokenOfferComponent =
+                FulfillmentComponent(nfts.length, 0);
+
+            FulfillmentComponent[] memory paymentTokenOfferComponents =
+            new FulfillmentComponent[](
+                    1
+                );
+            paymentTokenOfferComponents[0] = paymentTokenOfferComponent;
+
+            FulfillmentComponent[] memory paymentTokenConsiderationComponents =
+            new FulfillmentComponent[](
+                    nfts.length
+                );
+            for (uint256 i = 0; i < nfts.length; i++) {
+                {
+                    FulfillmentComponent memory
+                        paymentTokenConsiderationComponent =
+                            FulfillmentComponent(i, 0);
+                    paymentTokenConsiderationComponents[i] =
+                        paymentTokenConsiderationComponent;
+                }
+            }
+            fullfillments[nfts.length] = Fulfillment(
+                paymentTokenOfferComponents, paymentTokenConsiderationComponents
+            );
+        }
+
+        // Build sweep floor order
+        OfferItem[] memory fulfillerOfferItems = new OfferItem[](1);
+        fulfillerOfferItems[0] = OfferItem(
+            paymentTokenAddress != address(0) ? ItemType.ERC20 : ItemType.NATIVE,
+            paymentTokenAddress,
+            0,
+            sumAmounts,
+            sumAmounts
+        );
+        orders[nfts.length] = buildOrder(
+            contexts[0].castOfCharacters.fulfiller,
+            fulfillerOfferItems,
+            fulfillerConsiderationItems,
+            "a" // This is a hack to avoid buildOrder trying to sign with a test
+                // private key.  It gets ignored anyway.
         );
         orders[nfts.length].signature = ""; // Signature isn't needed since
             // fulfiller is msg.sender
@@ -363,7 +549,6 @@ contract SeaportOnePointFiveConfig is
                 ethAmount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -393,7 +578,8 @@ contract SeaportOnePointFiveConfig is
     function getPayload_BuyOfferedERC1155WithEther(
         OrderContext calldata context,
         Item1155 memory nft,
-        uint256 ethAmount
+        uint256 ethAmount,
+        bytes memory actualSignature
     ) external view override returns (OrderPayload memory execution) {
         (Order memory order, BasicOrderParameters memory basicComponents) =
         buildBasicOrder(
@@ -414,8 +600,7 @@ contract SeaportOnePointFiveConfig is
                 ethAmount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
-            ""
+            actualSignature
         );
         if (context.listOnChain) {
             order.signature = "";
@@ -463,7 +648,6 @@ contract SeaportOnePointFiveConfig is
                 erc20.amount,
                 payable(offerer)
             ),
-            0,
             ""
         );
     }
@@ -486,7 +670,6 @@ contract SeaportOnePointFiveConfig is
                 erc20.amount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -531,7 +714,6 @@ contract SeaportOnePointFiveConfig is
                 erc20.amount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -562,7 +744,6 @@ contract SeaportOnePointFiveConfig is
         address maker,
         Item1155 calldata nft,
         Item20 memory erc20,
-        uint256 privateKey,
         bytes memory actualSignature
     ) public view override returns (BasicOrderParameters memory) {
         (, BasicOrderParameters memory basicComponents) = buildBasicOrder(
@@ -583,7 +764,6 @@ contract SeaportOnePointFiveConfig is
                 erc20.amount,
                 payable(maker)
             ),
-            privateKey,
             actualSignature
         );
 
@@ -614,7 +794,6 @@ contract SeaportOnePointFiveConfig is
                 erc20.amount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -661,7 +840,6 @@ contract SeaportOnePointFiveConfig is
                 1,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -708,7 +886,6 @@ contract SeaportOnePointFiveConfig is
                 1,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -739,7 +916,6 @@ contract SeaportOnePointFiveConfig is
         address maker,
         Item20 calldata erc20,
         Item1155 calldata nft,
-        uint256 privateKey,
         bytes memory actualSignature
     )
         external
@@ -761,7 +937,6 @@ contract SeaportOnePointFiveConfig is
                 nft.amount,
                 payable(maker)
             ),
-            privateKey,
             actualSignature
         );
     }
@@ -786,7 +961,6 @@ contract SeaportOnePointFiveConfig is
                 nft.amount,
                 payable(context.castOfCharacters.offerer)
             ),
-            0,
             ""
         );
         if (context.listOnChain) {
@@ -835,7 +1009,7 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems, 0
+            context.castOfCharacters.offerer, offerItems, considerationItems, ""
         );
 
         if (context.listOnChain) {
@@ -885,7 +1059,7 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems, 0
+            context.castOfCharacters.offerer, offerItems, considerationItems, ""
         );
 
         if (context.listOnChain) {
@@ -1041,7 +1215,7 @@ contract SeaportOnePointFiveConfig is
         );
 
         Order memory order = buildOrder(
-            context.castOfCharacters.offerer, offerItems, considerationItems, 0
+            context.castOfCharacters.offerer, offerItems, considerationItems, ""
         );
 
         if (context.listOnChain) {
@@ -1080,7 +1254,7 @@ contract SeaportOnePointFiveConfig is
             Fulfillment[] memory fullfillments,
             uint256 sumEthAmount
         ) = buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, address(0), nfts, ethAmounts, 0
+            contexts, address(0), nfts, ethAmounts, new Fee[](0), new bytes[](0)
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1130,7 +1304,12 @@ contract SeaportOnePointFiveConfig is
 
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, erc20s[0].token, nfts, prices, 0
+            contexts,
+            erc20s[0].token,
+            nfts,
+            prices,
+            new Fee[](0),
+            new bytes[](0)
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1175,7 +1354,12 @@ contract SeaportOnePointFiveConfig is
         );
         (Order[] memory orders, Fulfillment[] memory fullfillments,) =
         buildOrderAndFulfillmentManyDistinctOrders(
-            contexts, erc20Address, nfts, erc20Amounts, 0
+            contexts,
+            erc20Address,
+            nfts,
+            erc20Amounts,
+            new Fee[](0),
+            new bytes[](1)
         );
 
         // Validate all for simplicity for now, could make this combination of
@@ -1240,7 +1424,7 @@ contract SeaportOnePointFiveConfig is
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
                     considerationItems,
-                    0
+                    ""
                 );
             }
             // Set fulfillment
@@ -1311,7 +1495,7 @@ contract SeaportOnePointFiveConfig is
                     contexts[i].castOfCharacters.offerer,
                     offerItems,
                     considerationItems,
-                    0
+                    ""
                 );
             }
             // Set fulfillment

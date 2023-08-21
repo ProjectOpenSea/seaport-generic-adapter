@@ -173,7 +173,8 @@ contract LooksRareConfig is BaseMarketConfig, LooksRareTypeHashes {
     function getPayload_BuyOfferedERC1155WithEther(
         OrderContext calldata context,
         Item1155 calldata nft,
-        uint256 ethAmount
+        uint256 ethAmount,
+        bytes memory
     ) external view override returns (OrderPayload memory execution) {
         OrderTypes.MakerOrder memory makerOrder = buildMakerOrder(
             true,

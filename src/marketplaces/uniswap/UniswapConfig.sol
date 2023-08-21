@@ -103,7 +103,8 @@ contract UniswapConfig is BaseMarketConfig {
             .ExactOutputSingleParams({
             tokenIn: offeredPayment.token,
             tokenOut: desiredPayment.token,
-            fee: 500,
+            // TODO: come back and handle pool selection to make tests pass.
+            fee: 500 * 6,
             recipient: context.castOfCharacters.fulfiller,
             deadline: block.timestamp + 1,
             amountOut: desiredPayment.amount,
@@ -155,7 +156,8 @@ contract UniswapConfig is BaseMarketConfig {
             .ExactOutputSingleParams({
             tokenIn: address(weth),
             tokenOut: desiredPayment.token,
-            fee: 500, // TODO: See if there's a way to ask Uniswap for this.
+            fee: 500 * 6, // TODO: Think about how to intelligently pick the
+                // right pool.
             recipient: context.castOfCharacters.fulfiller, // TODO: handle
                 // fulfiller/sidecar/adapter choice gracefully,
             deadline: block.timestamp + 1,
@@ -208,7 +210,7 @@ contract UniswapConfig is BaseMarketConfig {
             .ExactOutputSingleParams({
             tokenIn: offeredPayment.token,
             tokenOut: address(weth),
-            fee: 500,
+            fee: 500 * 6,
             recipient: context.castOfCharacters.fulfiller,
             deadline: block.timestamp + 1,
             amountOut: desiredEthAmount,

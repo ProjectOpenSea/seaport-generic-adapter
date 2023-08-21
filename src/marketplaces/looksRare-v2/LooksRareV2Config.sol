@@ -238,7 +238,8 @@ contract LooksRareV2Config is BaseMarketConfig, LooksRareV2TypeHashes {
     function getPayload_BuyOfferedERC1155WithEther(
         OrderContext calldata context,
         Item1155 calldata nft,
-        uint256 ethAmount
+        uint256 ethAmount,
+        bytes memory
     ) external view override returns (OrderPayload memory execution) {
         if (context.listOnChain) {
             _notImplemented();

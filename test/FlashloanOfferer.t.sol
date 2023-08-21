@@ -25,6 +25,9 @@ import { ItemType, OrderType } from "seaport-types/lib/ConsiderationEnums.sol";
 import { FlashloanOffererInterface } from
     "../src/interfaces/FlashloanOffererInterface.sol";
 
+import { GenericAdapterInterface } from
+    "../src/interfaces/GenericAdapterInterface.sol";
+
 import { TestERC721 } from "../src/contracts/test/TestERC721.sol";
 
 import { TestERC1155 } from "../src/contracts/test/TestERC1155.sol";
@@ -35,6 +38,8 @@ import { Schema, SpentItem } from "seaport-types/lib/ConsiderationStructs.sol";
 
 import { AdapterHelperLib, Flashloan } from "../src/lib/AdapterHelperLib.sol";
 
+import "forge-std/console.sol";
+
 contract FlashloanOffererTest is BaseOrderTest {
     using AdvancedOrderLib for AdvancedOrder;
     using ConsiderationItemLib for ConsiderationItem;
@@ -42,11 +47,14 @@ contract FlashloanOffererTest is BaseOrderTest {
 
     struct Context {
         FlashloanOffererInterface flashloanOfferer;
+        GenericAdapterInterface adapter;
         bool isReference;
     }
 
     FlashloanOffererInterface testFlashloanOfferer;
     FlashloanOffererInterface testFlashloanOffererReference;
+    GenericAdapterInterface testAdapter;
+    GenericAdapterInterface testAdapterReference;
     TestERC721 testERC721;
     TestERC1155 testERC1155;
 
@@ -60,17 +68,61 @@ contract FlashloanOffererTest is BaseOrderTest {
 
         vm.chainId(1);
 
-        testFlashloanOfferer = FlashloanOffererInterface(
-            deployCode(
-                "out/FlashloanOfferer.sol/FlashloanOfferer.json",
-                abi.encode(address(consideration))
-            )
+        // address seaportAddress =
+        //     address(0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC);
+        address flashloanOffererAddress =
+            payable(0x00A7DB0000BD990097e5229ea162cE0047a6006B);
+        address adapterAddress =
+            payable(0x00000000F2E7Fb5F440025F49BbD67133D2A6097);
+
+        // deployCodeTo(string memory what, bytes memory args, address where)
+        vm.allowCheatcodes(flashloanOffererAddress);
+        deployCodeTo(
+            "out/FlashloanOfferer.sol/FlashloanOfferer.json",
+            abi.encode(address(consideration)),
+            flashloanOffererAddress
         );
+        testFlashloanOfferer =
+            FlashloanOffererInterface(flashloanOffererAddress);
+
+        // testFlashloanOfferer = FlashloanOffererInterface(
+        //     deployCode(
+        //         "out/FlashloanOfferer.sol/FlashloanOfferer.json",
+        //         abi.encode(address(consideration))
+        //     )
+        // );
 
         testFlashloanOffererReference = FlashloanOffererInterface(
             deployCode(
                 "out/ReferenceFlashloanOfferer.sol/ReferenceFlashloanOfferer.json",
                 abi.encode(address(consideration))
+            )
+        );
+
+        vm.allowCheatcodes(adapterAddress);
+        deployCodeTo(
+            "out/GenericAdapter.sol/GenericAdapter.json",
+            abi.encode(address(consideration), address(flashloanOffererAddress)),
+            adapterAddress
+        );
+        testAdapter = GenericAdapterInterface(adapterAddress);
+
+        // testAdapter = GenericAdapterInterface(
+        //     deployCode(
+        //         "out/GenericAdapter.sol/GenericAdapter.json",
+        //         abi.encode(
+        //             address(consideration), address(testFlashloanOfferer)
+        //         )
+        //     )
+        // );
+
+        testAdapterReference = GenericAdapterInterface(
+            deployCode(
+                "out/ReferenceGenericAdapter.sol/ReferenceGenericAdapter.json",
+                abi.encode(
+                    address(consideration),
+                    address(testFlashloanOffererReference)
+                )
             )
         );
 
@@ -95,6 +147,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execReceive,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -102,6 +155,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execReceive,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -125,6 +179,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execSupportsInterface,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -132,6 +187,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execSupportsInterface,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -151,6 +207,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execGetSeaportMetadata,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -158,6 +215,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execGetSeaportMetadata,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -179,6 +237,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execGenerateOrderThresholdReverts,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -186,6 +245,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execGenerateOrderThresholdReverts,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -443,6 +503,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execDepositAndWithdrawFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -450,6 +511,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execDepositAndWithdrawFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -510,6 +572,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execProvideFlashloanFunctionalityNativeConsideration,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -517,6 +580,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execProvideFlashloanFunctionalityNativeConsideration,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -590,6 +654,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execProvideFlashloanFunctionalityWrappedConsideration,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -597,6 +662,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execProvideFlashloanFunctionalityWrappedConsideration,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -670,6 +736,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execRejectFlashloanFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -677,6 +744,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execRejectFlashloanFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -756,6 +824,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execSeaportWrappedFlashloanFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
                 isReference: false
             })
         );
@@ -763,6 +832,7 @@ contract FlashloanOffererTest is BaseOrderTest {
             this.execSeaportWrappedFlashloanFunctionality,
             Context({
                 flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
                 isReference: true
             })
         );
@@ -841,6 +911,148 @@ contract FlashloanOffererTest is BaseOrderTest {
         );
 
         // Check that the order was executed.
+    }
+
+    function testRatifyAndCleanupFunctionality() public {
+        test(
+            this.execRatifyAndCleanupFunctionality,
+            Context({
+                flashloanOfferer: testFlashloanOfferer,
+                adapter: testAdapter,
+                isReference: false
+            })
+        );
+        test(
+            this.execRatifyAndCleanupFunctionality,
+            Context({
+                flashloanOfferer: testFlashloanOffererReference,
+                adapter: testAdapterReference,
+                isReference: true
+            })
+        );
+    }
+
+    function execRatifyAndCleanupFunctionality(Context memory context)
+        external
+        stateless
+    {
+        vm.deal(address(this), 1000);
+
+        // Create an order.
+        AdvancedOrder memory order;
+        {
+            order = AdvancedOrderLib.empty().withNumerator(1).withDenominator(1);
+        }
+
+        // Create the offer and consideration.
+        uint256 flashloanValueRequested = 1000;
+
+        ConsiderationItem[] memory considerationArray =
+            new ConsiderationItem[](1);
+        {
+            ConsiderationItem memory considerationItem =
+                ConsiderationItemLib.empty();
+            considerationItem = considerationItem.withItemType(ItemType.NATIVE);
+            considerationItem = considerationItem.withToken(address(0));
+            considerationItem = considerationItem.withIdentifierOrCriteria(0);
+            considerationItem =
+                considerationItem.withStartAmount(flashloanValueRequested);
+            considerationItem =
+                considerationItem.withEndAmount(flashloanValueRequested);
+            considerationItem = considerationItem.withRecipient(address(0));
+            considerationArray[0] = considerationItem;
+        }
+
+        // Create the parameters for the order.
+        OrderParameters memory orderParameters;
+        {
+            orderParameters = OrderParametersLib.empty();
+            orderParameters =
+                orderParameters.withOfferer(address(context.flashloanOfferer));
+            orderParameters = orderParameters.withOrderType(OrderType.CONTRACT);
+            orderParameters = orderParameters.withStartTime(block.timestamp);
+            orderParameters = orderParameters.withEndTime(block.timestamp + 100);
+            orderParameters = orderParameters.withOffer(new OfferItem[](0));
+            orderParameters =
+                orderParameters.withConsideration(considerationArray);
+            orderParameters =
+                orderParameters.withTotalOriginalConsiderationItems(1);
+        }
+
+        Flashloan memory flashloan = Flashloan({
+            amount: uint88(flashloanValueRequested),
+            itemType: ItemType.NATIVE,
+            token: address(0),
+            shouldCallback: true,
+            recipient: address(context.adapter)
+        });
+        Flashloan[] memory flashloans = new Flashloan[](1);
+        flashloans[0] = flashloan;
+
+        bytes memory extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
+
+        {
+            // Add it all to the order.
+            order.withParameters(orderParameters).withExtraData(extraData);
+        }
+
+        // For now, just assume that the flashloan offerer is sufficiently
+        // funded.
+        vm.deal(address(context.flashloanOfferer), 0x4444444444444444444444444);
+        vm.deal(address(context.adapter), 100);
+
+        uint256 balanceBefore = address(this).balance;
+
+        // Call Seaport with the order.
+        consideration.fulfillAdvancedOrder{ value: flashloanValueRequested }(
+            order, new CriteriaResolver[](0), bytes32(0), address(this)
+        );
+
+        uint256 balanceAfter = address(this).balance;
+
+        assertEq(
+            balanceAfter,
+            balanceBefore + 100,
+            "Funds did not get swept by cleanup."
+        );
+
+        flashloan = Flashloan({
+            amount: uint88(flashloanValueRequested / 2),
+            itemType: ItemType.NATIVE,
+            token: address(0),
+            shouldCallback: false,
+            recipient: address(context.adapter)
+        });
+        flashloans = new Flashloan[](2);
+        flashloans[0] = flashloan;
+        flashloans[1] = flashloan;
+
+        extraData =
+            AdapterHelperLib.createFlashloanContext(address(this), flashloans);
+
+        {
+            // Add it to the order.
+            order.withParameters(orderParameters).withExtraData(extraData);
+        }
+
+        vm.deal(address(this), 1000);
+        vm.deal(address(context.adapter), 100);
+
+        balanceBefore = address(this).balance;
+
+        // Call Seaport with the order.
+        consideration.fulfillAdvancedOrder{ value: flashloanValueRequested }(
+            order, new CriteriaResolver[](0), bytes32(0), address(this)
+        );
+
+        balanceAfter = address(this).balance;
+
+        assertEq(
+            balanceAfter,
+            balanceBefore - flashloanValueRequested,
+            "Funds got swept by cleanup despite shouldCallback being false."
+        );
     }
 
     receive() external payable override {

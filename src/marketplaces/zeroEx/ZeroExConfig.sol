@@ -114,10 +114,9 @@ contract ZeroExConfig is BaseMarketConfig, Test {
     function getPayload_BuyOfferedERC1155WithEther(
         OrderContext calldata context,
         Item1155 memory nft,
-        uint256 ethAmount
+        uint256 ethAmount,
+        bytes memory actualSignature
     ) external view override returns (OrderPayload memory execution) {
-        console.log("getPayload_BuyOfferedERC1155WithEther");
-
         // Prepare the order
         LibNFTOrder.ERC1155Order memory order = LibNFTOrder.ERC1155Order({
             direction: LibNFTOrder.TradeDirection.SELL_NFT,
@@ -156,9 +155,22 @@ contract ZeroExConfig is BaseMarketConfig, Test {
                 )
             );
         } else {
-            // Sign the order
-            (uint8 v, bytes32 r, bytes32 s) =
-                _sign(order.maker, zeroEx.getERC1155OrderHash(order));
+            uint8 v;
+            bytes32 r;
+            bytes32 s;
+
+            if (actualSignature.length == 0) {
+                // Sign the order
+                (v, r, s) =
+                    _sign(order.maker, zeroEx.getERC1155OrderHash(order));
+            } else {
+                assembly {
+                    r := mload(add(actualSignature, 32))
+                    s := mload(add(actualSignature, 64))
+                    v := and(mload(add(actualSignature, 65)), 255)
+                }
+                if (v < 27) v += 27;
+            }
 
             // Prepare the signature
             sig = LibSignature.Signature({

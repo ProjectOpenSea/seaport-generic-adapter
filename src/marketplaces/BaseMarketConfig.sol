@@ -146,7 +146,8 @@ abstract contract BaseMarketConfig {
     function getPayload_BuyOfferedERC1155WithEther(
         OrderContext calldata,
         Item1155 calldata,
-        uint256
+        uint256,
+        bytes memory
     ) external view virtual returns (OrderPayload memory) {
         _notImplemented();
     }
@@ -529,7 +530,6 @@ abstract contract BaseMarketConfig {
         address,
         Item1155 calldata,
         Item20 memory,
-        uint256,
         bytes memory
     ) public view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
@@ -539,7 +539,6 @@ abstract contract BaseMarketConfig {
         address,
         Item20 calldata,
         Item1155 calldata,
-        uint256,
         bytes memory
     ) external view virtual returns (BasicOrderParameters memory) {
         _notImplemented();
@@ -550,7 +549,24 @@ abstract contract BaseMarketConfig {
         address,
         Item721[] memory,
         uint256[] memory,
-        uint256
+        Fee[] memory,
+        bytes[] memory
+    )
+        public
+        view
+        virtual
+        returns (Order[] memory, Fulfillment[] memory, uint256)
+    {
+        _notImplemented();
+    }
+
+    function buildOrderAndFulfillmentManyDistinctOrders(
+        OrderContext[] memory,
+        address,
+        Item1155[] memory,
+        uint256[] memory,
+        Fee[] memory,
+        bytes[] memory
     )
         public
         view

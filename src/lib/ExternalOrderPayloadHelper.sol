@@ -371,11 +371,14 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
+    // TODO: set up the option to pass through order data structs, including
+    // sigs, across the board.
     function getDataToBuyOfferedERC1155WithEther_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
-        uint256 price
+        uint256 price,
+        bytes memory actualSignature
     )
         public
         view
@@ -393,7 +396,7 @@ contract ExternalOrderPayloadHelper {
         });
 
         try config.getPayload_BuyOfferedERC1155WithEther(
-            context, desiredItem, price
+            context, desiredItem, price, actualSignature
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -410,7 +413,8 @@ contract ExternalOrderPayloadHelper {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
-        uint256 price
+        uint256 price,
+        bytes memory actualSignature
     )
         public
         returns (
@@ -427,7 +431,7 @@ contract ExternalOrderPayloadHelper {
         });
 
         try config.getPayload_BuyOfferedERC1155WithEther(
-            context, desiredItem, price
+            context, desiredItem, price, actualSignature
         ) returns (OrderPayload memory payload) {
             itemsToBeOfferedByAdapter = new OfferItem[](1);
             itemsToBeOfferedByAdapter[0] = _desiredItemToOfferItem(desiredItem);
@@ -476,7 +480,8 @@ contract ExternalOrderPayloadHelper {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
-        uint256 price
+        uint256 price,
+        bytes memory actualSignature
     )
         public
         view
@@ -488,7 +493,10 @@ contract ExternalOrderPayloadHelper {
         )
     {
         try config.getPayload_BuyOfferedERC1155WithEther(
-            OrderContext(false, false, castOfCharacters), desiredItem, price
+            OrderContext(false, false, castOfCharacters),
+            desiredItem,
+            price,
+            actualSignature
         ) returns (OrderPayload memory payload) {
             return (
                 payload,
@@ -505,7 +513,8 @@ contract ExternalOrderPayloadHelper {
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
         Item1155 memory desiredItem,
-        uint256 price
+        uint256 price,
+        bytes memory actualSignature
     )
         public
         returns (
@@ -533,7 +542,7 @@ contract ExternalOrderPayloadHelper {
         }
 
         try config.getPayload_BuyOfferedERC1155WithEther(
-            context, desiredItem, price
+            context, desiredItem, price, actualSignature
         ) returns (OrderPayload memory payload) {
             context.castOfCharacters.fulfiller = originalFulfiller;
 
@@ -2846,9 +2855,12 @@ contract ExternalOrderPayloadHelper {
         }
     }
 
+    // TODO: getDataToBuyManyOfferedERC1155WithERC20_ListOnChain
+
     function getDataToBuyManyOfferedERC721WithEther_ListOnChain(
         BaseMarketConfig config,
         CastOfCharacters memory castOfCharacters,
+        address tokenRecipient,
         Item721[] memory desiredItems,
         uint256 price
     )
@@ -2865,6 +2877,10 @@ contract ExternalOrderPayloadHelper {
             routeThroughAdapter: false,
             castOfCharacters: castOfCharacters
         });
+
+        if (tokenRecipient != address(0)) {
+            context.castOfCharacters.fulfiller = tokenRecipient;
+        }
 
         try config.getPayload_BuyManyOfferedERC721WithEther(
             context, desiredItems, price
@@ -3385,6 +3401,8 @@ contract ExternalOrderPayloadHelper {
             _revertNotSupported();
         }
     }
+
+    // TODO: getDataToBuyManyOfferedERC1155WithErc20DistinctOrders
 
     function getDataToBuyManyOfferedERC721WithErc20DistinctOrders(
         BaseMarketConfig config,

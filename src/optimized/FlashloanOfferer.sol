@@ -12,6 +12,8 @@ import {
     SpentItem
 } from "seaport-types/lib/ConsiderationStructs.sol";
 
+import "forge-std/console.sol";
+
 /**
  * @title FlashloanOfferer
  * @author 0age, snotrocket.eth
@@ -438,12 +440,17 @@ contract FlashloanOfferer is ContractOffererInterface {
             if and(calldataload(context.offset), 0xfffffff) {
                 let cleanupRecipient :=
                     shr(96, calldataload(add(32, context.offset)))
+                // 53 = 32 bytes for the first word (SIP encoding and length),
+                // plus 20 bytes for the cleanup recipient, plus one for the
+                // total flashloans.
                 let flashloanDataStarts := add(context.offset, 53)
+                let totalFlashloans :=
+                    and(0xff, calldataload(add(context.offset, 21)))
+
+                // Include one word of flashloan data for each flashloan.
+                let flashloanDataSize := shl(0x05, totalFlashloans)
                 let flashloanDataEnds :=
-                    add(
-                        flashloanDataStarts,
-                        shl(0x05, and(0xff, calldataload(add(context.offset, 52))))
-                    )
+                    add(flashloanDataStarts, flashloanDataSize)
 
                 mstore(0, 0xfbacefce) // cleanup(address) selector
                 mstore(0x20, cleanupRecipient)
@@ -451,9 +458,9 @@ contract FlashloanOfferer is ContractOffererInterface {
                 // Iterate over each flashloan.
                 for { let flashloanDataOffset := flashloanDataStarts } lt(
                     flashloanDataOffset, flashloanDataEnds
-                ) { flashloanDataOffset := add(flashloanDataOffset, 32) } {
+                ) { flashloanDataOffset := add(flashloanDataOffset, 0x20) } {
                     let flashloanData := calldataload(flashloanDataOffset)
-                    let shouldCall := byte(12, flashloanData)
+                    let shouldCall := byte(11, flashloanData)
                     let flashloanRecipient :=
                         and(
                             0xffffffffffffffffffffffffffffffffffffffff,
@@ -549,6 +556,7 @@ contract FlashloanOfferer is ContractOffererInterface {
         )
     {
         schemas = new Schema[](1);
+        // TODO: update this to the correct SIP ID
         schemas[0] = Schema({ id: 12, metadata: "" });
         return ("FlashloanOfferer", schemas);
     }

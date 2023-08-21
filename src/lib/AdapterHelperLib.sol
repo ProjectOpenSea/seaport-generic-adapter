@@ -105,6 +105,7 @@ struct BillOfGoods {
 struct Fee {
     address recipient;
     uint256 amount;
+    uint256 bps;
 }
 
 /**

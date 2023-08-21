@@ -444,6 +444,7 @@ contract ReferenceFlashloanOfferer is ContractOffererInterface {
         )
     {
         schemas = new Schema[](1);
+        // TODO: update this to the correct SIP ID
         schemas[0] = Schema({ id: 12, metadata: "" });
         return ("FlashloanOfferer", schemas);
     }
