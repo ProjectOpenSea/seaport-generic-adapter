@@ -1,3 +1,6 @@
+> [!NOTE]
+> This proof of concept is archived and no longer maintained. For the contract order pattern it uses, see [contract orders](https://github.com/ProjectOpenSea/seaport/blob/main/docs/SeaportDocumentation.md#contract-orders) in the Seaport docs.
+
 # Seaport Generic Adapter
 
 The Seaport Generic Adapter is a proof of concept Seaport app that allows users to fulfill listings from other marketplaces through a Seaport interaction.  It relies on [the contract order pattern](https://github.com/ProjectOpenSea/seaport/blob/main/docs/SeaportDocumentation.md#contract-orders) that was added as part of Seaport v1.2.
